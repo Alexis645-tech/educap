@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>EduPlan - Cuaderno Digital del Profesor</title>
+  <!-- Fuentes modernas -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- BARRA LATERAL / NAVEGACIÓN -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+        </div>
+        <div class="brand-text">
+          <h2>EduPlan</h2>
+          <span>Cuaderno Docente</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="classes-tab">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Mis Grupos / Clases
+        </button>
+        <button class="nav-item" data-tab="students-tab">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Alumnos & Fichas
+        </button>
+        <button class="nav-item" data-tab="attendance-tab">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
+          Pasar Asistencia
+        </button>
+        <button class="nav-item" data-tab="grades-tab">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Calificaciones / Notas
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="teacher-profile" id="btn-open-teacher-profile" role="button" tabindex="0" title="Personalizar mi perfil docente">
+          <div class="teacher-avatar" id="sidebar-teacher-avatar">P</div>
+          <div class="teacher-info">
+            <span class="teacher-name" id="sidebar-teacher-name">Prof. Alexis</span>
+            <span class="teacher-role" id="sidebar-teacher-school">Colegio Digital</span>
+          </div>
+          <button class="teacher-edit-btn" aria-label="Editar perfil docente" title="Editar perfil">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ÁREA DE CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <!-- HEADER SUPERIOR -->
+      <header class="top-header">
+        <div class="header-left">
+          <button id="btn-toggle-sidebar" class="btn-icon-mobile" aria-label="Abrir menú" title="Menú">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+          </button>
+          <div>
+            <h1 id="page-title">Gestión de Grupos</h1>
+            <p id="page-subtitle">Administra tus aulas activas y alumnos matriculados</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="btn-header-teacher-profile" class="btn btn-secondary btn-icon" aria-label="Mi Perfil Docente" title="Personalizar Perfil Docente">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="teacher-btn-text">Perfil</span>
+          </button>
+          <button id="btn-theme-toggle" class="btn btn-secondary btn-icon" aria-label="Cambiar tema oscuro/claro" title="Cambiar tema oscuro/claro">
+            <!-- Icono Sol (Modo Claro) -->
+            <svg class="theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+            <!-- Icono Luna (Modo Oscuro) -->
+            <svg class="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <span class="theme-btn-text">Tema</span>
+          </button>
+          <button id="btn-quick-action" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span id="quick-action-text">Nueva Clase</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- VISTA: CLASES -->
+      <section id="classes-tab" class="tab-pane active">
+        <div class="classrooms-grid" id="classrooms-container">
+          <!-- Render dinámico de tarjetas de clases -->
+        </div>
+      </section>
+
+      <!-- VISTA: ESTUDIANTES & FICHAS -->
+      <section id="students-tab" class="tab-pane">
+        <div class="filter-bar">
+          <div class="filter-item">
+            <label for="filter-classroom-select">Grupo seleccionado:</label>
+            <select id="filter-classroom-select" class="form-select"></select>
+          </div>
+          <div class="filter-item search-box">
+            <input type="text" id="student-search-input" placeholder="Buscar por nombre o apellido..." class="form-input">
+          </div>
+        </div>
+
+        <div class="students-table-container">
+          <table class="students-table">
+            <thead>
+              <tr>
+                <th>Alumno</th>
+                <th>Grupo</th>
+                <th>Email de Contacto</th>
+                <th>Incidencias</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="students-table-body">
+              <!-- Render dinámico de filas de alumnos -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VISTA: ASISTENCIA RÁPIDA -->
+      <section id="attendance-tab" class="tab-pane">
+        <div class="attendance-header-card">
+          <div class="attendance-controls">
+            <div class="control-group">
+              <label for="attendance-classroom-select">Grupo:</label>
+              <select id="attendance-classroom-select" class="form-select"></select>
+            </div>
+            <div class="control-group">
+              <label for="attendance-date-input">Fecha:</label>
+              <input type="date" id="attendance-date-input" class="form-input">
+            </div>
+          </div>
+          <div class="attendance-summary">
+            <div class="stat-badge stat-present">
+              <span class="count" id="stat-present-count">0</span>
+              <span class="label">Presentes</span>
+            </div>
+            <div class="stat-badge stat-late">
+              <span class="count" id="stat-late-count">0</span>
+              <span class="label">Retrasos</span>
+            </div>
+            <div class="stat-badge stat-absent">
+              <span class="count" id="stat-absent-count">0</span>
+              <span class="label">Faltas</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="attendance-roster" id="attendance-roster-container">
+          <!-- Tarjetas interactivas de asistencia para cada estudiante -->
+        </div>
+      </section>
+
+      <!-- VISTA: CUADERNO DE CALIFICACIONES / EVALUACIONES -->
+      <section id="grades-tab" class="tab-pane">
+        <div class="grades-header-card">
+          <div class="grades-controls">
+            <div class="control-group">
+              <label for="grades-classroom-select">Grupo seleccionado:</label>
+              <select id="grades-classroom-select" class="form-select"></select>
+            </div>
+            <div class="control-group">
+              <label for="grades-activity-select">Evaluación / Actividad:</label>
+              <select id="grades-activity-select" class="form-select"></select>
+            </div>
+          </div>
+          <div class="grades-actions">
+            <button id="btn-new-grade-item" class="btn btn-secondary btn-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nueva Actividad / Examen
+            </button>
+          </div>
+        </div>
+
+        <!-- Matriz de notas / calificaciones -->
+        <div class="grades-matrix-card">
+          <div class="grades-table-container">
+            <table class="grades-table">
+              <thead>
+                <tr id="grades-table-header">
+                  <th>Alumno</th>
+                  <!-- Columnas dinámicas de evaluaciones -->
+                  <th>Promedio</th>
+                </tr>
+              </thead>
+              <tbody id="grades-table-body">
+                <!-- Render dinámico de filas con inputs de calificaciones -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- BARRA DE NAVEGACIÓN INFERIOR PARA MÓVILES (ESTILO APP NATIVA) -->
+      <nav class="bottom-nav">
+        <button class="bottom-nav-item active" data-tab="classes-tab">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Grupos</span>
+        </button>
+        <button class="bottom-nav-item" data-tab="students-tab">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Alumnos</span>
+        </button>
+        <button class="bottom-nav-item" data-tab="attendance-tab">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
+          <span>Asistencia</span>
+        </button>
+        <button class="bottom-nav-item" data-tab="grades-tab">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span>Notas</span>
+        </button>
+      </nav>
+    </main>
+
+    <!-- Overlay de oscurecimiento cuando se abre el sidebar en móvil -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+  </div>
+
+  <!-- MODAL: CREAR GRUPO -->
+  <div id="modal-class" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Crear Nuevo Grupo de Alumnos</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="form-create-class">
+        <div class="form-group">
+          <label for="class-name">Nombre de la Asignatura / Grupo *</label>
+          <input type="text" id="class-name" class="form-input" placeholder="Ej: Biología Celular" required>
+        </div>
+        <div class="form-group">
+          <label for="class-grade">Nivel o Grado *</label>
+          <input type="text" id="class-grade" class="form-input" placeholder="Ej: 3º ESO - Grupo B" required>
+        </div>
+        <div class="form-group">
+          <label for="class-year">Año Escolar</label>
+          <input type="text" id="class-year" class="form-input" value="2026 - 2027">
+        </div>
+        <div class="form-group">
+          <label>Color de Identificación</label>
+          <div class="color-picker-palette">
+            <label class="color-choice"><input type="radio" name="class-color" value="#4F46E5" checked><span style="background:#4F46E5"></span></label>
+            <label class="color-choice"><input type="radio" name="class-color" value="#059669"><span style="background:#059669"></span></label>
+            <label class="color-choice"><input type="radio" name="class-color" value="#D97706"><span style="background:#D97706"></span></label>
+            <label class="color-choice"><input type="radio" name="class-color" value="#DC2626"><span style="background:#DC2626"></span></label>
+            <label class="color-choice"><input type="radio" name="class-color" value="#7C3AED"><span style="background:#7C3AED"></span></label>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Grupo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRAR ALUMNO -->
+  <div id="modal-student" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Registrar Nuevo Alumno</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="form-create-student">
+        <div class="form-group">
+          <label for="student-class-select">Asignar a Grupo *</label>
+          <select id="student-class-select" class="form-select" required></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="student-firstname">Nombre *</label>
+            <input type="text" id="student-firstname" class="form-input" placeholder="Ej: Lucas" required>
+          </div>
+          <div class="form-group">
+            <label for="student-lastname">Apellidos *</label>
+            <input type="text" id="student-lastname" class="form-input" placeholder="Ej: Navarro" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="student-email">Correo Electrónico (Tutor / Alumno)</label>
+          <input type="email" id="student-email" class="form-input" placeholder="lucas.navarro@familia.com">
+        </div>
+        <div class="form-group">
+          <label for="student-phone">Teléfono de Contacto</label>
+          <input type="tel" id="student-phone" class="form-input" placeholder="+34 600 000 000">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Matricular Alumno</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: FICHA & INCIDENCIAS DE ALUMNO -->
+  <div id="modal-incidents" class="modal-overlay">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="student-modal-badge">
+          <div class="student-avatar-lg" id="modal-student-avatar">AL</div>
+          <div>
+            <h3 id="modal-student-name">Nombre Alumno</h3>
+            <span id="modal-student-details" class="sub-badge">Detalles</span>
+          </div>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-tab-content">
+        <h4>Historial de Incidencias y Observaciones</h4>
+        <div class="new-incident-box">
+          <input type="hidden" id="incident-student-id">
+          <div class="form-row">
+            <select id="incident-type" class="form-select" style="max-width: 160px;">
+              <option value="positive">Positiva (+)</option>
+              <option value="negative">Negativa (-)</option>
+              <option value="note">Nota / Observación</option>
+            </select>
+            <input type="text" id="incident-title" class="form-input" placeholder="Título (ej: Gran participación, Falta de tarea)" required>
+          </div>
+          <textarea id="incident-comment" class="form-textarea" placeholder="Descripción detallada de la incidencia..." rows="2"></textarea>
+          <button type="button" id="btn-save-incident" class="btn btn-primary btn-sm">Añadir Anotación</button>
+        </div>
+
+        <div class="incidents-list" id="incidents-list-container">
+          <!-- Lista de incidencias previas -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CREAR ACTIVIDAD / EVALUACIÓN -->
+  <div id="modal-grade-item" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Nueva Actividad o Evaluación</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="form-create-grade-item">
+        <div class="form-group">
+          <label for="grade-item-class-select">Grupo / Clase *</label>
+          <select id="grade-item-class-select" class="form-select" required></select>
+        </div>
+        <div class="form-group">
+          <label for="grade-item-title">Nombre de la Actividad *</label>
+          <input type="text" id="grade-item-title" class="form-input" placeholder="Ej: Examen Parcial 1, Tarea de Vectores" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="grade-item-type">Tipo de Evaluación</label>
+            <select id="grade-item-type" class="form-select">
+              <option value="exam">Examen / Prueba</option>
+              <option value="homework">Tarea / Trabajo</option>
+              <option value="project">Proyecto</option>
+              <option value="participation">Participación</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="grade-item-max">Puntuación Máxima (Escala)</label>
+            <input type="number" id="grade-item-max" class="form-input" value="10" min="1" max="100" step="0.5" required>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Crear Actividad</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: PERSONALIZAR PERFIL DOCENTE -->
+  <div id="modal-teacher-profile" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Personalizar Perfil del Docente</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="form-teacher-profile">
+        <div class="form-row" style="align-items: center; margin-bottom: 4px;">
+          <div class="teacher-avatar-preview" id="preview-teacher-avatar" style="width: 54px; height: 54px; font-size: 1.25rem; font-weight: 800; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: #fff; background-color: #6366f1; box-shadow: var(--shadow-sm);">P</div>
+          <div style="flex: 1;">
+            <label style="font-size: 0.8rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 4px; display: block;">Color del Avatar</label>
+            <div class="color-picker-palette">
+              <label class="color-choice"><input type="radio" name="teacher-avatar-color" value="#6366F1" checked><span style="background:#6366F1"></span></label>
+              <label class="color-choice"><input type="radio" name="teacher-avatar-color" value="#059669"><span style="background:#059669"></span></label>
+              <label class="color-choice"><input type="radio" name="teacher-avatar-color" value="#D97706"><span style="background:#D97706"></span></label>
+              <label class="color-choice"><input type="radio" name="teacher-avatar-color" value="#DC2626"><span style="background:#DC2626"></span></label>
+              <label class="color-choice"><input type="radio" name="teacher-avatar-color" value="#8B5CF6"><span style="background:#8B5CF6"></span></label>
+              <label class="color-choice"><input type="radio" name="teacher-avatar-color" value="#0EA5E9"><span style="background:#0EA5E9"></span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="flex: 0 0 130px;">
+            <label for="teacher-prefix">Tratamiento *</label>
+            <select id="teacher-prefix" class="form-select">
+              <option value="Prof.">Prof.</option>
+              <option value="Profa.">Profa.</option>
+              <option value="Lic.">Lic.</option>
+              <option value="Mtro.">Mtro.</option>
+              <option value="Mtra.">Mtra.</option>
+              <option value="Dr.">Dr.</option>
+              <option value="Dra.">Dra.</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="teacher-name-input">Nombre Completo *</label>
+            <input type="text" id="teacher-name-input" class="form-input" placeholder="Ej: Alexis Gómez" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="teacher-specialty">Especialidad / Materia Principal</label>
+          <input type="text" id="teacher-specialty" class="form-input" placeholder="Ej: Matemáticas y Ciencias, Primaria">
+        </div>
+
+        <div class="form-group">
+          <label for="teacher-school-input">Centro Educativo / Institución</label>
+          <input type="text" id="teacher-school-input" class="form-input" placeholder="Ej: IES San Francisco, Colegio Bolivariano">
+        </div>
+
+        <div class="form-group">
+          <label for="teacher-email-input">Correo Institucional (Opcional)</label>
+          <input type="email" id="teacher-email-input" class="form-input" placeholder="docente@colegio.edu">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Perfil</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

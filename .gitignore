@@ -1,0 +1,23 @@
+# Dependencias y construcciones
+node_modules/
+dist/
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Entorno y logs
+.env
+*.log
+npm-debug.log*
+
+# IDE y sistema operativo
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
