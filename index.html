@@ -118,6 +118,19 @@
           <div class="filter-item search-box">
             <input type="text" id="student-search-input" placeholder="Buscar por nombre o apellido..." class="form-input">
           </div>
+          <div class="filter-item mobile-view-selector">
+            <span class="mobile-view-label">Vista móvil:</span>
+            <div class="view-toggle-segmented" role="group" aria-label="Modo de visualización móvil">
+              <button type="button" class="view-toggle-btn active" data-view="cards" title="Vista en Tarjetas">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <span>Tarjetas</span>
+              </button>
+              <button type="button" class="view-toggle-btn" data-view="table" title="Vista en Tabla">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                <span>Tabla</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="students-table-container">
@@ -198,6 +211,19 @@
             </div>
           </div>
           <div class="grades-actions">
+            <div class="mobile-view-selector">
+              <span class="mobile-view-label">Vista móvil:</span>
+              <div class="view-toggle-segmented" role="group" aria-label="Modo de visualización móvil">
+                <button type="button" class="view-toggle-btn active" data-view="cards" title="Vista en Tarjetas">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  <span>Tarjetas</span>
+                </button>
+                <button type="button" class="view-toggle-btn" data-view="table" title="Vista en Tabla">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                  <span>Tabla</span>
+                </button>
+              </div>
+            </div>
             <button id="btn-new-grade-item" class="btn btn-secondary btn-sm">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Nueva Actividad / Examen

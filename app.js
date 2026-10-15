@@ -10,7 +10,8 @@ const STORAGE_KEYS = {
   THEME: 'educap_theme_v1',
   GRADE_ITEMS: 'educap_grade_items_v1',
   GRADES: 'educap_grades_v1',
-  TEACHER: 'educap_teacher_v1'
+  TEACHER: 'educap_teacher_v1',
+  VIEW_MODE: 'educap_view_mode_v1'
 };
 
 // --- SERVICIO DE DATOS LOCALES ---
@@ -274,6 +275,7 @@ const UIController = {
 
   init() {
     this.initTheme();
+    this.initViewMode();
     DataService.initDefaults();
 
     const classrooms = DataService.getClassrooms();
@@ -329,6 +331,30 @@ const UIController = {
     localStorage.setItem(STORAGE_KEYS.THEME, nextTheme);
   },
 
+  initViewMode() {
+    const savedMode = localStorage.getItem(STORAGE_KEYS.VIEW_MODE) || 'cards';
+    this.setViewMode(savedMode, false);
+  },
+
+  setViewMode(mode, save = true) {
+    const validMode = mode === 'table' ? 'table' : 'cards';
+    document.documentElement.setAttribute('data-view-mode', validMode);
+    if (save) {
+      localStorage.setItem(STORAGE_KEYS.VIEW_MODE, validMode);
+    }
+    // Sincronizar todos los segmented controls de vista
+    document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+      const btnMode = btn.getAttribute('data-view');
+      btn.classList.toggle('active', btnMode === validMode);
+    });
+  },
+
+  toggleViewMode() {
+    const current = document.documentElement.getAttribute('data-view-mode') || 'cards';
+    const next = current === 'cards' ? 'table' : 'cards';
+    this.setViewMode(next, true);
+  },
+
   bindEvents() {
     // Alternancia de tema Claro / Oscuro
     const themeBtn = document.getElementById('btn-theme-toggle');
@@ -337,6 +363,14 @@ const UIController = {
         this.toggleTheme();
       });
     }
+
+    // Selector de vista en móvil: Tarjetas vs Tabla
+    document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-view');
+        this.setViewMode(mode, true);
+      });
+    });
 
     // Navegación lateral y navegación inferior móvil
     document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(button => {

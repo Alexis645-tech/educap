@@ -393,6 +393,58 @@ body {
   gap: 8px;
 }
 
+/* SELECTOR DE VISTA MÓVIL: TARJETAS VS TABLA */
+.mobile-view-selector {
+  display: none; /* Por defecto oculto en pantallas de escritorio donde la tabla siempre es espaciosa */
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-view-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.view-toggle-segmented {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--color-surface-hover);
+  padding: 3px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  gap: 2px;
+}
+
+.view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.view-toggle-btn:hover {
+  color: var(--color-text);
+}
+
+.view-toggle-btn.active {
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+  font-weight: 700;
+}
+
 /* PESTAÑAS (TAB PANES) */
 .tab-pane {
   display: none;
@@ -1297,33 +1349,40 @@ form {
     width: 100%;
   }
 
-  /* --- TRANSFORMACIÓN RESPONSIVE DE TABLAS A TARJETAS (MOBILE FIRST CARDS) --- */
-  
-  /* 1. Tabla de Alumnos transformada a tarjetas */
-  .students-table-container {
+  /* Mostrar selector de vista en móvil */
+  .mobile-view-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  /* --- MODO TARJETAS EN MÓVILES (POR DEFECTO O data-view-mode="cards") --- */
+  html:not([data-view-mode="table"]) .students-table-container {
     background: transparent;
     border: none;
     box-shadow: none;
     overflow: visible;
   }
 
-  .students-table {
+  html:not([data-view-mode="table"]) .students-table {
     display: block;
     width: 100%;
   }
 
-  .students-table thead {
+  html:not([data-view-mode="table"]) .students-table thead {
     display: none; /* Ocultar cabecera tabular rígida */
   }
 
-  .students-table tbody {
+  html:not([data-view-mode="table"]) .students-table tbody {
     display: flex;
     flex-direction: column;
     gap: 14px;
     width: 100%;
   }
 
-  .students-table tr {
+  html:not([data-view-mode="table"]) .students-table tr {
     display: flex;
     flex-direction: column;
     background-color: var(--color-surface);
@@ -1335,11 +1394,11 @@ form {
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
   }
 
-  .students-table tr:hover {
+  html:not([data-view-mode="table"]) .students-table tr:hover {
     box-shadow: var(--shadow-md);
   }
 
-  .students-table td {
+  html:not([data-view-mode="table"]) .students-table td {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1350,7 +1409,7 @@ form {
     white-space: normal;
   }
 
-  .students-table td:last-child {
+  html:not([data-view-mode="table"]) .students-table td:last-child {
     border-bottom: none;
     padding-bottom: 0;
     padding-top: 4px;
@@ -1358,19 +1417,19 @@ form {
   }
 
   /* Cabecera de la tarjeta: Nombre y avatar del alumno */
-  .students-table td[data-label="Alumno"] {
+  html:not([data-view-mode="table"]) .students-table td[data-label="Alumno"] {
     justify-content: flex-start;
     border-bottom: 1px solid var(--color-border);
     padding-bottom: 12px;
     margin-bottom: 2px;
   }
 
-  .students-table td[data-label="Alumno"]::before {
+  html:not([data-view-mode="table"]) .students-table td[data-label="Alumno"]::before {
     display: none;
   }
 
   /* Etiquetas descriptoras antes de cada dato */
-  .students-table td:not([data-label="Alumno"])::before {
+  html:not([data-view-mode="table"]) .students-table td:not([data-label="Alumno"])::before {
     content: attr(data-label);
     font-size: 0.72rem;
     font-weight: 700;
@@ -1381,39 +1440,39 @@ form {
     margin-right: 12px;
   }
 
-  .students-table td[data-label="Acciones"] .actions-cell {
+  html:not([data-view-mode="table"]) .students-table td[data-label="Acciones"] .actions-cell {
     gap: 10px;
   }
 
-  /* 2. Cuaderno de Calificaciones transformado a tarjetas */
-  .grades-matrix-card {
+  /* Cuaderno de Calificaciones transformado a tarjetas */
+  html:not([data-view-mode="table"]) .grades-matrix-card {
     background: transparent;
     border: none;
     box-shadow: none;
     overflow: visible;
   }
 
-  .grades-table-container {
+  html:not([data-view-mode="table"]) .grades-table-container {
     overflow: visible;
   }
 
-  .grades-table {
+  html:not([data-view-mode="table"]) .grades-table {
     display: block;
     width: 100%;
   }
 
-  .grades-table thead {
+  html:not([data-view-mode="table"]) .grades-table thead {
     display: none; /* Ocultar cabecera tabular rígida */
   }
 
-  .grades-table tbody {
+  html:not([data-view-mode="table"]) .grades-table tbody {
     display: flex;
     flex-direction: column;
     gap: 16px;
     width: 100%;
   }
 
-  .grades-table tr {
+  html:not([data-view-mode="table"]) .grades-table tr {
     display: flex;
     flex-direction: column;
     background-color: var(--color-surface);
@@ -1425,7 +1484,7 @@ form {
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
   }
 
-  .grades-table td {
+  html:not([data-view-mode="table"]) .grades-table td {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1436,26 +1495,24 @@ form {
     text-align: left !important;
   }
 
-  .grades-table td:last-child {
+  html:not([data-view-mode="table"]) .grades-table td:last-child {
     border-bottom: none;
     padding-bottom: 2px;
     padding-top: 10px;
   }
 
-  /* Cabecera de la tarjeta en notas: Alumno */
-  .grades-table td[data-label="Alumno"] {
+  html:not([data-view-mode="table"]) .grades-table td[data-label="Alumno"] {
     justify-content: flex-start;
     border-bottom: 1px solid var(--color-border);
     padding-bottom: 12px;
     margin-bottom: 4px;
   }
 
-  .grades-table td[data-label="Alumno"]::before {
+  html:not([data-view-mode="table"]) .grades-table td[data-label="Alumno"]::before {
     display: none;
   }
 
-  /* Fila de Promedio resaltada */
-  .grades-table td.grade-cell-average {
+  html:not([data-view-mode="table"]) .grades-table td.grade-cell-average {
     background-color: var(--color-surface-hover);
     margin: 6px -16px -16px -16px;
     padding: 12px 16px;
@@ -1464,8 +1521,7 @@ form {
     border-bottom: none;
   }
 
-  /* Etiquetas descriptoras antes de cada actividad evaluativa */
-  .grades-table td:not([data-label="Alumno"])::before {
+  html:not([data-view-mode="table"]) .grades-table td:not([data-label="Alumno"])::before {
     content: attr(data-label);
     font-size: 0.72rem;
     font-weight: 700;
@@ -1480,12 +1536,76 @@ form {
     white-space: nowrap;
   }
 
-  .grades-table .grade-input {
+  html:not([data-view-mode="table"]) .grades-table .grade-input {
     width: 68px;
     height: 38px;
     font-size: 0.95rem;
     text-align: center;
     border-radius: var(--radius-md);
+  }
+
+  /* --- MODO TABLA CLÁSICA EN MÓVILES (data-view-mode="table") --- */
+  html[data-view-mode="table"] .students-table-container,
+  html[data-view-mode="table"] .grades-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+
+  html[data-view-mode="table"] .students-table,
+  html[data-view-mode="table"] .grades-table {
+    display: table;
+    width: 100%;
+    min-width: 580px;
+  }
+
+  html[data-view-mode="table"] .students-table thead,
+  html[data-view-mode="table"] .grades-table thead {
+    display: table-header-group;
+  }
+
+  html[data-view-mode="table"] .students-table tbody,
+  html[data-view-mode="table"] .grades-table tbody {
+    display: table-row-group;
+  }
+
+  html[data-view-mode="table"] .students-table tr,
+  html[data-view-mode="table"] .grades-table tr {
+    display: table-row;
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
+
+  html[data-view-mode="table"] .students-table th,
+  html[data-view-mode="table"] .grades-table th {
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  html[data-view-mode="table"] .students-table td,
+  html[data-view-mode="table"] .grades-table td {
+    display: table-cell;
+    padding: 12px 14px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  html[data-view-mode="table"] .students-table td::before,
+  html[data-view-mode="table"] .grades-table td::before {
+    display: none !important;
+  }
+
+  html[data-view-mode="table"] .grade-input {
+    width: 54px;
+    height: 32px;
+    font-size: 0.85rem;
+    text-align: center;
   }
 
   /* Tarjeta y controles de asistencia */
