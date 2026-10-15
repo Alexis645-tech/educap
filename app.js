@@ -257,6 +257,8 @@ const DataService = {
 const UIController = {
   currentTab: 'classes-tab',
   selectedClassroomId: '',
+  selectedGradeType: '',
+  selectedGradeItemId: '',
   selectedDate: new Date().toISOString().split('T')[0],
 
   init() {
@@ -476,6 +478,24 @@ const UIController = {
     if (gradesClassSelect) {
       gradesClassSelect.addEventListener('change', (e) => {
         this.selectedClassroomId = e.target.value;
+        this.selectedGradeItemId = ''; // Reiniciar filtro específico de actividad al cambiar clase
+        this.renderGrades();
+      });
+    }
+
+    const gradesTypeSelect = document.getElementById('grades-type-select');
+    if (gradesTypeSelect) {
+      gradesTypeSelect.addEventListener('change', (e) => {
+        this.selectedGradeType = e.target.value;
+        this.selectedGradeItemId = ''; // Reiniciar actividad seleccionada si cambia el tipo
+        this.renderGrades();
+      });
+    }
+
+    const gradesActivitySelect = document.getElementById('grades-activity-select');
+    if (gradesActivitySelect) {
+      gradesActivitySelect.addEventListener('change', (e) => {
+        this.selectedGradeItemId = e.target.value;
         this.renderGrades();
       });
     }
@@ -944,18 +964,41 @@ const UIController = {
     }
 
     const students = DataService.getStudents(currentClassId);
-    const gradeItems = DataService.getGradeItems(currentClassId);
+    const allGradeItems = DataService.getGradeItems(currentClassId);
     const allGrades = DataService.getGrades(currentClassId);
 
-    // Actualizar filtro secundario de actividades
-    if (activitySelect) {
-      activitySelect.innerHTML = '<option value="">Todas las actividades</option>' +
-        gradeItems.map(g => `<option value="${g.id}">${g.title} (Máx: ${g.maxScore})</option>`).join('');
+    // Sincronizar select de tipo si existe
+    const typeSelect = document.getElementById('grades-type-select');
+    if (typeSelect && typeSelect.value !== this.selectedGradeType) {
+      typeSelect.value = this.selectedGradeType;
     }
 
-    // Cabecera de la tabla con cada actividad / examen
+    // Filtrar actividades según el tipo seleccionado
+    const itemsMatchingType = this.selectedGradeType
+      ? allGradeItems.filter(g => g.type === this.selectedGradeType)
+      : allGradeItems;
+
+    // Actualizar filtro secundario de actividades con opciones acordes al tipo
+    if (activitySelect) {
+      let optionsHTML = '<option value="">Todas las actividades</option>';
+      itemsMatchingType.forEach(g => {
+        optionsHTML += `<option value="${g.id}" ${g.id === this.selectedGradeItemId ? 'selected' : ''}>${g.title} (Máx: ${g.maxScore})</option>`;
+      });
+      activitySelect.innerHTML = optionsHTML;
+    }
+
+    // Items de evaluación visibles en la tabla (filtrados por tipo y opcionalmente por actividad específica)
+    let visibleGradeItems = itemsMatchingType;
+    if (this.selectedGradeItemId) {
+      const singleItem = itemsMatchingType.find(g => g.id === this.selectedGradeItemId);
+      if (singleItem) {
+        visibleGradeItems = [singleItem];
+      }
+    }
+
+    // Cabecera de la tabla con cada actividad / examen visible
     let headerHTML = '<th>Alumno</th>';
-    gradeItems.forEach(item => {
+    visibleGradeItems.forEach(item => {
       const typeLabels = { exam: 'Examen', homework: 'Tarea', project: 'Proyecto', participation: 'Part.' };
       headerHTML += `
         <th class="grade-col-activity">
@@ -971,7 +1014,8 @@ const UIController = {
         </th>
       `;
     });
-    headerHTML += '<th style="text-align: center; min-width: 90px;">Promedio</th>';
+    const avgHeaderTitle = this.selectedGradeType ? 'Promedio (Filtro)' : 'Promedio';
+    headerHTML += `<th style="text-align: center; min-width: 90px;" title="Promedio de notas visibles">${avgHeaderTitle}</th>`;
     if (headerRow) headerRow.innerHTML = headerHTML;
 
     // Filas con cada estudiante y sus calificaciones
@@ -979,7 +1023,15 @@ const UIController = {
       tableBody.innerHTML = '';
 
       if (students.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="${gradeItems.length + 2}" style="text-align: center; color: var(--color-text-muted); padding: 32px;">No hay alumnos matriculados en esta clase.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="${visibleGradeItems.length + 2}" style="text-align: center; color: var(--color-text-muted); padding: 32px;">No hay alumnos matriculados en esta clase.</td></tr>`;
+        return;
+      }
+
+      if (visibleGradeItems.length === 0) {
+        const noItemsMsg = this.selectedGradeType
+          ? 'No hay actividades registradas con el tipo de evaluación seleccionado.'
+          : 'No hay actividades ni exámenes creados para este grupo todavía.';
+        tableBody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--color-text-muted); padding: 32px;">${noItemsMsg}</td></tr>`;
         return;
       }
 
@@ -999,7 +1051,7 @@ const UIController = {
         let totalScores = 0;
         let ratedCount = 0;
 
-        gradeItems.forEach(item => {
+        visibleGradeItems.forEach(item => {
           const gradeRecord = allGrades.find(g => g.studentId === std.id && g.gradeItemId === item.id);
           const currentScore = gradeRecord !== undefined && gradeRecord.score !== null ? gradeRecord.score : '';
 
@@ -1027,7 +1079,7 @@ const UIController = {
           `;
         });
 
-        // Promedio general del alumno
+        // Promedio del alumno según las actividades visibles/filtradas
         let averageHTML = '';
         if (ratedCount > 0) {
           const avg = (totalScores / ratedCount).toFixed(1);
