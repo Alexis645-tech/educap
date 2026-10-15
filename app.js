@@ -1374,6 +1374,10 @@ const UIController = {
     DataService.setStudentGrade(studentId, gradeItemId, classroomId, value);
     // Re-renderizado suave para refrescar promedios
     this.renderGrades();
+    // Respaldo automático transparente en Google Drive
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
   },
 
   confirmDeleteGradeItem(gradeItemId, title) {
