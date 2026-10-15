@@ -187,6 +187,11 @@ const DataService = {
       all.push({ id: 'att_' + Date.now(), studentId, classroomId, date, status });
     }
     localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(all));
+
+    // Sincronización automática o encolado offline
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
   },
 
   getIncidents(studentId) {
@@ -198,6 +203,11 @@ const DataService = {
     const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.INCIDENTS) || '[]');
     all.unshift(incident);
     localStorage.setItem(STORAGE_KEYS.INCIDENTS, JSON.stringify(all));
+
+    // Sincronización automática o encolado offline
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
   },
 
   // --- CALIFICACIONES Y EVALUACIONES ---

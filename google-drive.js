@@ -30,14 +30,61 @@ const GoogleDriveService = {
   gapiInited: false,
   gisInited: false,
   lastSyncTime: null,
-  syncStatus: 'idle', // 'idle' | 'syncing' | 'synced' | 'error' | 'expired'
+  syncStatus: 'idle', // 'idle' | 'syncing' | 'synced' | 'error' | 'expired' | 'offline'
   isReauthorizing: false,
   pendingActionQueue: [], // Acciones pendientes esperando renovación de token sin perder datos
   autoSyncTimer: null,
+  isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+  hasPendingOfflineChanges: false,
 
   init() {
     this.loadSavedAuth();
     this.createSessionNotificationUI();
+    this.setupNetworkListeners();
+    this.checkPendingOfflineSync();
+  },
+
+  // Escuchar eventos de desconexión y reconexión a Internet
+  setupNetworkListeners() {
+    window.addEventListener('online', () => {
+      console.log('📡 Conexión a Internet restablecida (online).');
+      this.isOnline = true;
+      this.hideOfflineToast();
+      this.showOnlineToast();
+      // Si el docente hizo cambios mientras estaba offline, sincronizar de inmediato
+      if (this.hasPendingOfflineChanges || this.getPendingOfflineFlag()) {
+        console.log('🔄 Sincronizando cambios acumulados en modo offline con Google Drive...');
+        this.scheduleAutoSync(500);
+      } else if (this.currentUser) {
+        this.setSyncStatus('synced', 'Conexión restablecida');
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      console.warn('⚠️ Se perdió la conexión a Internet (offline).');
+      this.isOnline = false;
+      this.setSyncStatus('offline', 'Sin conexión (guardando localmente)');
+      this.showOfflineToast();
+    });
+  },
+
+  getPendingOfflineFlag() {
+    return localStorage.getItem('educap_pending_drive_sync') === 'true';
+  },
+
+  setPendingOfflineFlag(pending) {
+    this.hasPendingOfflineChanges = pending;
+    if (pending) {
+      localStorage.setItem('educap_pending_drive_sync', 'true');
+    } else {
+      localStorage.removeItem('educap_pending_drive_sync');
+    }
+  },
+
+  checkPendingOfflineSync() {
+    if (this.getPendingOfflineFlag() && navigator.onLine && this.currentUser) {
+      this.scheduleAutoSync(1000);
+    }
   },
 
   hasCredentials() {
@@ -374,8 +421,17 @@ const GoogleDriveService = {
   },
 
   // Guardar datos en Google Drive (Crea o actualiza educap_backup_data.json)
+  // Guardar datos en Google Drive (Crea o actualiza educap_backup_data.json)
   async syncToDrive() {
     if (!this.currentUser) {
+      return false;
+    }
+
+    // Si el navegador no tiene conexión activa, marcar como pendiente y esperar al evento 'online'
+    if (!navigator.onLine) {
+      console.warn('Dispositivo offline: Cambio guardado en LocalStorage, encolado para sincronización en la nube.');
+      this.setPendingOfflineFlag(true);
+      this.setSyncStatus('offline', 'Guardado local (pendiente de subir a Drive)');
       return false;
     }
 
@@ -429,12 +485,19 @@ const GoogleDriveService = {
       }
 
       this.lastSyncTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      this.setPendingOfflineFlag(false);
       this.saveAuth(this.currentUser);
       this.setSyncStatus('synced', `Guardado en Drive (${this.lastSyncTime})`);
       return true;
     } catch (err) {
       console.error('Error sincronizando con Google Drive:', err);
-      this.setSyncStatus('error', 'Error al sincronizar con Drive');
+      // Si falló por falta de red en pleno request
+      if (!navigator.onLine) {
+        this.setPendingOfflineFlag(true);
+        this.setSyncStatus('offline', 'Guardado local (sin internet)');
+      } else {
+        this.setSyncStatus('error', 'Error al sincronizar con Drive');
+      }
       return false;
     }
   },
@@ -444,6 +507,13 @@ const GoogleDriveService = {
     if (this.autoSyncTimer) {
       clearTimeout(this.autoSyncTimer);
     }
+
+    if (!navigator.onLine) {
+      this.setPendingOfflineFlag(true);
+      this.setSyncStatus('offline', 'Guardado local (sin conexión)');
+      return;
+    }
+
     this.autoSyncTimer = setTimeout(() => {
       if (this.currentUser) {
         this.syncToDrive();
@@ -470,6 +540,7 @@ const GoogleDriveService = {
       this.applyImportPayload(payload);
 
       this.lastSyncTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      this.setPendingOfflineFlag(false);
       this.setSyncStatus('synced', `Restaurado con éxito (${this.lastSyncTime})`);
       alert('¡Datos restaurados correctamente desde tu Google Drive!');
       return true;
@@ -521,6 +592,16 @@ const GoogleDriveService = {
           </div>
         </div>
       </div>
+
+      <div id="offline-network-banner" class="network-status-toast network-offline" style="display: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        <span><strong>Modo Offline:</strong> Sin conexión a Internet. Todos los datos que ingreses se guardan localmente y se subirán a Drive en cuanto regrese la señal.</span>
+      </div>
+
+      <div id="online-network-banner" class="network-status-toast network-online" style="display: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        <span><strong>¡Conexión restablecida!</strong> Sincronizando datos automáticamente con Google Drive...</span>
+      </div>
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
@@ -543,6 +624,26 @@ const GoogleDriveService = {
       btnDismiss.addEventListener('click', () => {
         this.hideSessionExpiredModal();
       });
+    }
+  },
+
+  showOfflineToast() {
+    const el = document.getElementById('offline-network-banner');
+    if (el) el.style.display = 'flex';
+  },
+
+  hideOfflineToast() {
+    const el = document.getElementById('offline-network-banner');
+    if (el) el.style.display = 'none';
+  },
+
+  showOnlineToast() {
+    const el = document.getElementById('online-network-banner');
+    if (el) {
+      el.style.display = 'flex';
+      setTimeout(() => {
+        el.style.display = 'none';
+      }, 4000);
     }
   },
 

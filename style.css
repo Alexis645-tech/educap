@@ -2206,3 +2206,61 @@ form {
   70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
 }
+
+/* Indicador de estado offline */
+.google-sync-indicator.offline {
+  background-color: var(--color-text-subtle);
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+}
+
+/* Toasts de red (Offline / Online) */
+.network-status-toast {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  max-width: 90vw;
+  box-shadow: var(--shadow-lg);
+  animation: slideDownFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownFade {
+  from {
+    transform: translate(-50%, -100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.network-status-toast.network-offline {
+  background-color: #1e293b;
+  color: #f1f5f9;
+  border: 1px solid #334155;
+}
+
+.network-status-toast.network-offline svg {
+  color: var(--color-warning);
+  flex-shrink: 0;
+}
+
+.network-status-toast.network-online {
+  background-color: #064e3b;
+  color: #ecfdf5;
+  border: 1px solid #059669;
+}
+
+.network-status-toast.network-online svg {
+  color: var(--color-success);
+  flex-shrink: 0;
+}
+
