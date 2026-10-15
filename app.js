@@ -11,7 +11,8 @@ const STORAGE_KEYS = {
   GRADE_ITEMS: 'educap_grade_items_v1',
   GRADES: 'educap_grades_v1',
   TEACHER: 'educap_teacher_v1',
-  VIEW_MODE: 'educap_view_mode_v1'
+  VIEW_MODE: 'educap_view_mode_v1',
+  AUTH_MODE: 'educap_auth_mode_v1'
 };
 
 // --- SERVICIO DE DATOS LOCALES ---
@@ -288,8 +289,34 @@ const UIController = {
       window.GoogleDriveService.init();
       this.renderGoogleAuthStatus();
     }
+    this.checkAuthScreen();
     this.bindEvents();
     this.renderCurrentView();
+  },
+
+  checkAuthScreen() {
+    const isLogged = window.GoogleDriveService && window.GoogleDriveService.currentUser;
+    const isOfflineChoice = localStorage.getItem(STORAGE_KEYS.AUTH_MODE) === 'offline';
+
+    if (isLogged || isOfflineChoice) {
+      this.showApp();
+    } else {
+      this.showAuthScreen();
+    }
+  },
+
+  showApp() {
+    const authScreen = document.getElementById('auth-screen');
+    const appLayout = document.getElementById('app-layout');
+    if (authScreen) authScreen.style.display = 'none';
+    if (appLayout) appLayout.style.display = 'flex';
+  },
+
+  showAuthScreen() {
+    const authScreen = document.getElementById('auth-screen');
+    const appLayout = document.getElementById('app-layout');
+    if (authScreen) authScreen.style.display = 'flex';
+    if (appLayout) appLayout.style.display = 'none';
   },
 
   renderTeacherProfile() {
@@ -692,6 +719,31 @@ const UIController = {
       });
     }
 
+    // Botones de la Pantalla de Bienvenida / Login
+    const btnLoginScreenGoogle = document.getElementById('btn-login-screen-google');
+    if (btnLoginScreenGoogle) {
+      btnLoginScreenGoogle.addEventListener('click', () => {
+        if (window.GoogleDriveService) {
+          window.GoogleDriveService.signIn();
+        }
+      });
+    }
+
+    const btnLoginScreenOffline = document.getElementById('btn-login-screen-offline');
+    if (btnLoginScreenOffline) {
+      btnLoginScreenOffline.addEventListener('click', () => {
+        localStorage.setItem(STORAGE_KEYS.AUTH_MODE, 'offline');
+        this.showApp();
+      });
+    }
+
+    const btnLoginScreenConfig = document.getElementById('btn-login-screen-config');
+    if (btnLoginScreenConfig) {
+      btnLoginScreenConfig.addEventListener('click', () => {
+        this.openGoogleConfigModal();
+      });
+    }
+
     const btnGoogleSignout = document.getElementById('btn-google-signout');
     if (btnGoogleSignout) {
       btnGoogleSignout.addEventListener('click', () => {
@@ -699,6 +751,9 @@ const UIController = {
           if (window.GoogleDriveService) {
             window.GoogleDriveService.signOut();
           }
+          localStorage.removeItem(STORAGE_KEYS.AUTH_MODE);
+          this.closeModal('modal-google-sync');
+          this.showAuthScreen();
         }
       });
     }

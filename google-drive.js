@@ -108,8 +108,13 @@ const GoogleDriveService = {
           this.setSyncStatus('synced', 'Conectado con Google Drive');
           // Disparar sincronización inicial / backup
           await this.syncToDrive();
-          if (window.UIController && window.UIController.renderGoogleAuthStatus) {
-            window.UIController.renderGoogleAuthStatus();
+          if (window.UIController) {
+            if (window.UIController.renderGoogleAuthStatus) {
+              window.UIController.renderGoogleAuthStatus();
+            }
+            if (window.UIController.showApp) {
+              window.UIController.showApp();
+            }
           }
         }
       });

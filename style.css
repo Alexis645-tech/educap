@@ -644,6 +644,205 @@ body {
   color: var(--color-danger);
 }
 
+/* ========================================================
+   PANTALLA DE INICIO DE SESIÓN / LOGIN CON GOOGLE
+   ======================================================== */
+.auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: var(--color-bg-app);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.auth-background-effects {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.auth-blob {
+  position: absolute;
+  border-radius: var(--radius-full);
+  filter: blur(80px);
+  opacity: 0.28;
+}
+
+.auth-blob-1 {
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, var(--color-primary), #3b82f6);
+  top: -80px;
+  left: -80px;
+}
+
+.auth-blob-2 {
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, #10b981, #06b6d4);
+  bottom: -100px;
+  right: -100px;
+}
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeInAuth 0.35s ease-out;
+}
+
+@keyframes fadeInAuth {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.auth-brand {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-logo-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-primary), #4338ca);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.45);
+  margin-bottom: 6px;
+}
+
+.auth-brand h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-text-main);
+}
+
+.auth-tagline {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.auth-features-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--color-text-main);
+}
+
+.feature-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.auth-actions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-google-login {
+  background-color: var(--color-surface);
+  color: var(--color-text-main);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 14px 20px;
+  width: 100%;
+  justify-content: center;
+  gap: 12px;
+  transition: all var(--transition-fast);
+}
+
+.btn-google-login:hover {
+  background-color: var(--color-surface-hover);
+  border-color: #4285F4;
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.18);
+  transform: translateY(-1px);
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 4px 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.auth-divider span {
+  padding: 0 12px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.btn-secondary-subtle {
+  background-color: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 16px;
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-secondary-subtle:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-main);
+}
+
+.auth-card-footer {
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
 /* PESTAÑAS (TAB PANES) */
 .tab-pane {
   display: none;
