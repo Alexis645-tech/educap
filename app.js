@@ -831,7 +831,7 @@ const UIController = {
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>
+        <td data-label="Alumno">
           <div class="student-identity">
             <div class="student-avatar" style="background-color: ${std.avatarColor || '#4F46E5'}">${initials}</div>
             <div>
@@ -840,14 +840,14 @@ const UIController = {
             </div>
           </div>
         </td>
-        <td><span class="classroom-card-badge">${cls ? cls.name : 'Sin grupo'}</span></td>
-        <td>${std.email || '—'}</td>
-        <td>
+        <td data-label="Grupo"><span class="classroom-card-badge">${cls ? cls.name : 'Sin grupo'}</span></td>
+        <td data-label="Email de Contacto">${std.email || '—'}</td>
+        <td data-label="Incidencias">
           <button class="btn btn-secondary btn-sm" onclick="UIController.openIncidentsModal('${std.id}')">
             ${incidents.length} Anotaciones
           </button>
         </td>
-        <td>
+        <td data-label="Acciones">
           <div class="actions-cell">
             <button class="btn-icon-ghost" title="Editar datos del alumno" onclick="UIController.openEditStudentModal('${std.id}')">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1119,7 +1119,7 @@ const UIController = {
         const tr = document.createElement('tr');
 
         let cellsHTML = `
-          <td>
+          <td data-label="Alumno">
             <div class="student-identity">
               <div class="student-avatar" style="background-color: ${std.avatarColor || '#4F46E5'}">${initials}</div>
               <div class="student-full-name">${std.firstName} ${std.lastName}</div>
@@ -1142,7 +1142,7 @@ const UIController = {
           }
 
           cellsHTML += `
-            <td style="text-align: center;">
+            <td data-label="${item.title} (/${item.maxScore})" class="grade-cell-activity">
               <input 
                 type="number" 
                 class="grade-input" 
@@ -1171,7 +1171,7 @@ const UIController = {
           averageHTML = `<span class="grade-average-badge grade-average-none">—</span>`;
         }
 
-        cellsHTML += `<td style="text-align: center;">${averageHTML}</td>`;
+        cellsHTML += `<td data-label="${avgHeaderTitle}" class="grade-cell-average">${averageHTML}</td>`;
         tr.innerHTML = cellsHTML;
         tableBody.appendChild(tr);
       });
