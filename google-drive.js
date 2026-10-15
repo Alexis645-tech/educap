@@ -5,7 +5,7 @@
 // CREDENCIAL DE LA APLICACIÓN (Configurada por el administrador/creador de la plataforma)
 // El docente final no necesita ingresar ningún Client ID ni dato técnico.
 const APP_GOOGLE_CONFIG = {
-  CLIENT_ID: '', // Pega aquí tu Client ID generado en Google Cloud Console
+  CLIENT_ID: '880247691892-igr0ffckn9tbuq1nvaqnn3d6um1951u4.apps.googleusercontent.com',
   API_KEY: ''
 };
 
