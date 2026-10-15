@@ -737,13 +737,6 @@ const UIController = {
       });
     }
 
-    const btnLoginScreenConfig = document.getElementById('btn-login-screen-config');
-    if (btnLoginScreenConfig) {
-      btnLoginScreenConfig.addEventListener('click', () => {
-        this.openGoogleConfigModal();
-      });
-    }
-
     const btnGoogleSignout = document.getElementById('btn-google-signout');
     if (btnGoogleSignout) {
       btnGoogleSignout.addEventListener('click', () => {
@@ -781,53 +774,11 @@ const UIController = {
         }
       });
     }
-
-    const btnOpenGoogleConfig = document.getElementById('btn-open-google-config');
-    if (btnOpenGoogleConfig) {
-      btnOpenGoogleConfig.addEventListener('click', () => {
-        this.openGoogleConfigModal();
-      });
-    }
-
-    const formGoogleConfig = document.getElementById('form-google-config');
-    if (formGoogleConfig) {
-      formGoogleConfig.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const clientId = document.getElementById('google-client-id-input').value.trim();
-        const apiKey = document.getElementById('google-api-key-input').value.trim();
-
-        if (window.GoogleDriveService) {
-          window.GoogleDriveService.saveConfig(clientId, apiKey);
-        }
-
-        this.closeModal('modal-google-config');
-        this.renderGoogleAuthStatus();
-        alert('Credenciales de Google guardadas correctamente.');
-      });
-    }
   },
 
   openGoogleSyncModal() {
     this.renderGoogleAuthStatus();
     this.openModal('modal-google-sync');
-  },
-
-  openGoogleConfigModal(alertMsg = '') {
-    if (window.GoogleDriveService) {
-      document.getElementById('google-client-id-input').value = window.GoogleDriveService.config.clientId || '';
-      document.getElementById('google-api-key-input').value = window.GoogleDriveService.config.apiKey || '';
-    }
-    const alertEl = document.getElementById('google-config-alert');
-    if (alertEl) {
-      if (alertMsg) {
-        alertEl.textContent = alertMsg;
-        alertEl.style.display = 'block';
-      } else {
-        alertEl.style.display = 'none';
-      }
-    }
-    this.closeModal('modal-google-sync');
-    this.openModal('modal-google-config');
   },
 
   renderGoogleAuthStatus() {

@@ -61,12 +61,6 @@
           Continuar en Modo Offline (Solo este dispositivo)
         </button>
       </div>
-
-      <div class="auth-card-footer">
-        <button type="button" id="btn-login-screen-config" class="btn-link">
-          ⚙️ Configurar Client ID / API Key de Google
-        </button>
-      </div>
     </div>
   </section>
 
@@ -631,48 +625,13 @@
           </div>
         </div>
 
-        <!-- Enlace a configuración de credenciales API -->
-        <div class="google-footer-settings">
-          <button type="button" id="btn-open-google-config" class="btn-link">
-            ⚙️ Configurar Client ID / API Key de Google
-          </button>
+        <!-- Enlace de sesión -->
+        <div class="google-footer-settings" style="justify-content: flex-end;">
           <button type="button" id="btn-google-signout" class="btn-link text-danger" style="display: none;">
             Cerrar sesión de Google
           </button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- MODAL: CONFIGURAR CREDENCIALES GOOGLE CLOUD (CLIENT ID & API KEY) -->
-  <div id="modal-google-config" class="modal-overlay">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3>Configuración de Google Cloud</h3>
-        <button class="modal-close-btn">&times;</button>
-      </div>
-      <form id="form-google-config">
-        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 16px;">
-          Ingresa las credenciales creadas en tu Google Cloud Console para habilitar Google Sign-In y Google Drive API en tu app.
-        </p>
-        <div id="google-config-alert" style="display: none; padding: 10px 14px; background: rgba(99, 102, 241, 0.1); border-left: 3px solid var(--color-primary); border-radius: var(--radius-sm); font-size: 0.82rem; margin-bottom: 14px;"></div>
-        
-        <div class="form-group">
-          <label for="google-client-id-input">Google OAuth 2.0 Client ID *</label>
-          <input type="text" id="google-client-id-input" class="form-input" placeholder="Ej: 123456789-abc.apps.googleusercontent.com" required>
-          <small style="color: var(--color-text-muted); font-size: 0.72rem; margin-top: 4px; display: block;">Tipo: Aplicación web (Web application)</small>
-        </div>
-
-        <div class="form-group">
-          <label for="google-api-key-input">Google API Key (Opcional)</label>
-          <input type="text" id="google-api-key-input" class="form-input" placeholder="Ej: AIzaSy...">
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar Credenciales</button>
-        </div>
-      </form>
     </div>
   </div>
 

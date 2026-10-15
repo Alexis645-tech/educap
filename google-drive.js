@@ -2,16 +2,21 @@
 // EDUPLAN - INTEGRACIÓN GOOGLE SIGN-IN & DRIVE API (GOOGLE-DRIVE.JS)
 // ========================================================
 
-const GOOGLE_CONFIG_STORAGE_KEY = 'educap_google_config_v1';
+// CREDENCIAL DE LA APLICACIÓN (Configurada por el administrador/creador de la plataforma)
+// El docente final no necesita ingresar ningún Client ID ni dato técnico.
+const APP_GOOGLE_CONFIG = {
+  CLIENT_ID: '', // Pega aquí tu Client ID generado en Google Cloud Console
+  API_KEY: ''
+};
+
 const GOOGLE_AUTH_STORAGE_KEY = 'educap_google_auth_v1';
 const DRIVE_FILE_NAME = 'educap_backup_data.json';
 const DRIVE_BACKUP_FOLDER = 'EduPlan_Docente';
 
 const GoogleDriveService = {
-  // Configuración por defecto o guardada por el usuario
   config: {
-    clientId: '',
-    apiKey: '',
+    clientId: APP_GOOGLE_CONFIG.CLIENT_ID || '',
+    apiKey: APP_GOOGLE_CONFIG.API_KEY || '',
     scopes: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email'
   },
 
@@ -24,32 +29,7 @@ const GoogleDriveService = {
   syncStatus: 'idle', // 'idle' | 'syncing' | 'synced' | 'error'
 
   init() {
-    this.loadConfig();
     this.loadSavedAuth();
-  },
-
-  loadConfig() {
-    try {
-      const saved = localStorage.getItem(GOOGLE_CONFIG_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        this.config.clientId = parsed.clientId || '';
-        this.config.apiKey = parsed.apiKey || '';
-      }
-    } catch (e) {
-      console.error('Error cargando config de Google:', e);
-    }
-  },
-
-  saveConfig(clientId, apiKey) {
-    this.config.clientId = (clientId || '').trim();
-    this.config.apiKey = (apiKey || '').trim();
-    localStorage.setItem(GOOGLE_CONFIG_STORAGE_KEY, JSON.stringify({
-      clientId: this.config.clientId,
-      apiKey: this.config.apiKey
-    }));
-    // Reinicializar clientes si ya cargaron los SDK
-    this.initGisClient();
   },
 
   hasCredentials() {
@@ -152,11 +132,7 @@ const GoogleDriveService = {
   // Iniciar flujo de Login
   signIn() {
     if (!this.hasCredentials()) {
-      if (window.UIController && window.UIController.openGoogleConfigModal) {
-        window.UIController.openGoogleConfigModal('Por favor ingresa primero tu Client ID de Google Cloud para iniciar sesión.');
-      } else {
-        alert('Debes configurar tu Client ID de Google Cloud Console primero.');
-      }
+      alert('El servicio de inicio de sesión de Google está pendiente de activación por el administrador de EduPlan (falta CLIENT_ID en el archivo de configuración). Mientras tanto, puedes usar el Modo Offline.');
       return;
     }
 
