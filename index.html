@@ -287,14 +287,15 @@
     </div>
   </div>
 
-  <!-- MODAL: REGISTRAR ALUMNO -->
+  <!-- MODAL: REGISTRAR / EDITAR ALUMNO -->
   <div id="modal-student" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>Registrar Nuevo Alumno</h3>
+        <h3 id="modal-student-title">Registrar Nuevo Alumno</h3>
         <button class="modal-close-btn">&times;</button>
       </div>
       <form id="form-create-student">
+        <input type="hidden" id="student-edit-id" value="">
         <div class="form-group">
           <label for="student-class-select">Asignar a Grupo *</label>
           <select id="student-class-select" class="form-select" required></select>
@@ -319,7 +320,7 @@
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Matricular Alumno</button>
+          <button type="submit" id="btn-submit-student" class="btn btn-primary">Matricular Alumno</button>
         </div>
       </form>
     </div>
@@ -336,7 +337,13 @@
             <span id="modal-student-details" class="sub-badge">Detalles</span>
           </div>
         </div>
-        <button class="modal-close-btn">&times;</button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" id="btn-edit-student-from-incidents" class="btn btn-secondary btn-sm" title="Editar datos del alumno">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Editar Datos
+          </button>
+          <button class="modal-close-btn">&times;</button>
+        </div>
       </div>
 
       <div class="modal-tab-content">

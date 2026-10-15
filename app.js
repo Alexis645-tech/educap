@@ -150,6 +150,17 @@ const DataService = {
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(list));
   },
 
+  updateStudent(id, updatedFields) {
+    const list = this.getStudents();
+    const index = list.findIndex(s => s.id === id);
+    if (index !== -1) {
+      list[index] = { ...list[index], ...updatedFields };
+      localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(list));
+      return list[index];
+    }
+    return null;
+  },
+
   deleteStudent(id) {
     const list = this.getStudents().filter(s => s.id !== id);
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(list));
@@ -526,27 +537,44 @@ const UIController = {
     document.getElementById('form-create-student').addEventListener('submit', (e) => {
       e.preventDefault();
       const classroomId = document.getElementById('student-class-select').value;
+      const editId = document.getElementById('student-edit-id').value;
       const firstName = document.getElementById('student-firstname').value.trim();
       const lastName = document.getElementById('student-lastname').value.trim();
       const email = document.getElementById('student-email').value.trim();
       const phone = document.getElementById('student-phone').value.trim();
 
-      const colors = ['#4F46E5', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#3B82F6'];
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      if (editId) {
+        // Actualizar estudiante existente
+        DataService.updateStudent(editId, {
+          classroomId,
+          firstName,
+          lastName,
+          email,
+          phone
+        });
+      } else {
+        // Crear nuevo estudiante
+        const colors = ['#4F46E5', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#3B82F6'];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-      DataService.addStudent({
-        id: 'std_' + Date.now(),
-        classroomId,
-        firstName,
-        lastName,
-        email,
-        phone,
-        avatarColor: randomColor
-      });
+        DataService.addStudent({
+          id: 'std_' + Date.now(),
+          classroomId,
+          firstName,
+          lastName,
+          email,
+          phone,
+          avatarColor: randomColor
+        });
+      }
 
       document.getElementById('form-create-student').reset();
+      document.getElementById('student-edit-id').value = '';
       this.closeModal('modal-student');
       this.renderStudents();
+      // Si la pestaña de notas o asistencia está activa, refrescarlas
+      if (this.currentTab === 'attendance-tab') this.renderAttendance();
+      if (this.currentTab === 'grades-tab') this.renderGrades();
     });
 
     // Filtros de estudiantes
@@ -596,6 +624,18 @@ const UIController = {
       this.renderIncidentsModal(studentId);
       this.renderStudents(); // Actualizar contador en tabla
     });
+
+    // Editar estudiante desde la cabecera de la ficha de incidencias
+    const btnEditFromIncidents = document.getElementById('btn-edit-student-from-incidents');
+    if (btnEditFromIncidents) {
+      btnEditFromIncidents.addEventListener('click', () => {
+        const studentId = document.getElementById('incident-student-id').value;
+        if (studentId) {
+          this.closeModal('modal-incidents');
+          this.openEditStudentModal(studentId);
+        }
+      });
+    }
   },
 
   closeMobileSidebar() {
@@ -808,9 +848,14 @@ const UIController = {
           </button>
         </td>
         <td>
-          <button class="btn-danger-ghost" title="Eliminar alumno" onclick="UIController.removeStudent('${std.id}')">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          </button>
+          <div class="actions-cell">
+            <button class="btn-icon-ghost" title="Editar datos del alumno" onclick="UIController.openEditStudentModal('${std.id}')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="btn-danger-ghost" title="Eliminar alumno" onclick="UIController.removeStudent('${std.id}')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
         </td>
       `;
       tbody.appendChild(tr);
@@ -891,9 +936,43 @@ const UIController = {
   },
 
   openStudentModal() {
+    const form = document.getElementById('form-create-student');
+    if (form) form.reset();
+    const editIdInput = document.getElementById('student-edit-id');
+    if (editIdInput) editIdInput.value = '';
+
+    const modalTitle = document.getElementById('modal-student-title');
+    if (modalTitle) modalTitle.textContent = 'Registrar Nuevo Alumno';
+
+    const submitBtn = document.getElementById('btn-submit-student');
+    if (submitBtn) submitBtn.textContent = 'Matricular Alumno';
+
     const classrooms = DataService.getClassrooms();
     const select = document.getElementById('student-class-select');
     select.innerHTML = classrooms.map(c => `<option value="${c.id}" ${c.id === this.selectedClassroomId ? 'selected' : ''}>${c.name}</option>`).join('');
+    this.openModal('modal-student');
+  },
+
+  openEditStudentModal(studentId) {
+    const student = DataService.getStudents().find(s => s.id === studentId);
+    if (!student) return;
+
+    const modalTitle = document.getElementById('modal-student-title');
+    if (modalTitle) modalTitle.textContent = 'Editar Información del Alumno';
+
+    const submitBtn = document.getElementById('btn-submit-student');
+    if (submitBtn) submitBtn.textContent = 'Guardar Cambios';
+
+    document.getElementById('student-edit-id').value = student.id;
+    document.getElementById('student-firstname').value = student.firstName || '';
+    document.getElementById('student-lastname').value = student.lastName || '';
+    document.getElementById('student-email').value = student.email || '';
+    document.getElementById('student-phone').value = student.phone || '';
+
+    const classrooms = DataService.getClassrooms();
+    const select = document.getElementById('student-class-select');
+    select.innerHTML = classrooms.map(c => `<option value="${c.id}" ${c.id === student.classroomId ? 'selected' : ''}>${c.name}</option>`).join('');
+
     this.openModal('modal-student');
   },
 

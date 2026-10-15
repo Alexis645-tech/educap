@@ -355,12 +355,42 @@ body {
   border: none;
   color: var(--color-danger);
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
 }
 
 .btn-danger-ghost:hover {
   background-color: var(--color-danger-light);
+  transform: scale(1.05);
+}
+
+.btn-icon-ghost {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.btn-icon-ghost:hover {
+  color: var(--color-primary);
+  background-color: var(--color-surface-hover);
+  transform: scale(1.05);
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* PESTAÑAS (TAB PANES) */
