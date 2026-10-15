@@ -445,6 +445,205 @@ body {
   font-weight: 700;
 }
 
+/* ESTILOS GOOGLE DRIVE SYNC & LOGIN */
+.google-drive-sync-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.google-btn {
+  position: relative;
+  border-color: var(--color-border);
+  gap: 8px;
+}
+
+.google-btn:hover {
+  border-color: #4285F4;
+}
+
+.google-icon {
+  flex-shrink: 0;
+}
+
+.google-sync-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  display: inline-block;
+  background-color: var(--color-text-subtle);
+  transition: all var(--transition-fast);
+}
+
+.google-sync-indicator.idle {
+  background-color: #94A3B8;
+}
+
+.google-sync-indicator.syncing {
+  background-color: #F59E0B;
+  animation: pulse-sync 1s infinite alternate;
+}
+
+.google-sync-indicator.synced {
+  background-color: #10B981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+
+.google-sync-indicator.error {
+  background-color: #EF4444;
+}
+
+@keyframes pulse-sync {
+  from { opacity: 0.4; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1.15); }
+}
+
+.google-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.google-user-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background-color: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.google-user-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background-color: #4285F4;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.google-user-details h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.google-user-details span {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  display: block;
+}
+
+.google-status-pill {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.7rem !important;
+  font-weight: 700;
+  color: var(--color-success) !important;
+}
+
+.google-status-pill .pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-success);
+}
+
+.google-login-prompt {
+  text-align: center;
+  padding: 16px;
+  background-color: var(--color-surface-hover);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.google-login-prompt p {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.google-sync-actions-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+
+.sync-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.sync-status-row .label {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.sync-status-row .status-msg {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.google-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.google-footer-settings {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 4px;
+  border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+  background-color: var(--color-surface-hover);
+}
+
+.btn-link.text-danger {
+  color: var(--color-danger);
+}
+
+.btn-link.text-danger:hover {
+  color: var(--color-danger);
+}
+
 /* PESTAÑAS (TAB PANES) */
 .tab-pane {
   display: none;
@@ -1268,9 +1467,10 @@ form {
     white-space: nowrap;
   }
 
-  /* Ocultar texto en el botón de tema y perfil docente en pantallas móviles para dejar solo el icono circular */
+  /* Ocultar texto en el botón de tema, perfil docente y Google en pantallas móviles para dejar solo el icono circular */
   #btn-theme-toggle,
-  #btn-header-teacher-profile {
+  #btn-header-teacher-profile,
+  #btn-google-drive {
     padding: 8px;
     width: 38px;
     height: 38px;
@@ -1279,7 +1479,8 @@ form {
   }
 
   #btn-theme-toggle .theme-btn-text,
-  #btn-header-teacher-profile .teacher-btn-text {
+  #btn-header-teacher-profile .teacher-btn-text,
+  #btn-google-drive .google-btn-text {
     display: none;
   }
 

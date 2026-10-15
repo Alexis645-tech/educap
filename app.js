@@ -284,6 +284,10 @@ const UIController = {
     }
 
     this.renderTeacherProfile();
+    if (window.GoogleDriveService) {
+      window.GoogleDriveService.init();
+      this.renderGoogleAuthStatus();
+    }
     this.bindEvents();
     this.renderCurrentView();
   },
@@ -669,6 +673,154 @@ const UIController = {
           this.openEditStudentModal(studentId);
         }
       });
+    }
+
+    // --- INTEGRACIÓN GOOGLE SIGN-IN & DRIVE API ---
+    const btnGoogleDrive = document.getElementById('btn-google-drive');
+    if (btnGoogleDrive) {
+      btnGoogleDrive.addEventListener('click', () => {
+        this.openGoogleSyncModal();
+      });
+    }
+
+    const btnGoogleLoginModal = document.getElementById('btn-google-login-modal');
+    if (btnGoogleLoginModal) {
+      btnGoogleLoginModal.addEventListener('click', () => {
+        if (window.GoogleDriveService) {
+          window.GoogleDriveService.signIn();
+        }
+      });
+    }
+
+    const btnGoogleSignout = document.getElementById('btn-google-signout');
+    if (btnGoogleSignout) {
+      btnGoogleSignout.addEventListener('click', () => {
+        if (confirm('¿Deseas cerrar la sesión de Google en este dispositivo? Tus datos locales se conservarán.')) {
+          if (window.GoogleDriveService) {
+            window.GoogleDriveService.signOut();
+          }
+        }
+      });
+    }
+
+    const btnSyncNow = document.getElementById('btn-sync-now');
+    if (btnSyncNow) {
+      btnSyncNow.addEventListener('click', async () => {
+        if (window.GoogleDriveService) {
+          btnSyncNow.disabled = true;
+          await window.GoogleDriveService.syncToDrive();
+          btnSyncNow.disabled = false;
+        }
+      });
+    }
+
+    const btnRestoreNow = document.getElementById('btn-restore-now');
+    if (btnRestoreNow) {
+      btnRestoreNow.addEventListener('click', async () => {
+        if (confirm('Esto reemplazará los datos actuales de la app por la copia guardada en Google Drive. ¿Deseas continuar?')) {
+          if (window.GoogleDriveService) {
+            btnRestoreNow.disabled = true;
+            await window.GoogleDriveService.restoreFromDrive();
+            btnRestoreNow.disabled = false;
+          }
+        }
+      });
+    }
+
+    const btnOpenGoogleConfig = document.getElementById('btn-open-google-config');
+    if (btnOpenGoogleConfig) {
+      btnOpenGoogleConfig.addEventListener('click', () => {
+        this.openGoogleConfigModal();
+      });
+    }
+
+    const formGoogleConfig = document.getElementById('form-google-config');
+    if (formGoogleConfig) {
+      formGoogleConfig.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const clientId = document.getElementById('google-client-id-input').value.trim();
+        const apiKey = document.getElementById('google-api-key-input').value.trim();
+
+        if (window.GoogleDriveService) {
+          window.GoogleDriveService.saveConfig(clientId, apiKey);
+        }
+
+        this.closeModal('modal-google-config');
+        this.renderGoogleAuthStatus();
+        alert('Credenciales de Google guardadas correctamente.');
+      });
+    }
+  },
+
+  openGoogleSyncModal() {
+    this.renderGoogleAuthStatus();
+    this.openModal('modal-google-sync');
+  },
+
+  openGoogleConfigModal(alertMsg = '') {
+    if (window.GoogleDriveService) {
+      document.getElementById('google-client-id-input').value = window.GoogleDriveService.config.clientId || '';
+      document.getElementById('google-api-key-input').value = window.GoogleDriveService.config.apiKey || '';
+    }
+    const alertEl = document.getElementById('google-config-alert');
+    if (alertEl) {
+      if (alertMsg) {
+        alertEl.textContent = alertMsg;
+        alertEl.style.display = 'block';
+      } else {
+        alertEl.style.display = 'none';
+      }
+    }
+    this.closeModal('modal-google-sync');
+    this.openModal('modal-google-config');
+  },
+
+  renderGoogleAuthStatus() {
+    if (!window.GoogleDriveService) return;
+    const isAuth = Boolean(window.GoogleDriveService.currentUser);
+    const userConnected = document.getElementById('google-user-connected');
+    const userDisconnected = document.getElementById('google-user-disconnected');
+    const btnSignout = document.getElementById('btn-google-signout');
+    const googleBtnText = document.getElementById('google-btn-text');
+
+    if (isAuth && window.GoogleDriveService.currentUser) {
+      const u = window.GoogleDriveService.currentUser;
+      if (userConnected) userConnected.style.display = 'flex';
+      if (userDisconnected) userDisconnected.style.display = 'none';
+      if (btnSignout) btnSignout.style.display = 'inline-block';
+
+      const nameEl = document.getElementById('google-user-name');
+      const emailEl = document.getElementById('google-user-email');
+      const avatarEl = document.getElementById('google-avatar-img');
+
+      if (nameEl) nameEl.textContent = u.name || 'Docente Google';
+      if (emailEl) emailEl.textContent = u.email || '';
+      if (avatarEl) {
+        if (u.picture) {
+          avatarEl.style.backgroundImage = `url(${u.picture})`;
+          avatarEl.textContent = '';
+        } else {
+          avatarEl.style.backgroundImage = 'none';
+          avatarEl.textContent = (u.name && u.name[0]) ? u.name[0].toUpperCase() : 'G';
+        }
+      }
+
+      if (googleBtnText) {
+        const shortName = (u.name || 'Conectado').split(' ')[0];
+        googleBtnText.textContent = shortName;
+      }
+    } else {
+      if (userConnected) userConnected.style.display = 'none';
+      if (userDisconnected) userDisconnected.style.display = 'flex';
+      if (btnSignout) btnSignout.style.display = 'none';
+      if (googleBtnText) googleBtnText.textContent = 'Google Drive';
+    }
+
+    if (window.GoogleDriveService.syncStatus) {
+      const msg = window.GoogleDriveService.lastSyncTime
+        ? `Última sincronización: ${window.GoogleDriveService.lastSyncTime}`
+        : (isAuth ? 'Conectado con Drive' : 'Sin sincronizar');
+      window.GoogleDriveService.setSyncStatus(window.GoogleDriveService.syncStatus, msg);
     }
   },
 
