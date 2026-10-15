@@ -30,12 +30,14 @@ const GoogleDriveService = {
   gapiInited: false,
   gisInited: false,
   lastSyncTime: null,
-  syncStatus: 'idle', // 'idle' | 'syncing' | 'synced' | 'error' | 'expired' | 'offline'
+  lastKnownRemoteModified: null, // ISO string de la última versión conocida en Drive
+  syncStatus: 'idle', // 'idle' | 'syncing' | 'synced' | 'error' | 'expired' | 'offline' | 'conflict'
   isReauthorizing: false,
   pendingActionQueue: [], // Acciones pendientes esperando renovación de token sin perder datos
   autoSyncTimer: null,
   isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
   hasPendingOfflineChanges: false,
+  pendingConflictPayload: null, // Si surge un conflicto, guarda el archivo remoto para que el docente elija
 
   init() {
     this.loadSavedAuth();
@@ -98,6 +100,7 @@ const GoogleDriveService = {
         const parsed = JSON.parse(saved);
         this.currentUser = parsed.user || null;
         this.lastSyncTime = parsed.lastSyncTime || null;
+        this.lastKnownRemoteModified = parsed.lastKnownRemoteModified || null;
         if (parsed.tokenExpiresAt) {
           this.tokenExpiresAt = parsed.tokenExpiresAt;
         }
@@ -112,7 +115,8 @@ const GoogleDriveService = {
     localStorage.setItem(GOOGLE_AUTH_STORAGE_KEY, JSON.stringify({
       user: this.currentUser,
       lastSyncTime: this.lastSyncTime,
-      tokenExpiresAt: this.tokenExpiresAt
+      tokenExpiresAt: this.tokenExpiresAt,
+      lastKnownRemoteModified: this.lastKnownRemoteModified
     }));
   },
 
@@ -435,11 +439,26 @@ const GoogleDriveService = {
       return false;
     }
 
-    this.setSyncStatus('syncing', 'Guardando en tu Google Drive...');
+    this.setSyncStatus('syncing', 'Comprobando sincronización con Drive...');
     try {
       const payload = this.getExportPayload();
       const content = JSON.stringify(payload, null, 2);
       const existingFile = await this.findBackupFile();
+
+      // --- CONTROL DE CONFLICTOS MULTI-DISPOSITIVO ---
+      // Si el archivo en Drive fue modificado por otro dispositivo después de nuestra última sincronización
+      if (existingFile && existingFile.modifiedTime && this.lastKnownRemoteModified) {
+        const remoteTime = new Date(existingFile.modifiedTime).getTime();
+        const localKnownTime = new Date(this.lastKnownRemoteModified).getTime();
+
+        // Si la versión en la nube es más reciente por más de 3 segundos
+        if (remoteTime > (localKnownTime + 3000)) {
+          console.warn('⚠️ Conflicto detectado: Se detectó una versión más reciente en Drive modificada en otro dispositivo.');
+          this.setSyncStatus('conflict', 'Conflicto detectado entre dispositivos');
+          this.showConflictResolutionModal(existingFile);
+          return false;
+        }
+      }
 
       if (existingFile) {
         // Actualizar archivo existente (PATCH multipart o upload)
@@ -452,6 +471,10 @@ const GoogleDriveService = {
           body: content
         });
         if (!res || !res.ok) throw new Error('Fallo al actualizar archivo en Drive');
+        
+        // Guardar la nueva marca de tiempo del archivo tras la actualización
+        const updatedMeta = await res.json();
+        this.lastKnownRemoteModified = updatedMeta.modifiedTime || new Date().toISOString();
       } else {
         // Crear nuevo archivo multipart
         const metadata = {
@@ -482,6 +505,9 @@ const GoogleDriveService = {
           body: multipartRequestBody
         });
         if (!res || !res.ok) throw new Error('Fallo al crear archivo en Drive');
+        
+        const createdMeta = await res.json();
+        this.lastKnownRemoteModified = createdMeta.modifiedTime || new Date().toISOString();
       }
 
       this.lastSyncTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -602,6 +628,50 @@ const GoogleDriveService = {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
         <span><strong>¡Conexión restablecida!</strong> Sincronizando datos automáticamente con Google Drive...</span>
       </div>
+
+      <!-- MODAL DE CONTROL DE CONFLICTOS MULTI-DISPOSITIVO -->
+      <div id="google-conflict-modal" class="modal-overlay" style="display: none; z-index: 10002;">
+        <div class="modal-card conflict-modal-card">
+          <div class="modal-header">
+            <div class="modal-title-group">
+              <span class="modal-icon-badge" style="background: rgba(245, 158, 11, 0.15); color: var(--color-warning);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </span>
+              <div>
+                <h3 style="color: var(--color-text-main); font-size: 1.1rem; font-weight: 700;">Conflicto de Sincronización</h3>
+                <p style="font-size: 0.8rem; color: var(--color-text-muted);">Se detectaron cambios más recientes en otro dispositivo</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-body">
+            <p style="font-size: 0.9rem; line-height: 1.5; color: var(--color-text-main); margin-bottom: 14px;">
+              Tu copia en <strong>Google Drive</strong> fue actualizada desde otro dispositivo (por ejemplo, tu laptop o teléfono) a las:
+              <strong id="conflict-remote-time" style="color: var(--color-warning);">—</strong>.
+            </p>
+            <p style="font-size: 0.85rem; line-height: 1.4; color: var(--color-text-muted); margin-bottom: 20px;">
+              Para proteger tu información y no perder notas accidentalmente, ¿qué acción deseas realizar?
+            </p>
+
+            <div class="conflict-options-grid">
+              <div class="conflict-option-card" id="btn-conflict-download">
+                <div class="conflict-card-header">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <h4>Cargar versión de la nube (Recomendado)</h4>
+                </div>
+                <p>Descarga la versión más reciente guardada en Drive y actualiza este dispositivo.</p>
+              </div>
+
+              <div class="conflict-option-card" id="btn-conflict-overwrite">
+                <div class="conflict-card-header">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                  <h4>Mantener cambios de este dispositivo</h4>
+                </div>
+                <p>Sobreescribe la nube con los datos que estás viendo en esta pantalla.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
@@ -624,6 +694,43 @@ const GoogleDriveService = {
       btnDismiss.addEventListener('click', () => {
         this.hideSessionExpiredModal();
       });
+    }
+
+    const btnConflictDownload = document.getElementById('btn-conflict-download');
+    if (btnConflictDownload) {
+      btnConflictDownload.addEventListener('click', async () => {
+        this.hideConflictModal();
+        await this.restoreFromDrive();
+      });
+    }
+
+    const btnConflictOverwrite = document.getElementById('btn-conflict-overwrite');
+    if (btnConflictOverwrite) {
+      btnConflictOverwrite.addEventListener('click', async () => {
+        this.hideConflictModal();
+        // Ignorar la fecha anterior para forzar el guardado
+        this.lastKnownRemoteModified = null;
+        await this.syncToDrive();
+      });
+    }
+  },
+
+  showConflictResolutionModal(remoteFile) {
+    const modal = document.getElementById('google-conflict-modal');
+    const timeEl = document.getElementById('conflict-remote-time');
+    if (timeEl && remoteFile && remoteFile.modifiedTime) {
+      const date = new Date(remoteFile.modifiedTime);
+      timeEl.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' (' + date.toLocaleDateString() + ')';
+    }
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+  },
+
+  hideConflictModal() {
+    const modal = document.getElementById('google-conflict-modal');
+    if (modal) {
+      modal.style.display = 'none';
     }
   },
 
