@@ -12,12 +12,14 @@ const APP_GOOGLE_CONFIG = {
 const GOOGLE_AUTH_STORAGE_KEY = 'educap_google_auth_v1';
 const DRIVE_FILE_NAME = 'educap_backup_data.json';
 const DRIVE_BACKUP_FOLDER = 'EduPlan_Docente';
-
-const GoogleDriveService = {
 const GoogleDriveService = {
   config: {
     clientId: APP_GOOGLE_CONFIG.CLIENT_ID || '',
     apiKey: APP_GOOGLE_CONFIG.API_KEY || '',
+    // SCOPES RECOMENDADOS (Non-sensitive / Permisos no sensibles):
+    // - drive.file: Acceso ÚNICAMENTE a los archivos creados por EduPlan en el Drive del docente.
+    // - userinfo.profile y userinfo.email: Para mostrar el nombre/avatar del docente conectado.
+    // NO se utiliza https://www.googleapis.com/auth/drive (que requeriría auditoría de seguridad CASA/Tier 2).
     scopes: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email'
   },
 
