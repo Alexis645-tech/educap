@@ -1627,7 +1627,7 @@ form {
 
   /* Header compacto sin desbordamientos */
   .top-header {
-    padding: 12px 14px;
+    padding: 10px 12px;
     gap: 8px;
     flex-wrap: nowrap;
   }
@@ -1635,15 +1635,21 @@ form {
   .header-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
     flex: 1 1 auto;
-    overflow: hidden;
+  }
+
+  .header-left > div {
+    min-width: 0;
+    flex: 1;
   }
 
   .header-left h1 {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1656,37 +1662,34 @@ form {
   .header-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     flex-shrink: 0;
   }
 
   .header-actions .btn {
-    padding: 8px 10px;
+    padding: 6px 8px;
     font-size: 0.8rem;
     white-space: nowrap;
   }
 
-  /* Ocultar texto en el botón de tema, perfil docente y Google en pantallas móviles para dejar solo el icono circular */
+  /* Ocultar texto en todos los botones secundarios y de acción rápida en móvil */
   #btn-theme-toggle,
   #btn-header-teacher-profile,
-  #btn-google-drive {
-    padding: 8px;
-    width: 38px;
-    height: 38px;
+  #btn-google-drive,
+  #btn-quick-action {
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
     justify-content: center;
     border-radius: var(--radius-md);
   }
 
   #btn-theme-toggle .theme-btn-text,
   #btn-header-teacher-profile .teacher-btn-text,
-  #btn-google-drive .google-btn-text {
+  #btn-google-drive .google-btn-text,
+  #btn-quick-action #quick-action-text {
     display: none;
-  }
-
-  /* Botón de acción rápida en móvil */
-  #btn-quick-action {
-    padding: 8px 12px;
-    height: 38px;
   }
 
   /* Área de pestañas */
@@ -2094,24 +2097,44 @@ form {
    ---------------------------------------------------- */
 @media (max-width: 480px) {
   .top-header {
-    padding: 10px 12px;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .header-left {
+    gap: 6px;
   }
 
   .header-left h1 {
-    font-size: 1.05rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.2;
   }
 
-  /* Dejar solo el icono '+' en el botón de acción rápida para que nunca colisione con el título */
-  #btn-quick-action #quick-action-text {
-    display: none;
+  .header-actions {
+    gap: 3px;
   }
 
+  #btn-theme-toggle,
+  #btn-header-teacher-profile,
+  #btn-google-drive,
   #btn-quick-action {
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
     padding: 0;
-    justify-content: center;
-    border-radius: var(--radius-md);
+  }
+
+  #btn-theme-toggle svg,
+  #btn-header-teacher-profile svg,
+  #btn-quick-action svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .google-icon {
+    width: 16px;
+    height: 16px;
   }
 
   .bottom-nav-item {
@@ -2122,6 +2145,21 @@ form {
   .bottom-nav-item svg {
     width: 20px;
     height: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .header-left h1 {
+    font-size: 0.84rem;
+  }
+
+  #btn-theme-toggle,
+  #btn-header-teacher-profile,
+  #btn-google-drive,
+  #btn-quick-action {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
   }
 }
 
