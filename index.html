@@ -152,6 +152,11 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <span class="teacher-btn-text">Perfil</span>
           </button>
+
+          <button id="btn-header-export-reports" class="btn btn-secondary btn-icon" aria-label="Exportar Reportes Excel" title="Centro de Exportación de Reportes Excel (.xlsx)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span class="report-btn-text">Reportes</span>
+          </button>
           <button id="btn-theme-toggle" class="btn btn-secondary btn-icon" aria-label="Cambiar tema oscuro/claro" title="Cambiar tema oscuro/claro">
             <!-- Icono Sol (Modo Claro) -->
             <svg class="theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -272,6 +277,17 @@
               <span class="count" id="stat-absent-count">0</span>
               <span class="label">Faltas</span>
             </div>
+            <div class="attendance-actions">
+              <button type="button" id="btn-export-attendance-excel" class="btn btn-excel btn-sm" title="Exportar Reporte de Asistencia a Excel (.xlsx)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <path d="M8 13h2M8 17h2"/>
+                  <path d="m14 13 2 2 4-4"/>
+                </svg>
+                <span>Exportar Asistencia (.xlsx)</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -328,6 +344,16 @@
                 </button>
               </div>
             </div>
+            <button type="button" id="btn-export-grades-excel" class="btn btn-excel btn-sm" title="Exportar Registro de Calificaciones a Excel (.xlsx)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="8" y1="13" x2="16" y2="13"/>
+                <line x1="8" y1="17" x2="16" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+              <span>Exportar Calificaciones (.xlsx)</span>
+            </button>
             <button id="btn-new-grade-item" class="btn btn-secondary btn-sm">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Nueva Actividad / Examen
@@ -680,11 +706,124 @@
     </div>
   </div>
 
+  <!-- MODAL: CENTRO DE EXPORTACIÓN DE REPORTES A EXCEL (.XLSX) -->
+  <div id="modal-export-reports" class="modal-overlay">
+    <div class="modal-card export-reports-modal-card">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: var(--radius-md); background: rgba(16, 124, 65, 0.12); color: #107C41; display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/>
+              <line x1="8" y1="17" x2="16" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem;">Exportar Reportes a Excel (.xlsx)</h3>
+            <span style="font-size: 0.78rem; color: var(--color-text-muted);">Generación de actas e informes institucionales</span>
+          </div>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+
+      <form id="form-export-report" style="padding: 20px 24px;">
+        <div class="form-group">
+          <label for="export-classroom-select">Selecciona el Grupo / Materia a Exportar:</label>
+          <select id="export-classroom-select" class="form-select"></select>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+          <label>Tipo de Documento Oficial:</label>
+          <div class="export-options-grid">
+            <!-- Opción 1: Calificaciones -->
+            <label class="export-option-card selected">
+              <input type="radio" name="export-doc-type" value="grades" checked>
+              <div class="export-option-body">
+                <div class="export-option-title-row">
+                  <span class="export-option-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#107C41" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    Acta Oficial de Calificaciones (.xlsx)
+                  </span>
+                  <span class="export-option-badge">Trimestral</span>
+                </div>
+                <p class="export-option-desc">Matriz con notas de cada actividad, promedio final en base 10, estado de aprobación y resumen estadístico institucional con tasa de aprobación.</p>
+              </div>
+            </label>
+
+            <!-- Opción 2: Asistencia Consolidada -->
+            <label class="export-option-card">
+              <input type="radio" name="export-doc-type" value="attendance-consolidated">
+              <div class="export-option-body">
+                <div class="export-option-title-row">
+                  <span class="export-option-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#107C41" stroke-width="2"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
+                    Consolidado de Asistencia y Puntualidad (.xlsx)
+                  </span>
+                  <span class="export-option-badge">Recomendado</span>
+                </div>
+                <p class="export-option-desc">Acumulado del período con total de clases dictadas, presentes, atrasos, faltas, % de asistencia y hoja adicional con la matriz de cada fecha.</p>
+              </div>
+            </label>
+
+            <!-- Opción 3: Pase de Lista Diario -->
+            <label class="export-option-card">
+              <input type="radio" name="export-doc-type" value="attendance-day">
+              <div class="export-option-body">
+                <div class="export-option-title-row">
+                  <span class="export-option-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#107C41" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Pase de Lista del Día (.xlsx)
+                  </span>
+                  <span class="export-option-badge">Diario</span>
+                </div>
+                <p class="export-option-desc">Registro detallado y formal de asistencia correspondiente a la fecha actual del grupo con resumen y espacios para observaciones.</p>
+              </div>
+            </label>
+
+            <!-- Opción 4: Informe Académico Integral -->
+            <label class="export-option-card">
+              <input type="radio" name="export-doc-type" value="course-integral">
+              <div class="export-option-body">
+                <div class="export-option-title-row">
+                  <span class="export-option-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#107C41" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+                    Libro Académico Integral del Grupo (.xlsx)
+                  </span>
+                  <span class="export-option-badge">Completo</span>
+                </div>
+                <p class="export-option-desc">Libro maestro que reúne en un solo archivo Excel las 3 hojas: Acta de Calificaciones, Consolidado de Asistencia y Directorio de Alumnos e Incidencias.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 14px;">
+          <button type="button" class="btn btn-secondary btn-cancel-modal">Cerrar</button>
+          <button type="submit" id="btn-submit-export-report" class="btn btn-excel">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Descargar Documento Excel (.xlsx)
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- SDKs OFICIALES DE GOOGLE (Identity Services & GAPI) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
   <!-- Lógica de Google Drive -->
   <script src="google-drive.js"></script>
+  <!-- Generación de Documentos y Hojas de Cálculo Excel (.xlsx) con SheetJS -->
+  <script src="xlsx.full.min.js"></script>
+  <script>
+    if (typeof XLSX === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>');
+    }
+  </script>
+  <!-- Servicio de Exportación de Reportes Excel -->
+  <script src="export-service.js"></script>
   <!-- Lógica Principal -->
   <script src="app.js"></script>
 </body>

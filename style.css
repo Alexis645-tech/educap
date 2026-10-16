@@ -1780,6 +1780,7 @@ form {
   /* Ocultar texto en todos los botones secundarios y de acción rápida en móvil */
   #btn-theme-toggle,
   #btn-header-teacher-profile,
+  #btn-header-export-reports,
   #btn-google-drive,
   #btn-quick-action {
     padding: 0;
@@ -1792,6 +1793,7 @@ form {
 
   #btn-theme-toggle .theme-btn-text,
   #btn-header-teacher-profile .teacher-btn-text,
+  #btn-header-export-reports .report-btn-text,
   #btn-google-drive .google-btn-text,
   #btn-quick-action #quick-action-text {
     display: none;
@@ -2464,3 +2466,233 @@ form {
   margin: 0;
   padding-left: 30px;
 }
+
+/* ========================================================
+   ESTILOS DE EXPORTACIÓN A EXCEL (.XLSX) Y REPORTES
+   ======================================================== */
+.btn-excel {
+  background: linear-gradient(135deg, #107C41, #0b6a37);
+  color: #ffffff !important;
+  border: 1px solid #0b6a37;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 6px rgba(16, 124, 65, 0.25);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-excel:hover {
+  background: linear-gradient(135deg, #138a49, #0e7b40);
+  box-shadow: 0 4px 14px rgba(16, 124, 65, 0.38);
+  transform: translateY(-1px);
+  color: #ffffff !important;
+}
+
+.btn-excel:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(16, 124, 65, 0.25);
+}
+
+.btn-excel svg {
+  flex-shrink: 0;
+}
+
+.attendance-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Modal de Exportación de Reportes */
+.export-reports-modal-card {
+  max-width: 580px;
+  width: 92vw;
+}
+
+.export-modal-description {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+
+.export-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.export-option-card {
+  padding: 14px 16px;
+  background-color: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  user-select: none;
+}
+
+.export-option-card:hover {
+  border-color: #107C41;
+  background-color: var(--color-surface);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.export-option-card.selected {
+  border-color: #107C41;
+  background-color: rgba(16, 124, 65, 0.06);
+  box-shadow: 0 0 0 2px rgba(16, 124, 65, 0.2);
+}
+
+.export-option-card input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #107C41;
+  margin-top: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.export-option-body {
+  flex: 1;
+}
+
+.export-option-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.export-option-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-option-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background-color: rgba(16, 124, 65, 0.12);
+  color: #107C41;
+}
+
+[data-theme="dark"] .export-option-badge {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.export-option-desc {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Toast de Descarga Exitosa */
+.export-excel-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  background-color: var(--color-surface);
+  border: 1px solid #107C41;
+  border-left: 5px solid #107C41;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 420px;
+}
+
+.export-excel-toast.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.export-toast-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.export-toast-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: rgba(16, 124, 65, 0.12);
+  color: #107C41;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .export-toast-icon {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.export-toast-info h4 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin: 0 0 2px 0;
+  color: var(--color-text-main);
+}
+
+.export-toast-info p {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+  .attendance-header-card {
+    gap: 16px;
+  }
+
+  .attendance-actions {
+    width: 100%;
+  }
+
+  .attendance-actions .btn-excel {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .grades-actions .btn-excel {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .export-excel-toast {
+    left: 16px;
+    right: 16px;
+    bottom: 80px;
+    max-width: none;
+  }
+}
+

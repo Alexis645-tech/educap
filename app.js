@@ -249,9 +249,12 @@ const DataService = {
     localStorage.setItem(STORAGE_KEYS.GRADES, JSON.stringify(remainingGrades));
   },
 
-  getAttendanceRecords(classroomId, date) {
+  getAttendanceRecords(classroomId, date = null) {
     const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.ATTENDANCE) || '[]');
-    return all.filter(a => a.classroomId === classroomId && a.date === date);
+    if (date) {
+      return all.filter(a => a.classroomId === classroomId && a.date === date);
+    }
+    return all.filter(a => a.classroomId === classroomId);
   },
 
   setAttendanceStatus(studentId, classroomId, date, status) {
@@ -842,6 +845,68 @@ const UIController = {
       });
     }
 
+    // --- EXPORTACIÓN DE REPORTES A EXCEL (.XLSX) ---
+    const btnExportGrades = document.getElementById('btn-export-grades-excel');
+    if (btnExportGrades) {
+      btnExportGrades.addEventListener('click', () => {
+        if (window.ExportService) {
+          window.ExportService.exportGradesToExcel(this.selectedClassroomId);
+        }
+      });
+    }
+
+    const btnExportAttendance = document.getElementById('btn-export-attendance-excel');
+    if (btnExportAttendance) {
+      btnExportAttendance.addEventListener('click', () => {
+        this.openExportModal('attendance-consolidated');
+      });
+    }
+
+    const btnHeaderReports = document.getElementById('btn-header-export-reports');
+    if (btnHeaderReports) {
+      btnHeaderReports.addEventListener('click', () => {
+        this.openExportModal();
+      });
+    }
+
+    // Selección interactiva de opciones en modal de exportación
+    document.querySelectorAll('.export-option-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.export-option-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        const radio = card.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+      });
+    });
+
+    // Envío del formulario de exportación de reportes
+    const formExportReport = document.getElementById('form-export-report');
+    if (formExportReport) {
+      formExportReport.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const targetClassId = document.getElementById('export-classroom-select').value;
+        const selectedRadio = document.querySelector('input[name="export-doc-type"]:checked');
+        const docType = selectedRadio ? selectedRadio.value : 'grades';
+
+        if (!window.ExportService) {
+          alert('El servicio de exportación Excel aún está cargando. Por favor intenta en unos segundos.');
+          return;
+        }
+
+        if (docType === 'grades') {
+          window.ExportService.exportGradesToExcel(targetClassId);
+        } else if (docType === 'attendance-consolidated') {
+          window.ExportService.exportAttendanceToExcel(targetClassId, null, 'consolidated');
+        } else if (docType === 'attendance-day') {
+          window.ExportService.exportAttendanceToExcel(targetClassId, this.selectedDate, 'day');
+        } else if (docType === 'course-integral') {
+          window.ExportService.exportCompleteCourseExcel(targetClassId);
+        }
+
+        this.closeModal('modal-export-reports');
+      });
+    }
+
     // Guardar incidencia
     document.getElementById('btn-save-incident').addEventListener('click', () => {
       const studentId = document.getElementById('incident-student-id').value;
@@ -1205,7 +1270,7 @@ const UIController = {
 
   populateClassroomSelects() {
     const classrooms = DataService.getClassrooms();
-    const selects = ['filter-classroom-select', 'attendance-classroom-select', 'grades-classroom-select', 'student-class-select', 'grade-item-class-select'];
+    const selects = ['filter-classroom-select', 'attendance-classroom-select', 'grades-classroom-select', 'student-class-select', 'grade-item-class-select', 'export-classroom-select'];
     selects.forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -1658,6 +1723,24 @@ const UIController = {
 
       this.renderGrades();
     }
+  },
+
+  openExportModal(defaultDocType = null) {
+    this.populateClassroomSelects();
+    const select = document.getElementById('export-classroom-select');
+    if (select && this.selectedClassroomId) {
+      select.value = this.selectedClassroomId;
+    }
+    if (defaultDocType) {
+      const radio = document.querySelector(`input[name="export-doc-type"][value="${defaultDocType}"]`);
+      if (radio) {
+        radio.checked = true;
+        document.querySelectorAll('.export-option-card').forEach(c => c.classList.remove('selected'));
+        const parentCard = radio.closest('.export-option-card');
+        if (parentCard) parentCard.classList.add('selected');
+      }
+    }
+    this.openModal('modal-export-reports');
   },
 
   openTeacherProfileModal() {

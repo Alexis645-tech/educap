@@ -1,0 +1,711 @@
+// ========================================================
+// EDUPLAN - SERVICIO DE EXPORTACIÓN EXCEL (.XLSX)
+// ========================================================
+
+const ExportService = {
+  // Verificar si la biblioteca SheetJS está disponible
+  isXlsxReady() {
+    return typeof XLSX !== 'undefined';
+  },
+
+  // Limpiar cadenas para nombres de archivo válidos
+  sanitizeFilename(str) {
+    return (str || 'Reporte')
+      .replace(/[\/\\:*?"<>|]/g, '_')
+      .replace(/\s+/g, '_')
+      .trim();
+  },
+
+  // Formatear fechas ISO (YYYY-MM-DD) a formato legible escolar (DD/MM/YYYY)
+  formatDateStr(isoOrDateStr) {
+    if (!isoOrDateStr) return '—';
+    try {
+      const parts = isoOrDateStr.split('T')[0].split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return isoOrDateStr;
+    } catch {
+      return isoOrDateStr;
+    }
+  },
+
+  // -------------------------------------------------------------
+  // 1. EXPORTACIÓN DE CALIFICACIONES Y NOTAS A EXCEL (.XLSX)
+  // -------------------------------------------------------------
+  exportGradesToExcel(classroomId) {
+    if (!this.isXlsxReady()) {
+      alert('La biblioteca de exportación Excel aún está cargando. Por favor intenta de nuevo en unos segundos.');
+      return false;
+    }
+
+    const classrooms = DataService.getClassrooms();
+    const classroom = classrooms.find(c => c.id === classroomId) || classrooms[0];
+    if (!classroom) {
+      alert('Por favor crea o selecciona un grupo antes de exportar.');
+      return false;
+    }
+
+    let students = DataService.getStudents(classroom.id);
+    if (UIController && typeof UIController.sortStudents === 'function') {
+      students = UIController.sortStudents(students);
+    }
+
+    const gradeItems = DataService.getGradeItems(classroom.id);
+    const allGrades = DataService.getGrades(classroom.id);
+    const teacher = DataService.getTeacherProfile();
+
+    const schoolName = (teacher.school || 'INSTITUCIÓN EDUCATIVA').toUpperCase();
+    const teacherFull = `${teacher.prefix || 'Prof.'} ${teacher.name || 'Docente'}`;
+    const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    const wb = XLSX.utils.book_new();
+
+    // --- HOJA 1: ACTA DE CALIFICACIONES ---
+    const sheetData = [];
+
+    // Membrete Institucional
+    sheetData.push([schoolName]);
+    sheetData.push(['ACTA OFICIAL DE CALIFICACIONES Y RENDIMIENTO ACADÉMICO']);
+    sheetData.push(['Docente a cargo:', teacherFull, '', 'Asignatura / Grupo:', `${classroom.name} (${classroom.gradeLevel})`]);
+    sheetData.push(['Año Escolar:', classroom.academicYear || '2026 - 2027', '', 'Fecha de Emisión:', today]);
+    sheetData.push([]); // fila separadora en blanco
+
+    // Encabezados de Columnas
+    const typeLabels = { exam: 'Examen', homework: 'Tarea', project: 'Proyecto', participation: 'Participación' };
+    const headerRow = ['Nº', 'Apellidos y Nombres', 'Correo Electrónico'];
+    
+    gradeItems.forEach(item => {
+      const tLabel = typeLabels[item.type] || item.type;
+      headerRow.push(`${item.title} (${tLabel} - Máx ${item.maxScore})`);
+    });
+
+    headerRow.push('Promedio Final (Base 10)');
+    headerRow.push('Rendimiento / Estado');
+    sheetData.push(headerRow);
+
+    // Filas de Alumnos
+    let totalAveragesSum = 0;
+    let studentsWithGradesCount = 0;
+    let passedCount = 0;
+    let atRiskCount = 0;
+
+    const activityScoresSum = new Array(gradeItems.length).fill(0);
+    const activityScoresCount = new Array(gradeItems.length).fill(0);
+
+    students.forEach((std, idx) => {
+      const row = [
+        idx + 1,
+        `${std.lastName || ''} ${std.firstName || ''}`.trim(),
+        std.email || '—'
+      ];
+
+      let studentTotalWeighted = 0;
+      let studentRatedCount = 0;
+
+      gradeItems.forEach((item, itemIdx) => {
+        const record = allGrades.find(g => g.studentId === std.id && g.gradeItemId === item.id);
+        const score = record !== undefined && record.score !== null ? record.score : '';
+
+        if (score !== '' && !isNaN(score)) {
+          const numScore = parseFloat(score);
+          row.push(numScore);
+          // Normalizar a escala base 10 para cálculo de promedio
+          const normalized = (numScore / item.maxScore) * 10;
+          studentTotalWeighted += normalized;
+          studentRatedCount++;
+
+          activityScoresSum[itemIdx] += numScore;
+          activityScoresCount[itemIdx]++;
+        } else {
+          row.push('—');
+        }
+      });
+
+      let avgVal = null;
+      let statusStr = 'Sin Calificar';
+
+      if (studentRatedCount > 0) {
+        avgVal = parseFloat((studentTotalWeighted / studentRatedCount).toFixed(2));
+        totalAveragesSum += avgVal;
+        studentsWithGradesCount++;
+
+        if (avgVal >= 7.0) {
+          statusStr = 'Aprobado (Destacado)';
+          passedCount++;
+        } else if (avgVal >= 6.0) {
+          statusStr = 'Aprobado';
+          passedCount++;
+        } else {
+          statusStr = 'En Riesgo / Requiere Apoyo';
+          atRiskCount++;
+        }
+        row.push(avgVal);
+      } else {
+        row.push('—');
+      }
+
+      row.push(statusStr);
+      sheetData.push(row);
+    });
+
+    if (students.length === 0) {
+      sheetData.push(['—', 'No hay alumnos matriculados en esta clase.', '—']);
+    }
+
+    // Fila en blanco
+    sheetData.push([]);
+
+    // Fila de Promedio Grupal por Evaluación
+    if (gradeItems.length > 0) {
+      const activityAvgRow = ['', 'PROMEDIO GRUPAL POR ACTIVIDAD:', ''];
+      gradeItems.forEach((item, itemIdx) => {
+        if (activityScoresCount[itemIdx] > 0) {
+          const itemAvg = parseFloat((activityScoresSum[itemIdx] / activityScoresCount[itemIdx]).toFixed(2));
+          activityAvgRow.push(itemAvg);
+        } else {
+          activityAvgRow.push('—');
+        }
+      });
+
+      const generalGroupAvg = studentsWithGradesCount > 0 
+        ? parseFloat((totalAveragesSum / studentsWithGradesCount).toFixed(2)) 
+        : '—';
+
+      activityAvgRow.push(generalGroupAvg);
+      activityAvgRow.push('');
+      sheetData.push(activityAvgRow);
+    }
+
+    // Resumen estadístico institucional al pie
+    const generalGroupAvg = studentsWithGradesCount > 0 
+      ? parseFloat((totalAveragesSum / studentsWithGradesCount).toFixed(2)) 
+      : '—';
+    const approvalRate = studentsWithGradesCount > 0 
+      ? ((passedCount / studentsWithGradesCount) * 100).toFixed(1) + '%' 
+      : '0%';
+
+    sheetData.push([]);
+    sheetData.push(['', 'RESUMEN ESTADÍSTICO INSTITUCIONAL']);
+    sheetData.push(['', 'Total Alumnos Matriculados:', students.length]);
+    sheetData.push(['', 'Alumnos con Evaluaciones:', studentsWithGradesCount]);
+    sheetData.push(['', 'Promedio General del Curso:', generalGroupAvg]);
+    sheetData.push(['', 'Alumnos Aprobados:', passedCount]);
+    sheetData.push(['', 'Alumnos en Riesgo Académico:', atRiskCount]);
+    sheetData.push(['', 'Tasa de Aprobación Trimestral:', approvalRate]);
+
+    const wsGrades = XLSX.utils.aoa_to_sheet(sheetData);
+
+    // Ajuste dinámico de anchos de columna
+    const cols = [
+      { wch: 6 },  // Nº
+      { wch: 32 }, // Apellidos y Nombres
+      { wch: 28 }, // Correo
+    ];
+    gradeItems.forEach(item => {
+      cols.push({ wch: Math.max(20, item.title.length + 8) });
+    });
+    cols.push({ wch: 22 }); // Promedio Final
+    cols.push({ wch: 26 }); // Estado
+    wsGrades['!cols'] = cols;
+
+    XLSX.utils.book_append_sheet(wb, wsGrades, 'Acta de Calificaciones');
+
+    // --- HOJA 2: DETALLE DE ACTIVIDADES ---
+    if (gradeItems.length > 0) {
+      const itemsSheetData = [
+        [schoolName],
+        ['DESGLOSE DE ACTIVIDADES EVALUADAS'],
+        ['Grupo:', `${classroom.name} (${classroom.gradeLevel})`, '', 'Docente:', teacherFull],
+        [],
+        ['Nº', 'Título de la Actividad', 'Tipo de Evaluación', 'Puntaje Máximo', 'Fecha de Registro', 'Promedio Obtenido', 'Alumnos Evaluados']
+      ];
+
+      gradeItems.forEach((item, idx) => {
+        const itemAvg = activityScoresCount[idx] > 0 
+          ? parseFloat((activityScoresSum[idx] / activityScoresCount[idx]).toFixed(2)) 
+          : '—';
+        itemsSheetData.push([
+          idx + 1,
+          item.title,
+          typeLabels[item.type] || item.type,
+          item.maxScore,
+          this.formatDateStr(item.createdAt),
+          itemAvg,
+          activityScoresCount[idx]
+        ]);
+      });
+
+      const wsItems = XLSX.utils.aoa_to_sheet(itemsSheetData);
+      wsItems['!cols'] = [
+        { wch: 6 },
+        { wch: 30 },
+        { wch: 22 },
+        { wch: 16 },
+        { wch: 18 },
+        { wch: 18 },
+        { wch: 18 }
+      ];
+      XLSX.utils.book_append_sheet(wb, wsItems, 'Detalle de Actividades');
+    }
+
+    const safeName = this.sanitizeFilename(classroom.name);
+    const dateStamp = new Date().toISOString().split('T')[0];
+    const fileName = `Calificaciones_${safeName}_${dateStamp}.xlsx`;
+
+    XLSX.writeFile(wb, fileName);
+    this.showExportSuccessToast(fileName, 'Calificaciones');
+    return true;
+  },
+
+  // -------------------------------------------------------------
+  // 2. EXPORTACIÓN DE ASISTENCIA A EXCEL (.XLSX)
+  // -------------------------------------------------------------
+  exportAttendanceToExcel(classroomId, selectedDate = null, mode = 'consolidated') {
+    if (!this.isXlsxReady()) {
+      alert('La biblioteca de exportación Excel aún está cargando. Por favor intenta de nuevo en unos segundos.');
+      return false;
+    }
+
+    const classrooms = DataService.getClassrooms();
+    const classroom = classrooms.find(c => c.id === classroomId) || classrooms[0];
+    if (!classroom) {
+      alert('Por favor crea o selecciona un grupo antes de exportar.');
+      return false;
+    }
+
+    let students = DataService.getStudents(classroom.id);
+    if (UIController && typeof UIController.sortStudents === 'function') {
+      students = UIController.sortStudents(students);
+    }
+
+    const teacher = DataService.getTeacherProfile();
+    const schoolName = (teacher.school || 'INSTITUCIÓN EDUCATIVA').toUpperCase();
+    const teacherFull = `${teacher.prefix || 'Prof.'} ${teacher.name || 'Docente'}`;
+    const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    const allAttendance = DataService.getAttendanceRecords(classroom.id);
+    const uniqueDates = [...new Set(allAttendance.map(a => a.date))].sort();
+
+    const wb = XLSX.utils.book_new();
+
+    // MODO CONSOLIDADO TRIMESTRAL (RECOMENDADO PARA INSTITUCIONES)
+    if (mode === 'consolidated' || mode === 'full') {
+      const consolData = [
+        [schoolName],
+        ['REPORTE CONSOLIDADO DE ASISTENCIA Y PUNTUALIDAD TRIMESTRAL'],
+        ['Docente a cargo:', teacherFull, '', 'Asignatura / Grupo:', `${classroom.name} (${classroom.gradeLevel})`],
+        ['Año Escolar:', classroom.academicYear || '2026 - 2027', '', 'Fecha de Emisión:', today],
+        [],
+        ['Nº', 'Apellidos y Nombres', 'Correo Electrónico', 'Total Sesiones', 'Presentes (P)', 'Atrasos (A)', 'Faltas (F)', '% Asistencia', 'Condición']
+      ];
+
+      const groupTotalSessions = uniqueDates.length;
+      let groupPresentSum = 0;
+      let groupLateSum = 0;
+      let groupAbsentSum = 0;
+
+      students.forEach((std, idx) => {
+        let pCount = 0;
+        let lCount = 0;
+        let aCount = 0;
+
+        uniqueDates.forEach(date => {
+          const rec = allAttendance.find(a => a.studentId === std.id && a.date === date);
+          if (rec) {
+            if (rec.status === 'PRESENT') pCount++;
+            else if (rec.status === 'LATE') lCount++;
+            else if (rec.status === 'ABSENT') aCount++;
+          }
+        });
+
+        const totalRecorded = pCount + lCount + aCount;
+        groupPresentSum += pCount;
+        groupLateSum += lCount;
+        groupAbsentSum += aCount;
+
+        // Porcentaje ponderado: (Presente + 0.5 * Atraso) / Total
+        let pct = totalRecorded > 0 ? ((pCount + (lCount * 0.5)) / totalRecorded) * 100 : 100;
+        pct = parseFloat(pct.toFixed(1));
+
+        let condicion = 'Regular';
+        if (pct < 75) {
+          condicion = 'En Riesgo por Inasistencias';
+        } else if (lCount >= 4) {
+          condicion = 'Atrasos Frecuentes';
+        }
+
+        consolData.push([
+          idx + 1,
+          `${std.lastName || ''} ${std.firstName || ''}`.trim(),
+          std.email || '—',
+          totalRecorded || groupTotalSessions,
+          pCount,
+          lCount,
+          aCount,
+          `${pct}%`,
+          condicion
+        ]);
+      });
+
+      if (students.length === 0) {
+        consolData.push(['—', 'No hay alumnos matriculados en esta clase.', '—']);
+      }
+
+      // Resumen institucional al pie
+      consolData.push([]);
+      consolData.push(['', 'TOTALES GENERALES DEL PERÍODO']);
+      consolData.push(['', 'Total Sesiones Dictadas:', groupTotalSessions]);
+      consolData.push(['', 'Total Presentes:', groupPresentSum]);
+      consolData.push(['', 'Total Atrasos:', groupLateSum]);
+      consolData.push(['', 'Total Inasistencias (Faltas):', groupAbsentSum]);
+      const totalEvents = groupPresentSum + groupLateSum + groupAbsentSum;
+      const groupPct = totalEvents > 0 
+        ? (((groupPresentSum + (groupLateSum * 0.5)) / totalEvents) * 100).toFixed(1) + '%' 
+        : '100%';
+      consolData.push(['', 'Promedio General de Asistencia Grupal:', groupPct]);
+
+      const wsConsol = XLSX.utils.aoa_to_sheet(consolData);
+      wsConsol['!cols'] = [
+        { wch: 6 },  // Nº
+        { wch: 32 }, // Alumno
+        { wch: 28 }, // Email
+        { wch: 15 }, // Sesiones
+        { wch: 14 }, // Presentes
+        { wch: 14 }, // Atrasos
+        { wch: 14 }, // Faltas
+        { wch: 16 }, // % Asistencia
+        { wch: 26 }  // Condición
+      ];
+      XLSX.utils.book_append_sheet(wb, wsConsol, 'Consolidado Asistencia');
+
+      // HOJA 2: MATRIZ DIARIA DETALLADA POR FECHAS
+      if (uniqueDates.length > 0) {
+        const matrixData = [
+          [schoolName],
+          ['MATRIZ DIARIA DE ASISTENCIA'],
+          ['Grupo:', `${classroom.name} (${classroom.gradeLevel})`, '', 'Docente:', teacherFull],
+          []
+        ];
+
+        const matrixHeader = ['Nº', 'Apellidos y Nombres'];
+        uniqueDates.forEach(d => {
+          matrixHeader.push(this.formatDateStr(d));
+        });
+        matrixHeader.push('Total Presentes');
+        matrixHeader.push('Total Atrasos');
+        matrixHeader.push('Total Faltas');
+        matrixData.push(matrixHeader);
+
+        students.forEach((std, idx) => {
+          let pCount = 0;
+          let lCount = 0;
+          let aCount = 0;
+
+          const row = [
+            idx + 1,
+            `${std.lastName || ''} ${std.firstName || ''}`.trim()
+          ];
+
+          uniqueDates.forEach(date => {
+            const rec = allAttendance.find(a => a.studentId === std.id && a.date === date);
+            if (rec) {
+              if (rec.status === 'PRESENT') { row.push('P'); pCount++; }
+              else if (rec.status === 'LATE') { row.push('A'); lCount++; }
+              else if (rec.status === 'ABSENT') { row.push('F'); aCount++; }
+              else { row.push('—'); }
+            } else {
+              row.push('—');
+            }
+          });
+
+          row.push(pCount);
+          row.push(lCount);
+          row.push(aCount);
+          matrixData.push(row);
+        });
+
+        matrixData.push([]);
+        matrixData.push(['', 'Convenciones: P = Presente | A = Atraso | F = Falta']);
+
+        const wsMatrix = XLSX.utils.aoa_to_sheet(matrixData);
+        const matrixCols = [
+          { wch: 6 },
+          { wch: 32 }
+        ];
+        uniqueDates.forEach(() => matrixCols.push({ wch: 14 }));
+        matrixCols.push({ wch: 16 });
+        matrixCols.push({ wch: 14 });
+        matrixCols.push({ wch: 14 });
+        wsMatrix['!cols'] = matrixCols;
+
+        XLSX.utils.book_append_sheet(wb, wsMatrix, 'Detalle por Fechas');
+      }
+
+      const safeName = this.sanitizeFilename(classroom.name);
+      const dateStamp = new Date().toISOString().split('T')[0];
+      const fileName = `Asistencia_Consolidada_${safeName}_${dateStamp}.xlsx`;
+
+      XLSX.writeFile(wb, fileName);
+      this.showExportSuccessToast(fileName, 'Asistencia Consolidada');
+      return true;
+    }
+
+    // MODO PASE DE LISTA DIARIO
+    if (mode === 'day') {
+      const targetDate = selectedDate || new Date().toISOString().split('T')[0];
+      const dateFormatted = this.formatDateStr(targetDate);
+      const records = allAttendance.filter(a => a.date === targetDate);
+
+      const dayData = [
+        [schoolName],
+        ['PASE DE LISTA DIARIO OFICIAL'],
+        ['Fecha de la Sesión:', dateFormatted, '', 'Asignatura / Grupo:', `${classroom.name} (${classroom.gradeLevel})`],
+        ['Docente a cargo:', teacherFull, '', 'Año Escolar:', classroom.academicYear || '2026 - 2027'],
+        [],
+        ['Nº', 'Apellidos y Nombres', 'Correo Electrónico', 'Estado de Asistencia', 'Observaciones']
+      ];
+
+      let p = 0, l = 0, a = 0;
+
+      students.forEach((std, idx) => {
+        const rec = records.find(r => r.studentId === std.id);
+        const st = rec ? rec.status : 'PRESENT';
+        let stLabel = 'Presente';
+        if (st === 'PRESENT') { stLabel = 'Presente'; p++; }
+        else if (st === 'LATE') { stLabel = 'Atraso'; l++; }
+        else if (st === 'ABSENT') { stLabel = 'Falta / Inasistencia'; a++; }
+
+        dayData.push([
+          idx + 1,
+          `${std.lastName || ''} ${std.firstName || ''}`.trim(),
+          std.email || '—',
+          stLabel,
+          ''
+        ]);
+      });
+
+      if (students.length === 0) {
+        dayData.push(['—', 'No hay alumnos matriculados en esta clase.', '—']);
+      }
+
+      dayData.push([]);
+      dayData.push(['', 'RESUMEN DEL DÍA']);
+      dayData.push(['', 'Alumnos Presentes:', p]);
+      dayData.push(['', 'Alumnos con Atraso:', l]);
+      dayData.push(['', 'Inasistencias (Faltas):', a]);
+      dayData.push(['', 'Total Alumnos:', students.length]);
+
+      const wsDay = XLSX.utils.aoa_to_sheet(dayData);
+      wsDay['!cols'] = [
+        { wch: 6 },
+        { wch: 32 },
+        { wch: 28 },
+        { wch: 22 },
+        { wch: 25 }
+      ];
+      XLSX.utils.book_append_sheet(wb, wsDay, 'Pase de Lista');
+
+      const safeName = this.sanitizeFilename(classroom.name);
+      const fileName = `Asistencia_Diaria_${safeName}_${targetDate}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      this.showExportSuccessToast(fileName, 'Pase de Lista Diario');
+      return true;
+    }
+  },
+
+  // -------------------------------------------------------------
+  // 3. EXPORTACIÓN DEL LIBRO ACADÉMICO INTEGRAL (Notas + Asistencia + Directorio)
+  // -------------------------------------------------------------
+  exportCompleteCourseExcel(classroomId) {
+    if (!this.isXlsxReady()) {
+      alert('La biblioteca de exportación Excel aún está cargando. Por favor intenta de nuevo en unos segundos.');
+      return false;
+    }
+
+    const classrooms = DataService.getClassrooms();
+    const classroom = classrooms.find(c => c.id === classroomId) || classrooms[0];
+    if (!classroom) {
+      alert('Por favor crea o selecciona un grupo antes de exportar.');
+      return false;
+    }
+
+    let students = DataService.getStudents(classroom.id);
+    if (UIController && typeof UIController.sortStudents === 'function') {
+      students = UIController.sortStudents(students);
+    }
+
+    const gradeItems = DataService.getGradeItems(classroom.id);
+    const allGrades = DataService.getGrades(classroom.id);
+    const allAttendance = DataService.getAttendanceRecords(classroom.id);
+    const uniqueDates = [...new Set(allAttendance.map(a => a.date))].sort();
+    const teacher = DataService.getTeacherProfile();
+
+    const schoolName = (teacher.school || 'INSTITUCIÓN EDUCATIVA').toUpperCase();
+    const teacherFull = `${teacher.prefix || 'Prof.'} ${teacher.name || 'Docente'}`;
+    const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    const wb = XLSX.utils.book_new();
+
+    // HOJA 1: ACTA DE CALIFICACIONES
+    const typeLabels = { exam: 'Examen', homework: 'Tarea', project: 'Proyecto', participation: 'Participación' };
+    const gradesSheetData = [
+      [schoolName],
+      ['LIBRO DE CALIFICACIONES TRIMESTRALES'],
+      ['Docente:', teacherFull, '', 'Asignatura:', `${classroom.name} (${classroom.gradeLevel})`],
+      ['Año Escolar:', classroom.academicYear || '2026 - 2027', '', 'Fecha:', today],
+      []
+    ];
+
+    const gradesHeader = ['Nº', 'Apellidos y Nombres', 'Correo'];
+    gradeItems.forEach(item => {
+      gradesHeader.push(`${item.title} (${typeLabels[item.type] || item.type} - Máx ${item.maxScore})`);
+    });
+    gradesHeader.push('Promedio Final');
+    gradesHeader.push('Estado');
+    gradesSheetData.push(gradesHeader);
+
+    students.forEach((std, idx) => {
+      const row = [idx + 1, `${std.lastName || ''} ${std.firstName || ''}`.trim(), std.email || '—'];
+      let sum = 0, cnt = 0;
+      gradeItems.forEach(item => {
+        const rec = allGrades.find(g => g.studentId === std.id && g.gradeItemId === item.id);
+        if (rec !== undefined && rec.score !== null && rec.score !== '') {
+          const s = parseFloat(rec.score);
+          row.push(s);
+          sum += (s / item.maxScore) * 10;
+          cnt++;
+        } else {
+          row.push('—');
+        }
+      });
+      if (cnt > 0) {
+        const avg = parseFloat((sum / cnt).toFixed(2));
+        row.push(avg);
+        row.push(avg >= 6.0 ? 'Aprobado' : 'En Riesgo');
+      } else {
+        row.push('—');
+        row.push('Sin Notas');
+      }
+      gradesSheetData.push(row);
+    });
+
+    const wsG = XLSX.utils.aoa_to_sheet(gradesSheetData);
+    const gCols = [{ wch: 6 }, { wch: 32 }, { wch: 28 }];
+    gradeItems.forEach(item => gCols.push({ wch: Math.max(20, item.title.length + 8) }));
+    gCols.push({ wch: 18 }, { wch: 20 });
+    wsG['!cols'] = gCols;
+    XLSX.utils.book_append_sheet(wb, wsG, 'Calificaciones');
+
+    // HOJA 2: ASISTENCIA CONSOLIDADA
+    const attData = [
+      [schoolName],
+      ['CONSOLIDADO DE ASISTENCIA Y PUNTUALIDAD'],
+      ['Docente:', teacherFull, '', 'Asignatura:', `${classroom.name} (${classroom.gradeLevel})`],
+      ['Año Escolar:', classroom.academicYear || '2026 - 2027', '', 'Fecha:', today],
+      [],
+      ['Nº', 'Apellidos y Nombres', 'Total Sesiones', 'Presentes (P)', 'Atrasos (A)', 'Faltas (F)', '% Asistencia', 'Condición']
+    ];
+
+    students.forEach((std, idx) => {
+      let p = 0, l = 0, a = 0;
+      uniqueDates.forEach(d => {
+        const rec = allAttendance.find(att => att.studentId === std.id && att.date === d);
+        if (rec) {
+          if (rec.status === 'PRESENT') p++;
+          else if (rec.status === 'LATE') l++;
+          else if (rec.status === 'ABSENT') a++;
+        }
+      });
+      const tot = p + l + a;
+      const pct = tot > 0 ? parseFloat((((p + l * 0.5) / tot) * 100).toFixed(1)) : 100;
+      attData.push([
+        idx + 1,
+        `${std.lastName || ''} ${std.firstName || ''}`.trim(),
+        tot || uniqueDates.length,
+        p,
+        l,
+        a,
+        `${pct}%`,
+        pct >= 75 ? 'Regular' : 'En Riesgo'
+      ]);
+    });
+    const wsA = XLSX.utils.aoa_to_sheet(attData);
+    wsA['!cols'] = [
+      { wch: 6 }, { wch: 32 }, { wch: 15 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 16 }, { wch: 24 }
+    ];
+    XLSX.utils.book_append_sheet(wb, wsA, 'Asistencia Consolidada');
+
+    // HOJA 3: DIRECTORIO DE ESTUDIANTES E INCIDENCIAS
+    const dirData = [
+      [schoolName],
+      ['DIRECTORIO DE ALUMNOS E HISTORIAL CONDUCTUAL'],
+      ['Grupo:', `${classroom.name} (${classroom.gradeLevel})`, '', 'Docente:', teacherFull],
+      [],
+      ['Nº', 'Apellidos y Nombres', 'Correo Electrónico', 'Teléfono de Contacto', 'Anotaciones Positivas', 'Anotaciones Negativas', 'Total Incidencias']
+    ];
+
+    students.forEach((std, idx) => {
+      const incs = DataService.getIncidents(std.id);
+      const pos = incs.filter(i => i.type === 'positive').length;
+      const neg = incs.filter(i => i.type === 'negative').length;
+      dirData.push([
+        idx + 1,
+        `${std.lastName || ''} ${std.firstName || ''}`.trim(),
+        std.email || '—',
+        std.phone || '—',
+        pos,
+        neg,
+        incs.length
+      ]);
+    });
+    const wsDir = XLSX.utils.aoa_to_sheet(dirData);
+    wsDir['!cols'] = [
+      { wch: 6 }, { wch: 32 }, { wch: 28 }, { wch: 20 }, { wch: 22 }, { wch: 22 }, { wch: 18 }
+    ];
+    XLSX.utils.book_append_sheet(wb, wsDir, 'Directorio e Incidencias');
+
+    const safeName = this.sanitizeFilename(classroom.name);
+    const dateStamp = new Date().toISOString().split('T')[0];
+    const fileName = `Informe_Integral_${safeName}_${dateStamp}.xlsx`;
+
+    XLSX.writeFile(wb, fileName);
+    this.showExportSuccessToast(fileName, 'Informe Académico Integral');
+    return true;
+  },
+
+  // Toast flotante de confirmación de descarga exitosa
+  showExportSuccessToast(fileName, reportType) {
+    let toast = document.getElementById('export-excel-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'export-excel-toast';
+      toast.className = 'export-excel-toast';
+      document.body.appendChild(toast);
+    }
+
+    toast.innerHTML = `
+      <div class="export-toast-content">
+        <div class="export-toast-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <path d="m9 15 2 2 4-4"/>
+          </svg>
+        </div>
+        <div class="export-toast-info">
+          <h4>Reporte Generado con Éxito</h4>
+          <p><strong>${fileName}</strong> listo para entregar a la institución.</p>
+        </div>
+      </div>
+    `;
+
+    toast.classList.add('active');
+    setTimeout(() => {
+      toast.classList.remove('active');
+    }, 4500);
+  }
+};
+
+// Exponer globalmente
+window.ExportService = ExportService;
