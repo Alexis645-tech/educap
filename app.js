@@ -15,6 +15,13 @@ const STORAGE_KEYS = {
   AUTH_MODE: 'educap_auth_mode_v1'
 };
 
+// Helper para sincronizar en segundo plano con IndexedDB manteniendo velocidad síncrona
+const syncToIndexedDB = (key, data) => {
+  if (window.EduDB && window.EduDB.setItem) {
+    window.EduDB.setItem(key, data).catch(e => console.warn('[Storage] Error IndexedDB:', e));
+  }
+};
+
 // --- SERVICIO DE DATOS LOCALES ---
 const DataService = {
   initDefaults() {
@@ -28,6 +35,7 @@ const DataService = {
         avatarColor: '#6366F1'
       };
       localStorage.setItem(STORAGE_KEYS.TEACHER, JSON.stringify(defaultTeacher));
+      syncToIndexedDB(STORAGE_KEYS.TEACHER, defaultTeacher);
     }
     if (!localStorage.getItem(STORAGE_KEYS.CLASSROOMS)) {
       const defaultClasses = [
@@ -94,6 +102,12 @@ const DataService = {
         { id: 'gr_8', gradeItemId: 'gi_2', studentId: 'std_4', classroomId: 'cls_1', score: 7.0 }
       ];
       localStorage.setItem(STORAGE_KEYS.GRADES, JSON.stringify(defaultGrades));
+      syncToIndexedDB(STORAGE_KEYS.GRADES, defaultGrades);
+    }
+
+    // Asegurar migración de datos hacia IndexedDB en segundo plano
+    if (window.EduDB && window.EduDB.migrateFromLocalStorage) {
+      window.EduDB.migrateFromLocalStorage();
     }
   },
 
@@ -105,6 +119,7 @@ const DataService = {
     const list = this.getClassrooms();
     list.push(cls);
     localStorage.setItem(STORAGE_KEYS.CLASSROOMS, JSON.stringify(list));
+    syncToIndexedDB(STORAGE_KEYS.CLASSROOMS, list);
 
     if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
       window.GoogleDriveService.scheduleAutoSync();
@@ -117,6 +132,7 @@ const DataService = {
     if (index !== -1) {
       list[index] = { ...list[index], ...updatedFields };
       localStorage.setItem(STORAGE_KEYS.CLASSROOMS, JSON.stringify(list));
+      syncToIndexedDB(STORAGE_KEYS.CLASSROOMS, list);
 
       if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
         window.GoogleDriveService.scheduleAutoSync();
@@ -130,6 +146,7 @@ const DataService = {
     // 1. Eliminar la clase
     const classrooms = this.getClassrooms().filter(c => c.id !== classroomId);
     localStorage.setItem(STORAGE_KEYS.CLASSROOMS, JSON.stringify(classrooms));
+    syncToIndexedDB(STORAGE_KEYS.CLASSROOMS, classrooms);
 
     // 2. Alumnos: desvincular de la clase; si el alumno solo pertenecía a esta clase, se elimina completamente
     const allStudents = JSON.parse(localStorage.getItem(STORAGE_KEYS.STUDENTS) || '[]');
@@ -151,25 +168,34 @@ const DataService = {
     });
 
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(updatedStudents));
+    syncToIndexedDB(STORAGE_KEYS.STUDENTS, updatedStudents);
 
     // 3. Limpiar incidencias sólo de los alumnos que fueron eliminados totalmente
     const allIncidents = JSON.parse(localStorage.getItem(STORAGE_KEYS.INCIDENTS) || '[]');
     const remainingIncidents = allIncidents.filter(i => !studentIdsFullyRemoved.has(i.studentId));
     localStorage.setItem(STORAGE_KEYS.INCIDENTS, JSON.stringify(remainingIncidents));
+    syncToIndexedDB(STORAGE_KEYS.INCIDENTS, remainingIncidents);
 
     // 4. Limpiar registros de asistencia de la clase eliminada
     const allAttendance = JSON.parse(localStorage.getItem(STORAGE_KEYS.ATTENDANCE) || '[]');
     const remainingAttendance = allAttendance.filter(a => a.classroomId !== classroomId);
     localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(remainingAttendance));
+    syncToIndexedDB(STORAGE_KEYS.ATTENDANCE, remainingAttendance);
 
     // 5. Limpiar evaluaciones y notas de la clase eliminada
     const allGradeItems = JSON.parse(localStorage.getItem(STORAGE_KEYS.GRADE_ITEMS) || '[]');
     const remainingGradeItems = allGradeItems.filter(g => g.classroomId !== classroomId);
     localStorage.setItem(STORAGE_KEYS.GRADE_ITEMS, JSON.stringify(remainingGradeItems));
+    syncToIndexedDB(STORAGE_KEYS.GRADE_ITEMS, remainingGradeItems);
 
     const allGrades = JSON.parse(localStorage.getItem(STORAGE_KEYS.GRADES) || '[]');
     const remainingGrades = allGrades.filter(g => g.classroomId !== classroomId);
     localStorage.setItem(STORAGE_KEYS.GRADES, JSON.stringify(remainingGrades));
+    syncToIndexedDB(STORAGE_KEYS.GRADES, remainingGrades);
+
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
   },
 
   getStudents(classroomId = null) {
@@ -204,6 +230,7 @@ const DataService = {
 
     list.push(normalized);
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(list));
+    syncToIndexedDB(STORAGE_KEYS.STUDENTS, list);
 
     if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
       window.GoogleDriveService.scheduleAutoSync();
@@ -230,6 +257,7 @@ const DataService = {
       };
 
       localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(list));
+      syncToIndexedDB(STORAGE_KEYS.STUDENTS, list);
 
       if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
         window.GoogleDriveService.scheduleAutoSync();
@@ -242,11 +270,17 @@ const DataService = {
   deleteStudent(id) {
     const list = this.getStudents().filter(s => s.id !== id);
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(list));
+    syncToIndexedDB(STORAGE_KEYS.STUDENTS, list);
 
     // Limpiar notas del alumno eliminado
     const allGrades = JSON.parse(localStorage.getItem(STORAGE_KEYS.GRADES) || '[]');
     const remainingGrades = allGrades.filter(g => g.studentId !== id);
     localStorage.setItem(STORAGE_KEYS.GRADES, JSON.stringify(remainingGrades));
+    syncToIndexedDB(STORAGE_KEYS.GRADES, remainingGrades);
+
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
   },
 
   getAttendanceRecords(classroomId, date = null) {
@@ -266,6 +300,7 @@ const DataService = {
       all.push({ id: 'att_' + Date.now(), studentId, classroomId, date, status });
     }
     localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(all));
+    syncToIndexedDB(STORAGE_KEYS.ATTENDANCE, all);
 
     // Sincronización automática o encolado offline
     if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
@@ -282,6 +317,7 @@ const DataService = {
     const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.INCIDENTS) || '[]');
     all.unshift(incident);
     localStorage.setItem(STORAGE_KEYS.INCIDENTS, JSON.stringify(all));
+    syncToIndexedDB(STORAGE_KEYS.INCIDENTS, all);
 
     // Sincronización automática o encolado offline
     if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
@@ -300,6 +336,11 @@ const DataService = {
     const list = this.getGradeItems();
     list.push(item);
     localStorage.setItem(STORAGE_KEYS.GRADE_ITEMS, JSON.stringify(list));
+    syncToIndexedDB(STORAGE_KEYS.GRADE_ITEMS, list);
+
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
   },
 
   getGrades(classroomId = null) {
@@ -332,6 +373,11 @@ const DataService = {
       }
     }
     localStorage.setItem(STORAGE_KEYS.GRADES, JSON.stringify(all));
+    syncToIndexedDB(STORAGE_KEYS.GRADES, all);
+
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
   },
 
   // --- PERFIL DEL DOCENTE ---
@@ -352,6 +398,11 @@ const DataService = {
 
   saveTeacherProfile(profile) {
     localStorage.setItem(STORAGE_KEYS.TEACHER, JSON.stringify(profile));
+    syncToIndexedDB(STORAGE_KEYS.TEACHER, profile);
+
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
   }
 };
 
@@ -519,6 +570,14 @@ const UIController = {
     if (themeBtn) {
       themeBtn.addEventListener('click', () => {
         this.toggleTheme();
+      });
+    }
+
+    // Botón de instalación PWA en el header
+    const pwaBtn = document.getElementById('btn-pwa-install');
+    if (pwaBtn) {
+      pwaBtn.addEventListener('click', () => {
+        this.triggerPwaInstall();
       });
     }
 
@@ -1778,10 +1837,140 @@ const UIController = {
 
   closeModal(modalId) {
     document.getElementById(modalId).classList.remove('active');
+  },
+
+  // --- PROGRESSIVE WEB APP (PWA) & INSTALACIÓN ---
+  deferredInstallPrompt: null,
+
+  initPWA() {
+    // 1. Registro del Service Worker para funcionamiento 100% offline
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => {
+            console.log('✅ [PWA] Service Worker registrado con éxito. Ámbito:', reg.scope);
+            // Comprobar si hay una nueva versión disponible
+            reg.onupdatefound = () => {
+              const installingWorker = reg.installing;
+              if (installingWorker) {
+                installingWorker.onstatechange = () => {
+                  if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('⚡ [PWA] Nueva versión disponible en segundo plano.');
+                  }
+                };
+              }
+            };
+          })
+          .catch((err) => {
+            console.warn('⚠️ [PWA] Error registrando Service Worker:', err);
+          });
+      });
+    }
+
+    // 2. Capturar evento de instalación nativo (beforeinstallprompt)
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this.deferredInstallPrompt = e;
+      console.log('📱 [PWA] Evento beforeinstallprompt capturado. Listo para instalación.');
+
+      const installBtn = document.getElementById('btn-pwa-install');
+      if (installBtn) {
+        installBtn.style.display = 'inline-flex';
+      }
+
+      // Mostrar banner de invitación a instalar si no se ha descartado previamente en la sesión
+      const hasDismissed = sessionStorage.getItem('educap_pwa_banner_dismissed');
+      if (!hasDismissed && !window.matchMedia('(display-mode: standalone)').matches) {
+        setTimeout(() => this.showPwaInstallBanner(), 2500);
+      }
+    });
+
+    // 3. Manejar evento cuando la app ya fue instalada
+    window.addEventListener('appinstalled', () => {
+      console.log('🎉 [PWA] ¡EduPlan se ha instalado exitosamente como App Nativa!');
+      this.deferredInstallPrompt = null;
+      this.hidePwaInstallBanner();
+      const installBtn = document.getElementById('btn-pwa-install');
+      if (installBtn) installBtn.classList.add('installed');
+      if (window.GoogleDriveService && window.GoogleDriveService.showToast) {
+        window.GoogleDriveService.showToast('¡EduPlan se ha instalado en tu dispositivo!');
+      }
+    });
+
+    // 4. Si ya está corriendo como PWA independiente (standalone)
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      const installBtn = document.getElementById('btn-pwa-install');
+      if (installBtn) installBtn.classList.add('installed');
+    }
+  },
+
+  async triggerPwaInstall() {
+    if (this.deferredInstallPrompt) {
+      this.deferredInstallPrompt.prompt();
+      const choiceResult = await this.deferredInstallPrompt.userChoice;
+      console.log('Resultado de instalación:', choiceResult.outcome);
+      if (choiceResult.outcome === 'accepted') {
+        this.hidePwaInstallBanner();
+      }
+      this.deferredInstallPrompt = null;
+    } else {
+      // Si el navegador no soporta o no emitió beforeinstallprompt (ej. iOS Safari o ya instalada)
+      alert('Para instalar EduPlan en tu pantalla de inicio:\n\n• En Chrome / Edge: Haz clic en el ícono de instalación en la barra de direcciones o en Menú > Instalar EduPlan.\n• En iPhone/iPad (Safari): Toca el botón "Compartir" y selecciona "Agregar a la pantalla de inicio".');
+    }
+  },
+
+  showPwaInstallBanner() {
+    if (document.getElementById('pwa-install-banner') || window.matchMedia('(display-mode: standalone)').matches) {
+      return;
+    }
+
+    const banner = document.createElement('div');
+    banner.id = 'pwa-install-banner';
+    banner.className = 'pwa-install-banner';
+    banner.innerHTML = `
+      <div class="pwa-banner-header">
+        <div class="pwa-banner-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+            <path d="M6 6h10M6 10h10"/>
+          </svg>
+        </div>
+        <div class="pwa-banner-info">
+          <h4>Instala EduPlan</h4>
+          <p>Úsalo como app nativa directamente en tu pantalla de inicio, sin consumir datos y con soporte offline total.</p>
+        </div>
+      </div>
+      <div class="pwa-banner-actions">
+        <button type="button" class="btn btn-secondary" id="btn-pwa-dismiss">Ahora no</button>
+        <button type="button" class="btn btn-primary" id="btn-pwa-confirm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Instalar App
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(banner);
+
+    document.getElementById('btn-pwa-confirm').addEventListener('click', () => {
+      this.triggerPwaInstall();
+    });
+
+    document.getElementById('btn-pwa-dismiss').addEventListener('click', () => {
+      sessionStorage.setItem('educap_pwa_banner_dismissed', 'true');
+      this.hidePwaInstallBanner();
+    });
+  },
+
+  hidePwaInstallBanner() {
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner) {
+      banner.remove();
+    }
   }
 };
 
 // Iniciar aplicación al cargar el DOM
 document.addEventListener('DOMContentLoaded', () => {
   UIController.init();
+  UIController.initPWA();
 });

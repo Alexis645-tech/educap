@@ -395,14 +395,34 @@ const GoogleDriveService = {
     if (!payload || !payload.data) {
       throw new Error('Formato de datos no válido.');
     }
-    const d = payload.data;
-    if (Array.isArray(d.classrooms)) localStorage.setItem(STORAGE_KEYS.CLASSROOMS, JSON.stringify(d.classrooms));
-    if (Array.isArray(d.students)) localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(d.students));
-    if (Array.isArray(d.attendance)) localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(d.attendance));
-    if (Array.isArray(d.incidents)) localStorage.setItem(STORAGE_KEYS.INCIDENTS, JSON.stringify(d.incidents));
-    if (Array.isArray(d.gradeItems)) localStorage.setItem(STORAGE_KEYS.GRADE_ITEMS, JSON.stringify(d.gradeItems));
-    if (Array.isArray(d.grades)) localStorage.setItem(STORAGE_KEYS.GRADES, JSON.stringify(d.grades));
-    if (d.teacher && typeof d.teacher === 'object') localStorage.setItem(STORAGE_KEYS.TEACHER, JSON.stringify(d.teacher));
+    if (Array.isArray(d.classrooms)) {
+      localStorage.setItem(STORAGE_KEYS.CLASSROOMS, JSON.stringify(d.classrooms));
+      if (window.EduDB && window.EduDB.setItem) window.EduDB.setItem(STORAGE_KEYS.CLASSROOMS, d.classrooms);
+    }
+    if (Array.isArray(d.students)) {
+      localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(d.students));
+      if (window.EduDB && window.EduDB.setItem) window.EduDB.setItem(STORAGE_KEYS.STUDENTS, d.students);
+    }
+    if (Array.isArray(d.attendance)) {
+      localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(d.attendance));
+      if (window.EduDB && window.EduDB.setItem) window.EduDB.setItem(STORAGE_KEYS.ATTENDANCE, d.attendance);
+    }
+    if (Array.isArray(d.incidents)) {
+      localStorage.setItem(STORAGE_KEYS.INCIDENTS, JSON.stringify(d.incidents));
+      if (window.EduDB && window.EduDB.setItem) window.EduDB.setItem(STORAGE_KEYS.INCIDENTS, d.incidents);
+    }
+    if (Array.isArray(d.gradeItems)) {
+      localStorage.setItem(STORAGE_KEYS.GRADE_ITEMS, JSON.stringify(d.gradeItems));
+      if (window.EduDB && window.EduDB.setItem) window.EduDB.setItem(STORAGE_KEYS.GRADE_ITEMS, d.gradeItems);
+    }
+    if (Array.isArray(d.grades)) {
+      localStorage.setItem(STORAGE_KEYS.GRADES, JSON.stringify(d.grades));
+      if (window.EduDB && window.EduDB.setItem) window.EduDB.setItem(STORAGE_KEYS.GRADES, d.grades);
+    }
+    if (d.teacher && typeof d.teacher === 'object') {
+      localStorage.setItem(STORAGE_KEYS.TEACHER, JSON.stringify(d.teacher));
+      if (window.EduDB && window.EduDB.setItem) window.EduDB.setItem(STORAGE_KEYS.TEACHER, d.teacher);
+    }
     
     // Notificar actualización de vistas
     if (window.UIController) {

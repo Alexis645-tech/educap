@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>EduPlan - Cuaderno Digital del Profesor</title>
+  <!-- PWA Meta Tags & Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4F46E5">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EduPlan">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="icons/icon-96x96.png">
   <!-- Fuentes modernas -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -147,6 +157,16 @@
               <span id="google-sync-indicator" class="google-sync-indicator idle" title="Estado de sincronización"></span>
             </button>
           </div>
+
+          <!-- BOTÓN INSTALAR APP (PWA) -->
+          <button id="btn-pwa-install" class="btn btn-secondary btn-icon pwa-install-btn" aria-label="Instalar EduPlan" title="Instalar EduPlan en este dispositivo (App Nativa)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span class="pwa-install-btn-text">Instalar App</span>
+          </button>
 
           <button id="btn-header-teacher-profile" class="btn btn-secondary btn-icon" aria-label="Mi Perfil Docente" title="Personalizar Perfil Docente">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -815,6 +835,8 @@
   <!-- SDKs OFICIALES DE GOOGLE (Identity Services & GAPI) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
+  <!-- Motor de Persistencia IndexedDB con Soporte Offline Total -->
+  <script src="db.js"></script>
   <!-- Lógica de Google Drive -->
   <script src="google-drive.js"></script>
   <!-- Generación de Documentos y Hojas de Cálculo Excel (.xlsx) con SheetJS -->
