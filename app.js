@@ -1698,9 +1698,11 @@ const UIController = {
         return;
       }
 
-      students.forEach(std => {
+      students.forEach((std, rowIndex) => {
         const initials = (std.firstName[0] || '') + (std.lastName[0] || '');
         const tr = document.createElement('tr');
+        tr.setAttribute('data-student-id', std.id);
+        tr.setAttribute('data-row-index', rowIndex);
 
         let cellsHTML = `
           <td data-label="Alumno">
@@ -1714,7 +1716,7 @@ const UIController = {
         let totalScores = 0;
         let ratedCount = 0;
 
-        visibleGradeItems.forEach(item => {
+        visibleGradeItems.forEach((item, colIndex) => {
           const gradeRecord = allGrades.find(g => g.studentId === std.id && g.gradeItemId === item.id);
           const currentScore = gradeRecord !== undefined && gradeRecord.score !== null ? gradeRecord.score : '';
 
@@ -1726,7 +1728,7 @@ const UIController = {
           }
 
           cellsHTML += `
-            <td data-label="${item.title} (/${item.maxScore})" class="grade-cell-activity">
+            <td data-label="${item.title} (/${item.maxScore})" class="grade-cell-activity" data-cell-row="${rowIndex}" data-cell-col="${colIndex}">
               <input 
                 type="number" 
                 class="grade-input" 
@@ -1736,7 +1738,16 @@ const UIController = {
                 step="0.1" 
                 placeholder="—"
                 title="Nota para ${item.title} (Máx: ${item.maxScore})"
-                onchange="UIController.updateStudentGrade('${std.id}', '${item.id}', '${currentClassId}', this.value)"
+                data-row="${rowIndex}"
+                data-col="${colIndex}"
+                data-student-id="${std.id}"
+                data-item-id="${item.id}"
+                data-class-id="${currentClassId}"
+                data-max-score="${item.maxScore}"
+                onfocus="UIController.handleGradeInputFocus(this)"
+                onblur="UIController.handleGradeInputBlur(this)"
+                onkeydown="UIController.handleGradeInputKeydown(event, this)"
+                onchange="UIController.updateStudentGrade('${std.id}', '${item.id}', '${currentClassId}', this.value, false)"
               >
             </td>
           `;
@@ -1755,20 +1766,143 @@ const UIController = {
           averageHTML = `<span class="grade-average-badge grade-average-none">—</span>`;
         }
 
-        cellsHTML += `<td data-label="${avgHeaderTitle}" class="grade-cell-average">${averageHTML}</td>`;
+        cellsHTML += `<td data-label="${avgHeaderTitle}" class="grade-cell-average" id="avg-student-${std.id}">${averageHTML}</td>`;
         tr.innerHTML = cellsHTML;
         tableBody.appendChild(tr);
       });
     }
   },
 
-  updateStudentGrade(studentId, gradeItemId, classroomId, value) {
+  handleGradeInputFocus(input) {
+    // Resaltar la fila y celda actual
+    const tr = input.closest('tr');
+    if (tr) tr.classList.add('row-focused');
+    const td = input.closest('td');
+    if (td) td.classList.add('cell-focused');
+
+    // Seleccionar automáticamente todo el texto para permitir sobrescribir de un solo tecleo
+    setTimeout(() => {
+      try { input.select(); } catch (e) {}
+    }, 10);
+  },
+
+  handleGradeInputBlur(input) {
+    const tr = input.closest('tr');
+    if (tr) tr.classList.remove('row-focused');
+    const td = input.closest('td');
+    if (td) td.classList.remove('cell-focused');
+  },
+
+  handleGradeInputKeydown(event, input) {
+    const key = event.key;
+    const isEnter = key === 'Enter';
+    const isTab = key === 'Tab';
+    const isArrowUp = key === 'ArrowUp';
+    const isArrowDown = key === 'ArrowDown';
+    const isArrowLeft = key === 'ArrowLeft';
+    const isArrowRight = key === 'ArrowRight';
+    const isEscape = key === 'Escape';
+
+    if (isEscape) {
+      input.blur();
+      return;
+    }
+
+    if (!isEnter && !isTab && !isArrowUp && !isArrowDown && !isArrowLeft && !isArrowRight) {
+      return;
+    }
+
+    const currentRow = parseInt(input.getAttribute('data-row'), 10);
+    const currentCol = parseInt(input.getAttribute('data-col'), 10);
+
+    let nextRow = currentRow;
+    let nextCol = currentCol;
+
+    // Calcular la siguiente coordenada según la tecla pulsada (comportamiento exacto de Excel)
+    if (isEnter) {
+      event.preventDefault();
+      // Si la tecla modificadora Shift está activa, sube; si no, baja al siguiente alumno
+      nextRow = event.shiftKey ? currentRow - 1 : currentRow + 1;
+    } else if (isArrowDown) {
+      event.preventDefault();
+      nextRow = currentRow + 1;
+    } else if (isArrowUp) {
+      event.preventDefault();
+      nextRow = currentRow - 1;
+    } else if (isTab) {
+      event.preventDefault();
+      // Tab avanza a la siguiente columna; Shift+Tab retrocede
+      nextCol = event.shiftKey ? currentCol - 1 : currentCol + 1;
+    } else if (isArrowRight) {
+      // Si el cursor está al final del texto o no hay selección, permitir navegación rápida
+      if (input.selectionEnd === input.value.length) {
+        event.preventDefault();
+        nextCol = currentCol + 1;
+      }
+    } else if (isArrowLeft) {
+      if (input.selectionStart === 0) {
+        event.preventDefault();
+        nextCol = currentCol - 1;
+      }
+    }
+
+    // Guardar el valor actual si cambió antes de mover el foco
+    const studentId = input.getAttribute('data-student-id');
+    const itemId = input.getAttribute('data-item-id');
+    const classId = input.getAttribute('data-class-id');
+    this.updateStudentGrade(studentId, itemId, classId, input.value, false);
+
+    // Mover foco a la celda destino
+    const targetInput = document.querySelector(`.grade-input[data-row="${nextRow}"][data-col="${nextCol}"]`);
+    if (targetInput) {
+      targetInput.focus();
+      targetInput.select();
+    }
+  },
+
+  updateStudentGrade(studentId, gradeItemId, classroomId, value, triggerFullRender = true) {
     DataService.setStudentGrade(studentId, gradeItemId, classroomId, value);
-    // Re-renderizado suave para refrescar promedios
-    this.renderGrades();
+
+    if (triggerFullRender) {
+      this.renderGrades();
+    } else {
+      // Actualización quirúrgica del promedio del alumno sin parpadear ni perder foco
+      this.refreshStudentRowAverage(studentId, classroomId);
+    }
+
     // Respaldo automático transparente en Google Drive
     if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
       window.GoogleDriveService.scheduleAutoSync();
+    }
+  },
+
+  refreshStudentRowAverage(studentId, classroomId) {
+    const avgCell = document.getElementById(`avg-student-${studentId}`);
+    if (!avgCell) return;
+
+    const allGrades = DataService.getGrades(classroomId);
+    const allGradeItems = DataService.getGradeItems(classroomId);
+
+    let totalScores = 0;
+    let ratedCount = 0;
+
+    allGradeItems.forEach(item => {
+      const g = allGrades.find(r => r.studentId === studentId && r.gradeItemId === item.id);
+      if (g && g.score !== null && g.score !== undefined && !isNaN(g.score)) {
+        totalScores += (parseFloat(g.score) / item.maxScore) * 10;
+        ratedCount++;
+      }
+    });
+
+    if (ratedCount > 0) {
+      const avg = (totalScores / ratedCount).toFixed(1);
+      let avgClass = 'grade-average-medium';
+      if (avg >= 7.0) avgClass = 'grade-average-high';
+      else if (avg < 5.0) avgClass = 'grade-average-low';
+
+      avgCell.innerHTML = `<span class="grade-average-badge ${avgClass}">${avg}</span>`;
+    } else {
+      avgCell.innerHTML = `<span class="grade-average-badge grade-average-none">—</span>`;
     }
   },
 

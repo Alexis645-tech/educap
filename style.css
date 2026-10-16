@@ -1270,6 +1270,60 @@ body {
   border-bottom: none;
 }
 
+/* BARRA DE HINTS PARA NAVEGACIÓN TIPO EXCEL */
+.grades-keyboard-hints {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 18px;
+  background-color: var(--color-surface-hover);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+
+.keyboard-hints-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.keyboard-keys-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.key-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.key-hint kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.12);
+}
+
+[data-theme="dark"] .key-hint kbd {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.5);
+}
+
 .grade-input {
   width: 72px;
   text-align: center;
@@ -1282,12 +1336,26 @@ body {
   background-color: var(--color-surface);
   color: var(--color-text-main);
   outline: none;
-  transition: all 0.15s ease;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: all;
 }
 
 .grade-input:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-light);
+  background-color: var(--color-surface);
+  box-shadow: 0 0 0 3px var(--color-primary-light), inset 0 0 0 1px var(--color-primary);
+  transform: scale(1.04);
+  z-index: 5;
+  position: relative;
+}
+
+/* Fila activa resaltada tipo hoja de cálculo al navegar */
+.grades-table tr.row-focused {
+  background-color: var(--color-primary-light) !important;
+}
+
+.grades-table td.grade-cell-activity.cell-focused {
+  background-color: rgba(79, 70, 229, 0.08);
 }
 
 .grade-average-badge {
