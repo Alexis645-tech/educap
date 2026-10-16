@@ -1087,6 +1087,13 @@ body {
   text-transform: uppercase;
 }
 
+.attendance-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .attendance-summary {
   display: flex;
   gap: 12px;
@@ -1679,8 +1686,19 @@ form {
     gap: 16px;
   }
 
-  .attendance-summary {
+  .attendance-meta {
+    display: flex;
     justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .attendance-summary {
+    display: flex;
+    gap: 10px;
+    flex: 1;
   }
 
   .attendance-summary .stat-badge {
@@ -2120,31 +2138,76 @@ form {
 
   /* Tarjeta y controles de asistencia */
   .attendance-header-card {
-    padding: 16px;
+    padding: 14px;
+    gap: 14px;
+    border-radius: var(--radius-md);
   }
 
   .attendance-controls {
     flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .attendance-controls .control-group {
+    width: 100%;
+  }
+
+  .attendance-controls .form-select,
+  .attendance-controls .form-input {
+    width: 100%;
+  }
+
+  .attendance-meta {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
     gap: 12px;
   }
 
   .attendance-summary {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
     gap: 8px;
   }
 
   .stat-badge {
-    min-width: auto;
-    padding: 6px 10px;
+    min-width: 0;
+    width: 100%;
+    padding: 8px 4px;
+    text-align: center;
+    box-sizing: border-box;
   }
 
   .stat-badge .count {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+    line-height: 1.2;
   }
 
   .stat-badge .label {
     font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    width: 100%;
+  }
+
+  .attendance-actions {
+    width: 100%;
+    display: flex;
+  }
+
+  .attendance-actions .btn-excel {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    min-height: 42px;
   }
 
   /* Lista de asistencia (roster cards) vertical y táctil */
