@@ -13,8 +13,10 @@ const STORAGE_KEYS = {
   TEACHER: 'educap_teacher_v1',
   VIEW_MODE: 'educap_view_mode_v1',
   AUTH_MODE: 'educap_auth_mode_v1',
-  HINTS_VISIBLE: 'educap_hints_visible_v1'
+  HINTS_VISIBLE: 'educap_hints_visible_v1',
+  LOCAL_MODIFIED: 'educap_local_modified_time'
 };
+window.STORAGE_KEYS = STORAGE_KEYS;
 
 // Helper para sincronizar en segundo plano con IndexedDB manteniendo velocidad síncrona
 const syncToIndexedDB = (key, data) => {
@@ -1246,7 +1248,21 @@ const UIController = {
     const btnGoogleDrive = document.getElementById('btn-google-drive');
     if (btnGoogleDrive) {
       btnGoogleDrive.addEventListener('click', () => {
-        this.openGoogleSyncModal();
+        if (window.GoogleDriveService && window.GoogleDriveService.syncStatus === 'conflict' && window.GoogleDriveService.pendingConflict) {
+          window.GoogleDriveService.showConflictResolutionModal();
+        } else {
+          this.openGoogleSyncModal();
+        }
+      });
+    }
+
+    const btnOpenConflictFromSync = document.getElementById('btn-open-conflict-modal-from-sync');
+    if (btnOpenConflictFromSync) {
+      btnOpenConflictFromSync.addEventListener('click', () => {
+        this.closeModal('modal-google-sync');
+        if (window.GoogleDriveService) {
+          window.GoogleDriveService.showConflictResolutionModal();
+        }
       });
     }
 
@@ -1362,10 +1378,21 @@ const UIController = {
       if (googleBtnText) googleBtnText.textContent = 'Google Drive';
     }
 
+    const conflictBox = document.getElementById('google-sync-conflict-box');
+    if (conflictBox) {
+      if (window.GoogleDriveService && window.GoogleDriveService.pendingConflict) {
+        conflictBox.style.display = 'flex';
+      } else {
+        conflictBox.style.display = 'none';
+      }
+    }
+
     if (window.GoogleDriveService.syncStatus) {
-      const msg = window.GoogleDriveService.lastSyncTime
-        ? `Última sincronización: ${window.GoogleDriveService.lastSyncTime}`
-        : (isAuth ? 'Conectado con Drive' : 'Sin sincronizar');
+      const msg = window.GoogleDriveService.syncStatus === 'conflict'
+        ? '⚠️ Conflicto detectado: Datos en Drive más recientes'
+        : (window.GoogleDriveService.lastSyncTime
+            ? `Última sincronización: ${window.GoogleDriveService.lastSyncTime}`
+            : (isAuth ? 'Conectado con Drive' : 'Sin sincronizar'));
       window.GoogleDriveService.setSyncStatus(window.GoogleDriveService.syncStatus, msg);
     }
   },
@@ -2649,6 +2676,9 @@ const UIController = {
     }
   }
 };
+
+// Exportar UIController globalmente
+window.UIController = UIController;
 
 // Iniciar aplicación al cargar el DOM
 document.addEventListener('DOMContentLoaded', () => {

@@ -776,6 +776,24 @@
           </div>
         </div>
 
+        <!-- Alerta de Conflicto en el Modal de Sincronización -->
+        <div id="google-sync-conflict-box" class="google-sync-conflict-box" style="display: none;">
+          <div class="conflict-box-content">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <div>
+              <h4>Conflicto de Sincronización Pendiente</h4>
+              <p>Google Drive tiene cambios más recientes que este equipo.</p>
+            </div>
+          </div>
+          <button type="button" id="btn-open-conflict-modal-from-sync" class="btn btn-warning btn-sm" style="font-weight: 700;">
+            Resolver Conflicto
+          </button>
+        </div>
+
         <!-- Enlace de sesión -->
         <div class="google-footer-settings" style="justify-content: flex-end;">
           <button type="button" id="btn-google-signout" class="btn-link text-danger" style="display: none;">
