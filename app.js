@@ -55,12 +55,12 @@ const DataService = {
 
     if (!localStorage.getItem(STORAGE_KEYS.STUDENTS)) {
       const defaultStudents = [
-        { id: 'std_1', classroomId: 'cls_1', firstName: 'Sofía', lastName: 'Rodríguez Martínez', email: 'sofia.rodriguez@colegio.edu', phone: '+52 555 123 4567', avatarColor: '#EC4899' },
-        { id: 'std_2', classroomId: 'cls_1', firstName: 'Mateo', lastName: 'Gómez Hernández', email: 'mateo.gomez@colegio.edu', phone: '+52 555 234 5678', avatarColor: '#3B82F6' },
-        { id: 'std_3', classroomId: 'cls_1', firstName: 'Valentina', lastName: 'López Castro', email: 'valentina.l@colegio.edu', phone: '+52 555 345 6789', avatarColor: '#10B981' },
-        { id: 'std_4', classroomId: 'cls_1', firstName: 'Santiago', lastName: 'Torres Morales', email: 'santiago.t@colegio.edu', phone: '+52 555 456 7890', avatarColor: '#F59E0B' },
-        { id: 'std_5', classroomId: 'cls_2', firstName: 'Camila', lastName: 'Vargas Silva', email: 'camila.v@colegio.edu', phone: '+52 555 567 8901', avatarColor: '#8B5CF6' },
-        { id: 'std_6', classroomId: 'cls_2', firstName: 'Alejandro', lastName: 'Mendoza Ruiz', email: 'alejandro.m@colegio.edu', phone: '+52 555 678 9012', avatarColor: '#EF4444' }
+        { id: 'std_1', classroomIds: ['cls_1', 'cls_2'], firstName: 'Sofía', lastName: 'Rodríguez Martínez', email: 'sofia.rodriguez@colegio.edu', phone: '+52 555 123 4567', avatarColor: '#EC4899' },
+        { id: 'std_2', classroomIds: ['cls_1'], firstName: 'Mateo', lastName: 'Gómez Hernández', email: 'mateo.gomez@colegio.edu', phone: '+52 555 234 5678', avatarColor: '#3B82F6' },
+        { id: 'std_3', classroomIds: ['cls_1'], firstName: 'Valentina', lastName: 'López Castro', email: 'valentina.l@colegio.edu', phone: '+52 555 345 6789', avatarColor: '#10B981' },
+        { id: 'std_4', classroomIds: ['cls_1'], firstName: 'Santiago', lastName: 'Torres Morales', email: 'santiago.t@colegio.edu', phone: '+52 555 456 7890', avatarColor: '#F59E0B' },
+        { id: 'std_5', classroomIds: ['cls_2'], firstName: 'Camila', lastName: 'Vargas Silva', email: 'camila.v@colegio.edu', phone: '+52 555 567 8901', avatarColor: '#8B5CF6' },
+        { id: 'std_6', classroomIds: ['cls_2'], firstName: 'Alejandro', lastName: 'Mendoza Ruiz', email: 'alejandro.m@colegio.edu', phone: '+52 555 678 9012', avatarColor: '#EF4444' }
       ];
       localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(defaultStudents));
     }
@@ -131,25 +131,38 @@ const DataService = {
     const classrooms = this.getClassrooms().filter(c => c.id !== classroomId);
     localStorage.setItem(STORAGE_KEYS.CLASSROOMS, JSON.stringify(classrooms));
 
-    // 2. Obtener alumnos de la clase para limpiar sus incidencias
+    // 2. Alumnos: desvincular de la clase; si el alumno solo pertenecía a esta clase, se elimina completamente
     const allStudents = JSON.parse(localStorage.getItem(STORAGE_KEYS.STUDENTS) || '[]');
-    const studentIdsToRemove = new Set(allStudents.filter(s => s.classroomId === classroomId).map(s => s.id));
+    const studentIdsFullyRemoved = new Set();
 
-    // 3. Eliminar alumnos de esa clase
-    const remainingStudents = allStudents.filter(s => s.classroomId !== classroomId);
-    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(remainingStudents));
+    const updatedStudents = [];
+    allStudents.forEach(s => {
+      const groups = Array.isArray(s.classroomIds) ? s.classroomIds : (s.classroomId ? [s.classroomId] : []);
+      const remainingGroups = groups.filter(id => id !== classroomId);
+      if (remainingGroups.length > 0) {
+        updatedStudents.push({
+          ...s,
+          classroomIds: remainingGroups,
+          classroomId: remainingGroups[0]
+        });
+      } else {
+        studentIdsFullyRemoved.add(s.id);
+      }
+    });
 
-    // 4. Limpiar incidencias de los alumnos eliminados
+    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(updatedStudents));
+
+    // 3. Limpiar incidencias sólo de los alumnos que fueron eliminados totalmente
     const allIncidents = JSON.parse(localStorage.getItem(STORAGE_KEYS.INCIDENTS) || '[]');
-    const remainingIncidents = allIncidents.filter(i => !studentIdsToRemove.has(i.studentId));
+    const remainingIncidents = allIncidents.filter(i => !studentIdsFullyRemoved.has(i.studentId));
     localStorage.setItem(STORAGE_KEYS.INCIDENTS, JSON.stringify(remainingIncidents));
 
-    // 5. Limpiar registros de asistencia de la clase
+    // 4. Limpiar registros de asistencia de la clase eliminada
     const allAttendance = JSON.parse(localStorage.getItem(STORAGE_KEYS.ATTENDANCE) || '[]');
     const remainingAttendance = allAttendance.filter(a => a.classroomId !== classroomId);
     localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(remainingAttendance));
 
-    // 6. Limpiar evaluaciones y notas de la clase
+    // 5. Limpiar evaluaciones y notas de la clase eliminada
     const allGradeItems = JSON.parse(localStorage.getItem(STORAGE_KEYS.GRADE_ITEMS) || '[]');
     const remainingGradeItems = allGradeItems.filter(g => g.classroomId !== classroomId);
     localStorage.setItem(STORAGE_KEYS.GRADE_ITEMS, JSON.stringify(remainingGradeItems));
@@ -161,22 +174,66 @@ const DataService = {
 
   getStudents(classroomId = null) {
     const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.STUDENTS) || '[]');
-    if (classroomId) return all.filter(s => s.classroomId === classroomId);
-    return all;
+    // Normalizar estudiantes para asegurar classroomIds
+    const normalized = all.map(s => {
+      const groups = Array.isArray(s.classroomIds) ? s.classroomIds : (s.classroomId ? [s.classroomId] : []);
+      return {
+        ...s,
+        classroomIds: groups,
+        classroomId: groups[0] || ''
+      };
+    });
+
+    if (classroomId) {
+      return normalized.filter(s => s.classroomIds.includes(classroomId));
+    }
+    return normalized;
   },
 
   addStudent(student) {
     const list = this.getStudents();
-    list.push(student);
+    const groups = Array.isArray(student.classroomIds) && student.classroomIds.length > 0 
+      ? student.classroomIds 
+      : (student.classroomId ? [student.classroomId] : []);
+    
+    const normalized = {
+      ...student,
+      classroomIds: groups,
+      classroomId: groups[0] || ''
+    };
+
+    list.push(normalized);
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(list));
+
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
   },
 
   updateStudent(id, updatedFields) {
     const list = this.getStudents();
     const index = list.findIndex(s => s.id === id);
     if (index !== -1) {
-      list[index] = { ...list[index], ...updatedFields };
+      const current = list[index];
+      let groups = current.classroomIds || [];
+      if (updatedFields.classroomIds) {
+        groups = updatedFields.classroomIds;
+      } else if (updatedFields.classroomId) {
+        groups = [updatedFields.classroomId];
+      }
+
+      list[index] = { 
+        ...current, 
+        ...updatedFields,
+        classroomIds: groups,
+        classroomId: groups[0] || ''
+      };
+
       localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(list));
+
+      if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+        window.GoogleDriveService.scheduleAutoSync();
+      }
       return list[index];
     }
     return null;
@@ -685,7 +742,14 @@ const UIController = {
     // Envío formulario estudiante
     document.getElementById('form-create-student').addEventListener('submit', (e) => {
       e.preventDefault();
-      const classroomId = document.getElementById('student-class-select').value;
+      const checkedBoxes = Array.from(document.querySelectorAll('input[name="student-assigned-classrooms"]:checked'));
+      const classroomIds = checkedBoxes.map(cb => cb.value);
+
+      if (classroomIds.length === 0) {
+        alert('Por favor selecciona al menos un grupo o materia para el alumno.');
+        return;
+      }
+
       const editId = document.getElementById('student-edit-id').value;
       const firstName = document.getElementById('student-firstname').value.trim();
       const lastName = document.getElementById('student-lastname').value.trim();
@@ -695,7 +759,7 @@ const UIController = {
       if (editId) {
         // Actualizar estudiante existente
         DataService.updateStudent(editId, {
-          classroomId,
+          classroomIds,
           firstName,
           lastName,
           email,
@@ -708,7 +772,7 @@ const UIController = {
 
         DataService.addStudent({
           id: 'std_' + Date.now(),
-          classroomId,
+          classroomIds,
           firstName,
           lastName,
           email,
@@ -1008,7 +1072,7 @@ const UIController = {
 
     container.innerHTML = '';
     classrooms.forEach(cls => {
-      const studentCount = allStudents.filter(s => s.classroomId === cls.id).length;
+      const studentCount = allStudents.filter(s => (s.classroomIds || [s.classroomId]).includes(cls.id)).length;
       const card = document.createElement('div');
       card.className = 'classroom-card';
       card.innerHTML = `
@@ -1062,7 +1126,7 @@ const UIController = {
     const count = students.length;
     let message = `¿Estás seguro de que deseas eliminar la clase "${className}"?`;
     if (count > 0) {
-      message += `\n\n⚠️ Atención: También se eliminarán los ${count} alumno(s) matriculados en esta clase y sus historiales de asistencia e incidencias.`;
+      message += `\n\n⚠️ Atención: Afectará a los ${count} alumno(s) asignados a esta materia o grupo (se desvincularán de esta clase, y si no pertenecen a otro grupo serán eliminados).`;
     }
 
     if (confirm(message)) {
@@ -1181,9 +1245,20 @@ const UIController = {
     }
 
     students.forEach(std => {
-      const cls = classrooms.find(c => c.id === std.classroomId);
+      const studentClassIds = Array.isArray(std.classroomIds) ? std.classroomIds : (std.classroomId ? [std.classroomId] : []);
+      const assignedClasses = classrooms.filter(c => studentClassIds.includes(c.id));
       const incidents = DataService.getIncidents(std.id);
       const initials = (std.firstName[0] || '') + (std.lastName[0] || '');
+
+      let groupsHTML = '<span style="color: var(--color-text-muted); font-size: 0.75rem;">Sin grupo</span>';
+      if (assignedClasses.length > 0) {
+        groupsHTML = assignedClasses.map(c => `
+          <span class="group-pill-badge" title="${c.name} (${c.gradeLevel})">
+            <span class="group-pill-dot" style="background-color: ${c.color || '#4F46E5'};"></span>
+            <span>${c.name}</span>
+          </span>
+        `).join('');
+      }
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -1196,7 +1271,11 @@ const UIController = {
             </div>
           </div>
         </td>
-        <td data-label="Grupo"><span class="classroom-card-badge">${cls ? cls.name : 'Sin grupo'}</span></td>
+        <td data-label="Grupo(s)">
+          <div class="student-groups-cell">
+            ${groupsHTML}
+          </div>
+        </td>
         <td data-label="Email de Contacto">${std.email || '—'}</td>
         <td data-label="Incidencias">
           <button class="btn btn-secondary btn-sm" onclick="UIController.openIncidentsModal('${std.id}')">
@@ -1292,6 +1371,29 @@ const UIController = {
     }
   },
 
+  renderStudentClassroomsCheckboxes(selectedClassroomIds = []) {
+    const container = document.getElementById('student-classrooms-checkboxes');
+    if (!container) return;
+
+    const classrooms = DataService.getClassrooms();
+    if (classrooms.length === 0) {
+      container.innerHTML = '<span style="font-size: 0.8rem; color: var(--color-text-muted);">No tienes clases creadas aún. Por favor crea una clase primero.</span>';
+      return;
+    }
+
+    container.innerHTML = classrooms.map(c => {
+      const isChecked = selectedClassroomIds.includes(c.id);
+      return `
+        <label class="classroom-checkbox-item">
+          <input type="checkbox" name="student-assigned-classrooms" value="${c.id}" ${isChecked ? 'checked' : ''}>
+          <span class="classroom-checkbox-color-dot" style="background-color: ${c.color || '#4F46E5'};"></span>
+          <span class="classroom-checkbox-name">${c.name}</span>
+          <span class="classroom-checkbox-grade">${c.gradeLevel}</span>
+        </label>
+      `;
+    }).join('');
+  },
+
   openStudentModal() {
     const form = document.getElementById('form-create-student');
     if (form) form.reset();
@@ -1304,9 +1406,10 @@ const UIController = {
     const submitBtn = document.getElementById('btn-submit-student');
     if (submitBtn) submitBtn.textContent = 'Matricular Alumno';
 
-    const classrooms = DataService.getClassrooms();
-    const select = document.getElementById('student-class-select');
-    select.innerHTML = classrooms.map(c => `<option value="${c.id}" ${c.id === this.selectedClassroomId ? 'selected' : ''}>${c.name}</option>`).join('');
+    // Por defecto, preseleccionar la clase actual si existe
+    const defaultSelection = this.selectedClassroomId ? [this.selectedClassroomId] : [];
+    this.renderStudentClassroomsCheckboxes(defaultSelection);
+
     this.openModal('modal-student');
   },
 
@@ -1326,9 +1429,8 @@ const UIController = {
     document.getElementById('student-email').value = student.email || '';
     document.getElementById('student-phone').value = student.phone || '';
 
-    const classrooms = DataService.getClassrooms();
-    const select = document.getElementById('student-class-select');
-    select.innerHTML = classrooms.map(c => `<option value="${c.id}" ${c.id === student.classroomId ? 'selected' : ''}>${c.name}</option>`).join('');
+    const currentGroups = Array.isArray(student.classroomIds) ? student.classroomIds : (student.classroomId ? [student.classroomId] : []);
+    this.renderStudentClassroomsCheckboxes(currentGroups);
 
     this.openModal('modal-student');
   },

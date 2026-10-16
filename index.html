@@ -224,7 +224,7 @@
             <thead>
               <tr>
                 <th>Alumno</th>
-                <th>Grupo</th>
+                <th>Grupo(s)</th>
                 <th>Email de Contacto</th>
                 <th>Incidencias</th>
                 <th>Acciones</th>
@@ -432,8 +432,11 @@
       <form id="form-create-student">
         <input type="hidden" id="student-edit-id" value="">
         <div class="form-group">
-          <label for="student-class-select">Asignar a Grupo *</label>
-          <select id="student-class-select" class="form-select" required></select>
+          <label>Asignar a Grupo(s) / Materia(s) *</label>
+          <div id="student-classrooms-checkboxes" class="classroom-checkbox-list">
+            <!-- Checkboxes generados dinámicamente con cada clase -->
+          </div>
+          <span style="font-size: 0.72rem; color: var(--color-text-muted);">Puedes seleccionar uno o varios grupos para este alumno.</span>
         </div>
         <div class="form-row">
           <div class="form-group">
