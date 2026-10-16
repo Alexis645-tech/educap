@@ -192,6 +192,15 @@
             <label for="filter-classroom-select">Grupo seleccionado:</label>
             <select id="filter-classroom-select" class="form-select"></select>
           </div>
+          <div class="filter-item">
+            <label for="student-sort-select">Ordenar por:</label>
+            <select id="student-sort-select" class="form-select">
+              <option value="lastName-asc">Apellido (A - Z)</option>
+              <option value="lastName-desc">Apellido (Z - A)</option>
+              <option value="firstName-asc">Nombre (A - Z)</option>
+              <option value="firstName-desc">Nombre (Z - A)</option>
+            </select>
+          </div>
           <div class="filter-item search-box">
             <input type="text" id="student-search-input" placeholder="Buscar por nombre o apellido..." class="form-input">
           </div>
@@ -240,6 +249,15 @@
               <label for="attendance-date-input">Fecha:</label>
               <input type="date" id="attendance-date-input" class="form-input">
             </div>
+            <div class="control-group">
+              <label for="attendance-sort-select">Ordenar alumnos:</label>
+              <select id="attendance-sort-select" class="form-select">
+                <option value="lastName-asc">Apellido (A - Z)</option>
+                <option value="lastName-desc">Apellido (Z - A)</option>
+                <option value="firstName-asc">Nombre (A - Z)</option>
+                <option value="firstName-desc">Nombre (Z - A)</option>
+              </select>
+            </div>
           </div>
           <div class="attendance-summary">
             <div class="stat-badge stat-present">
@@ -284,6 +302,15 @@
               <label for="grades-activity-select">Evaluación / Actividad:</label>
               <select id="grades-activity-select" class="form-select">
                 <option value="">Todas las actividades</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="grades-sort-select">Ordenar alumnos:</label>
+              <select id="grades-sort-select" class="form-select">
+                <option value="lastName-asc">Apellido (A - Z)</option>
+                <option value="lastName-desc">Apellido (Z - A)</option>
+                <option value="firstName-asc">Nombre (A - Z)</option>
+                <option value="firstName-desc">Nombre (Z - A)</option>
               </select>
             </div>
           </div>

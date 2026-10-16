@@ -302,6 +302,44 @@ const UIController = {
   selectedGradeType: '',
   selectedGradeItemId: '',
   selectedDate: new Date().toISOString().split('T')[0],
+  studentSortOrder: 'lastName-asc', // 'lastName-asc' | 'lastName-desc' | 'firstName-asc' | 'firstName-desc'
+
+  sortStudents(studentsList) {
+    const list = [...studentsList];
+    const order = this.studentSortOrder || 'lastName-asc';
+
+    list.sort((a, b) => {
+      const aFirst = (a.firstName || '').trim();
+      const bFirst = (b.firstName || '').trim();
+      const aLast = (a.lastName || '').trim();
+      const bLast = (b.lastName || '').trim();
+
+      switch (order) {
+        case 'lastName-asc':
+          return aLast.localeCompare(bLast, 'es', { sensitivity: 'base' }) || aFirst.localeCompare(bFirst, 'es', { sensitivity: 'base' });
+        case 'lastName-desc':
+          return bLast.localeCompare(aLast, 'es', { sensitivity: 'base' }) || bFirst.localeCompare(aFirst, 'es', { sensitivity: 'base' });
+        case 'firstName-asc':
+          return aFirst.localeCompare(bFirst, 'es', { sensitivity: 'base' }) || aLast.localeCompare(bLast, 'es', { sensitivity: 'base' });
+        case 'firstName-desc':
+          return bFirst.localeCompare(aFirst, 'es', { sensitivity: 'base' }) || bLast.localeCompare(aLast, 'es', { sensitivity: 'base' });
+        default:
+          return aLast.localeCompare(bLast, 'es', { sensitivity: 'base' });
+      }
+    });
+
+    return list;
+  },
+
+  syncSortSelects() {
+    const selects = ['student-sort-select', 'attendance-sort-select', 'grades-sort-select'];
+    selects.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.value !== this.studentSortOrder) {
+        el.value = this.studentSortOrder;
+      }
+    });
+  },
 
   init() {
     this.initTheme();
@@ -688,11 +726,20 @@ const UIController = {
       if (this.currentTab === 'grades-tab') this.renderGrades();
     });
 
-    // Filtros de estudiantes
+    // Filtros y ordenamiento de estudiantes
     document.getElementById('filter-classroom-select').addEventListener('change', (e) => {
       this.selectedClassroomId = e.target.value;
       this.renderStudents();
     });
+
+    const sortSelect = document.getElementById('student-sort-select');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', (e) => {
+        this.studentSortOrder = e.target.value;
+        this.syncSortSelects();
+        this.renderStudents();
+      });
+    }
 
     document.getElementById('student-search-input').addEventListener('input', () => {
       this.renderStudents();
@@ -705,12 +752,31 @@ const UIController = {
       this.renderAttendance();
     });
 
+    const attSortSelect = document.getElementById('attendance-sort-select');
+    if (attSortSelect) {
+      attSortSelect.addEventListener('change', (e) => {
+        this.studentSortOrder = e.target.value;
+        this.syncSortSelects();
+        this.renderAttendance();
+      });
+    }
+
     const dateInput = document.getElementById('attendance-date-input');
     dateInput.value = this.selectedDate;
     dateInput.addEventListener('change', (e) => {
       this.selectedDate = e.target.value;
       this.renderAttendance();
     });
+
+    // Ordenamiento en calificaciones
+    const gradesSortSelect = document.getElementById('grades-sort-select');
+    if (gradesSortSelect) {
+      gradesSortSelect.addEventListener('change', (e) => {
+        this.studentSortOrder = e.target.value;
+        this.syncSortSelects();
+        this.renderGrades();
+      });
+    }
 
     // Guardar incidencia
     document.getElementById('btn-save-incident').addEventListener('click', () => {
@@ -1104,6 +1170,8 @@ const UIController = {
       );
     }
 
+    students = this.sortStudents(students);
+
     const tbody = document.getElementById('students-table-body');
     tbody.innerHTML = '';
 
@@ -1156,7 +1224,8 @@ const UIController = {
     select.innerHTML = classrooms.map(c => `<option value="${c.id}" ${c.id === this.selectedClassroomId ? 'selected' : ''}>${c.name}</option>`).join('');
 
     const targetClassroomId = select.value;
-    const students = DataService.getStudents(targetClassroomId);
+    let students = DataService.getStudents(targetClassroomId);
+    students = this.sortStudents(students);
     const records = DataService.getAttendanceRecords(targetClassroomId, this.selectedDate);
 
     // Contadores estadísticos
@@ -1330,7 +1399,8 @@ const UIController = {
       return;
     }
 
-    const students = DataService.getStudents(currentClassId);
+    let students = DataService.getStudents(currentClassId);
+    students = this.sortStudents(students);
     const allGradeItems = DataService.getGradeItems(currentClassId);
     const allGrades = DataService.getGrades(currentClassId);
 
