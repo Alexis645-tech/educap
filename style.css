@@ -1210,24 +1210,32 @@ body {
 
 .grades-table-container {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 290px);
+  min-height: 380px;
   -webkit-overflow-scrolling: touch;
+  position: relative;
 }
 
 .grades-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
 }
 
 .grades-table th {
-  background-color: var(--color-surface-hover);
-  padding: 14px 18px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: var(--color-surface);
+  box-shadow: 0 1px 0 var(--color-border);
+  padding: 12px 16px;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 700;
   color: var(--color-text-muted);
-  border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
 }
 
@@ -1260,14 +1268,29 @@ body {
 }
 
 .grades-table td {
-  padding: 14px 18px;
+  padding: 10px 16px;
+  height: 58px;
+  box-sizing: border-box;
   font-size: 0.875rem;
   border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
 }
 
 .grades-table tr:last-child td {
-  border-bottom: none;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.grades-table tr.virtual-row {
+  height: 58px;
+  box-sizing: border-box;
+}
+
+.grades-table tr.virtual-spacer-row td {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  pointer-events: none;
 }
 
 /* BARRA DE HINTS PARA NAVEGACIÓN TIPO EXCEL */
@@ -1303,6 +1326,17 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+.virtual-stats-badge {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  margin-left: 6px;
 }
 
 .key-hint kbd {
