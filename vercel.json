@@ -8,6 +8,14 @@
     {
       "source": "/privacy",
       "destination": "/privacidad.html"
+    },
+    {
+      "source": "/terminos",
+      "destination": "/terminos.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terminos.html"
     }
   ]
 }
