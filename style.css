@@ -1305,6 +1305,47 @@ body {
   font-size: 0.78rem;
   color: var(--color-text-muted);
   flex-wrap: wrap;
+  transition: all 0.25s ease;
+}
+
+.grades-keyboard-hints.is-hidden {
+  display: none !important;
+}
+
+.keyboard-hints-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.keyboard-hints-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-hints-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-hints-close:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-main);
+  border-color: var(--color-primary);
 }
 
 .keyboard-hints-title {
@@ -1336,7 +1377,23 @@ body {
   padding: 3px 8px;
   border-radius: var(--radius-full);
   border: 1px solid rgba(79, 70, 229, 0.2);
-  margin-left: 6px;
+}
+
+@media (max-width: 768px) {
+  /* En pantallas móviles se permite ocultar cómodamente y se adapta el layout */
+  .grades-keyboard-hints {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .keyboard-hints-left {
+    gap: 8px;
+  }
+  .keyboard-hints-right {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 4px;
+    border-top: 1px dashed var(--color-border);
+  }
 }
 
 .key-hint kbd {

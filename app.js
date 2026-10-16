@@ -12,7 +12,8 @@ const STORAGE_KEYS = {
   GRADES: 'educap_grades_v1',
   TEACHER: 'educap_teacher_v1',
   VIEW_MODE: 'educap_view_mode_v1',
-  AUTH_MODE: 'educap_auth_mode_v1'
+  AUTH_MODE: 'educap_auth_mode_v1',
+  HINTS_VISIBLE: 'educap_hints_visible_v1'
 };
 
 // Helper para sincronizar en segundo plano con IndexedDB manteniendo velocidad síncrona
@@ -526,6 +527,7 @@ const UIController = {
   init() {
     this.initTheme();
     this.initViewMode();
+    this.initKeyboardHints();
     DataService.initDefaults();
 
     const classrooms = DataService.getClassrooms();
@@ -633,6 +635,45 @@ const UIController = {
     const current = document.documentElement.getAttribute('data-view-mode') || 'cards';
     const next = current === 'cards' ? 'table' : 'cards';
     this.setViewMode(next, true);
+  },
+
+  initKeyboardHints() {
+    const saved = localStorage.getItem(STORAGE_KEYS.HINTS_VISIBLE);
+    const isMobile = window.innerWidth <= 768;
+    // Si el usuario ya guardó preferencia, usarla; si no, en móviles ocultar por defecto
+    const isVisible = saved !== null ? saved === 'true' : !isMobile;
+    this.setKeyboardHintsVisible(isVisible, false);
+  },
+
+  setKeyboardHintsVisible(visible, save = true) {
+    const bar = document.getElementById('grades-keyboard-hints');
+    const toggleBtnText = document.getElementById('btn-toggle-keyboard-hints-text');
+    const toggleBtn = document.getElementById('btn-toggle-keyboard-hints');
+
+    if (bar) {
+      bar.classList.toggle('is-hidden', !visible);
+    }
+
+    if (toggleBtnText) {
+      toggleBtnText.textContent = visible ? 'Ocultar Guía' : 'Guía de Teclas';
+    }
+
+    if (toggleBtn) {
+      toggleBtn.classList.toggle('active', visible);
+      toggleBtn.title = visible 
+        ? 'Ocultar consejos de navegación por teclado' 
+        : 'Mostrar consejos de atajos de teclado tipo Excel';
+    }
+
+    if (save) {
+      localStorage.setItem(STORAGE_KEYS.HINTS_VISIBLE, visible ? 'true' : 'false');
+    }
+  },
+
+  toggleKeyboardHints() {
+    const bar = document.getElementById('grades-keyboard-hints');
+    const isCurrentlyHidden = bar ? bar.classList.contains('is-hidden') : false;
+    this.setKeyboardHintsVisible(isCurrentlyHidden, true);
   },
 
   bindEvents() {
@@ -768,6 +809,21 @@ const UIController = {
     if (btnNewGradeItem) {
       btnNewGradeItem.addEventListener('click', () => {
         this.openGradeItemModal();
+      });
+    }
+
+    // Botones para alternar y ocultar barra de navegación tipo Excel (especialmente en pantallas móviles)
+    const btnHideHints = document.getElementById('btn-hide-keyboard-hints');
+    if (btnHideHints) {
+      btnHideHints.addEventListener('click', () => {
+        this.setKeyboardHintsVisible(false, true);
+      });
+    }
+
+    const btnToggleHints = document.getElementById('btn-toggle-keyboard-hints');
+    if (btnToggleHints) {
+      btnToggleHints.addEventListener('click', () => {
+        this.toggleKeyboardHints();
       });
     }
 

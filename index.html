@@ -417,6 +417,10 @@
               </svg>
               <span>Exportar Calificaciones (.xlsx)</span>
             </button>
+            <button type="button" id="btn-toggle-keyboard-hints" class="btn btn-secondary btn-sm" title="Mostrar u ocultar consejos de atajos de teclado tipo Excel">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+              <span id="btn-toggle-keyboard-hints-text">Guía de Teclas</span>
+            </button>
             <button id="btn-new-grade-item" class="btn btn-secondary btn-sm">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Nueva Actividad / Examen
@@ -427,21 +431,29 @@
         <!-- Matriz de notas / calificaciones con Soporte de Entrada Rápida de Teclado -->
         <div class="grades-matrix-card">
           <!-- Barra de Consejos de Entrada Rápida / Data Entry Excel -->
-          <div class="grades-keyboard-hints">
-            <span class="keyboard-hints-title">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
-              Navegación tipo Excel:
-            </span>
-            <div class="keyboard-keys-group">
-              <span class="key-hint"><kbd>Enter</kbd> o <kbd>↓</kbd> Abajo</span>
-              <span class="key-hint"><kbd>Shift+Enter</kbd> o <kbd>↑</kbd> Arriba</span>
-              <span class="key-hint"><kbd>Tab</kbd> o <kbd>→</kbd> Derecha</span>
-              <span class="key-hint"><kbd>Shift+Tab</kbd> o <kbd>←</kbd> Izquierda</span>
-              <span class="key-hint"><kbd>Esc</kbd> Deseleccionar</span>
+          <div class="grades-keyboard-hints" id="grades-keyboard-hints">
+            <div class="keyboard-hints-left">
+              <span class="keyboard-hints-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+                Navegación tipo Excel:
+              </span>
+              <div class="keyboard-keys-group">
+                <span class="key-hint"><kbd>Enter</kbd> o <kbd>↓</kbd> Abajo</span>
+                <span class="key-hint"><kbd>Shift+Enter</kbd> o <kbd>↑</kbd> Arriba</span>
+                <span class="key-hint"><kbd>Tab</kbd> o <kbd>→</kbd> Derecha</span>
+                <span class="key-hint"><kbd>Shift+Tab</kbd> o <kbd>←</kbd> Izquierda</span>
+                <span class="key-hint"><kbd>Esc</kbd> Deseleccionar</span>
+              </div>
+            </div>
+            <div class="keyboard-hints-right">
               <span id="grades-virtual-stats" class="key-hint virtual-stats-badge" title="Windowing / Virtualización activa para alto rendimiento">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 <span id="grades-virtual-text">Virtualización: Activa</span>
               </span>
+              <button type="button" id="btn-hide-keyboard-hints" class="btn-hints-close" aria-label="Ocultar consejos de navegación" title="Ocultar consejos de navegación">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <span class="hints-close-text">Ocultar</span>
+              </button>
             </div>
           </div>
           <div class="grades-table-container">
