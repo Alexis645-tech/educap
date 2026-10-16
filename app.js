@@ -702,11 +702,13 @@ const UIController = {
     });
 
     // Navegación lateral y navegación inferior móvil
-    document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(button => {
+    document.querySelectorAll('.nav-item[data-tab], .bottom-nav-item[data-tab]').forEach(button => {
       button.addEventListener('click', () => {
         const tabId = button.getAttribute('data-tab');
-        this.switchTab(tabId);
-        this.closeMobileSidebar();
+        if (tabId) {
+          this.switchTab(tabId);
+          this.closeMobileSidebar();
+        }
       });
     });
 
@@ -1133,26 +1135,18 @@ const UIController = {
       });
     }
 
-    // --- EXPORTACIÓN DE REPORTES A EXCEL (.XLSX) ---
-    const btnExportGrades = document.getElementById('btn-export-grades-excel');
-    if (btnExportGrades) {
-      btnExportGrades.addEventListener('click', () => {
-        if (window.ExportService) {
-          window.ExportService.exportGradesToExcel(this.selectedClassroomId);
-        }
-      });
-    }
-
-    const btnExportAttendance = document.getElementById('btn-export-attendance-excel');
-    if (btnExportAttendance) {
-      btnExportAttendance.addEventListener('click', () => {
-        this.openExportModal('attendance-consolidated');
-      });
-    }
-
+    // --- BOTÓN CENTRAL DE EXPORTACIÓN DE REPORTES A EXCEL (.XLSX) ---
     const btnHeaderReports = document.getElementById('btn-header-export-reports');
     if (btnHeaderReports) {
       btnHeaderReports.addEventListener('click', () => {
+        this.openExportModal();
+      });
+    }
+
+    const btnSidebarReports = document.getElementById('sidebar-btn-export-reports');
+    if (btnSidebarReports) {
+      btnSidebarReports.addEventListener('click', () => {
+        this.closeMobileSidebar();
         this.openExportModal();
       });
     }
@@ -2434,8 +2428,21 @@ const UIController = {
     if (select && this.selectedClassroomId) {
       select.value = this.selectedClassroomId;
     }
-    if (defaultDocType) {
-      const radio = document.querySelector(`input[name="export-doc-type"][value="${defaultDocType}"]`);
+
+    // Si no se especificó un tipo por parámetro, preseleccionar según la pestaña activa del docente
+    let targetType = defaultDocType;
+    if (!targetType) {
+      if (this.currentTab === 'attendance-tab') {
+        targetType = 'attendance-consolidated';
+      } else if (this.currentTab === 'grades-tab') {
+        targetType = 'grades';
+      } else {
+        targetType = 'grades';
+      }
+    }
+
+    if (targetType) {
+      const radio = document.querySelector(`input[name="export-doc-type"][value="${targetType}"]`);
       if (radio) {
         radio.checked = true;
         document.querySelectorAll('.export-option-card').forEach(c => c.classList.remove('selected'));

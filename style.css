@@ -2370,15 +2370,9 @@ form {
 
   .attendance-actions {
     width: 100%;
+    max-width: 100%;
     display: flex;
-  }
-
-  .attendance-actions .btn-excel {
-    width: 100%;
-    justify-content: center;
-    padding: 10px 14px;
-    font-size: 0.88rem;
-    min-height: 42px;
+    box-sizing: border-box;
   }
 
   /* Lista de asistencia (roster cards) vertical y táctil */
@@ -2741,6 +2735,55 @@ form {
   gap: 10px;
 }
 
+/* Botón Central de Exportación de Reportes en Header */
+#btn-header-export-reports.btn-header-export {
+  color: #107C41;
+  background-color: rgba(16, 124, 65, 0.08);
+  border: 1px solid rgba(16, 124, 65, 0.35);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+#btn-header-export-reports.btn-header-export:hover {
+  background-color: #107C41;
+  border-color: #0b6a37;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(16, 124, 65, 0.28);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] #btn-header-export-reports.btn-header-export {
+  color: #34d399;
+  background-color: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+[data-theme="dark"] #btn-header-export-reports.btn-header-export:hover {
+  background-color: #107C41;
+  border-color: #107C41;
+  color: #ffffff !important;
+}
+
+/* Botón de Exportación en Barra Lateral (Sidebar) */
+#sidebar-btn-export-reports {
+  color: #107C41;
+  font-weight: 600;
+}
+
+#sidebar-btn-export-reports:hover {
+  background-color: rgba(16, 124, 65, 0.1);
+  color: #0b6a37;
+}
+
+[data-theme="dark"] #sidebar-btn-export-reports {
+  color: #34d399;
+}
+
+[data-theme="dark"] #sidebar-btn-export-reports:hover {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+}
+
 /* Modal de Exportación de Reportes */
 .export-reports-modal-card {
   max-width: 580px;
@@ -2910,16 +2953,25 @@ form {
 
   .attendance-actions {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
-  .attendance-actions .btn-excel {
-    width: 100%;
-    justify-content: center;
+  #form-export-report {
+    padding: 14px 16px !important;
   }
 
-  .grades-actions .btn-excel {
-    width: 100%;
-    justify-content: center;
+  .export-option-card {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .export-option-title {
+    font-size: 0.88rem;
+  }
+
+  .export-option-desc {
+    font-size: 0.76rem;
   }
 
   .export-excel-toast {
@@ -3237,13 +3289,41 @@ form {
   }
   .bulk-attendance-group {
     width: 100%;
-    justify-content: space-around;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    padding: 3px;
   }
   .bulk-attendance-group .btn-secondary {
     flex: 1;
+    min-width: 0;
     text-align: center;
-    padding: 6px 4px;
+    padding: 8px 4px;
     font-size: 0.74rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .bulk-attendance-group .btn-secondary svg {
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .bulk-attendance-group .btn-secondary {
+    font-size: 0.68rem;
+    padding: 6px 2px;
+    gap: 2px;
+  }
+  .bulk-attendance-group .btn-secondary svg {
+    width: 13px;
+    height: 13px;
   }
 }
 
