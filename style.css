@@ -2995,3 +2995,186 @@ form {
   }
 }
 
+/* ==========================================================================
+   OPERACIONES EN LOTE / BULK ACTIONS
+   ========================================================================== */
+
+/* Grupo de botones para marcar asistencia en lote en cabecera */
+.bulk-attendance-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--color-surface);
+  padding: 3px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.bulk-attendance-group .btn-secondary {
+  border: none;
+  background-color: transparent;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.bulk-attendance-group .btn-secondary:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-primary);
+}
+
+#btn-bulk-attend-present:hover {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+#btn-bulk-attend-late:hover {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+
+#btn-bulk-attend-absent:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+/* Barra flotante de acciones masivas en directorio de alumnos */
+.bulk-actions-toolbar {
+  position: sticky;
+  top: 10px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.95), rgba(67, 56, 202, 0.95));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #ffffff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: slideDownFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bulk-bar-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.bulk-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: var(--radius-full);
+  background-color: #ffffff;
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.bulk-bar-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bulk-bar-buttons .btn {
+  font-weight: 600;
+  border-radius: var(--radius-md);
+}
+
+#btn-bulk-incident {
+  background-color: #ffffff;
+  color: var(--color-primary);
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+#btn-bulk-incident:hover {
+  background-color: #f8fafc;
+  transform: translateY(-1px);
+}
+
+#btn-bulk-clear-selection {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#btn-bulk-clear-selection:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Checkbox estilizado para tablas */
+.student-row-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  margin: 0;
+  vertical-align: middle;
+}
+
+#students-select-all {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  margin: 0;
+  vertical-align: middle;
+}
+
+/* Fila seleccionada en tabla de alumnos */
+.students-table tr.row-selected {
+  background-color: rgba(79, 70, 229, 0.08) !important;
+}
+
+[data-theme="dark"] .students-table tr.row-selected {
+  background-color: rgba(99, 102, 241, 0.15) !important;
+}
+
+@media (max-width: 768px) {
+  .bulk-actions-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+  .bulk-bar-buttons {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .bulk-attendance-group {
+    width: 100%;
+    justify-content: space-around;
+  }
+  .bulk-attendance-group .btn-secondary {
+    flex: 1;
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 0.74rem;
+  }
+}
+

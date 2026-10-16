@@ -244,10 +244,30 @@
           </div>
         </div>
 
+        <!-- Barra flotante de acciones masivas / Bulk Actions para alumnos seleccionados -->
+        <div id="students-bulk-bar" class="bulk-actions-toolbar" style="display: none;">
+          <div class="bulk-bar-info">
+            <span class="bulk-count-badge" id="students-bulk-count">0</span>
+            <span>alumnos seleccionados</span>
+          </div>
+          <div class="bulk-bar-buttons">
+            <button type="button" id="btn-bulk-incident" class="btn btn-secondary btn-sm">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Aplicar Incidencia/Nota Masiva
+            </button>
+            <button type="button" id="btn-bulk-clear-selection" class="btn btn-secondary-subtle btn-sm">
+              Deseleccionar todos
+            </button>
+          </div>
+        </div>
+
         <div class="students-table-container">
           <table class="students-table">
             <thead>
               <tr>
+                <th style="width: 44px; text-align: center;">
+                  <input type="checkbox" id="students-select-all" class="form-checkbox" title="Seleccionar o deseleccionar a todos los alumnos">
+                </th>
                 <th>Alumno</th>
                 <th>Grupo(s)</th>
                 <th>Email de Contacto</th>
@@ -300,6 +320,22 @@
               </div>
             </div>
             <div class="attendance-actions">
+              <!-- Botones de Operaciones en Lote / Bulk Actions para Asistencia -->
+              <div class="bulk-attendance-group" role="group" aria-label="Acciones masivas de asistencia">
+                <button type="button" id="btn-bulk-attend-present" class="btn btn-secondary btn-sm" title="Marcar a todos los alumnos del grupo como PRESENTES hoy">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>Todos Presentes</span>
+                </button>
+                <button type="button" id="btn-bulk-attend-late" class="btn btn-secondary btn-sm" title="Marcar a todos los alumnos como ATRASOS">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span>Todos Atrasos</span>
+                </button>
+                <button type="button" id="btn-bulk-attend-absent" class="btn btn-secondary btn-sm" title="Marcar a todos los alumnos como FALTAS">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <span>Todos Faltas</span>
+                </button>
+              </div>
+
               <button type="button" id="btn-export-attendance-excel" class="btn btn-excel btn-sm" title="Exportar Reporte de Asistencia a Excel (.xlsx)">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -353,6 +389,11 @@
             </div>
           </div>
           <div class="grades-actions">
+            <!-- Botón de Operación en Lote: Asignar Calificación Base -->
+            <button type="button" id="btn-bulk-assign-grade" class="btn btn-secondary btn-sm" title="Asignar una misma nota o calificación base a todos los alumnos en una actividad seleccionada">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+              <span>Asignar Calificación Base</span>
+            </button>
             <div class="mobile-view-selector">
               <span class="mobile-view-label">Vista móvil:</span>
               <div class="view-toggle-segmented" role="group" aria-label="Modo de visualización móvil">
@@ -844,6 +885,93 @@
           <button type="submit" id="btn-submit-export-report" class="btn btn-excel">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Descargar Documento Excel (.xlsx)
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ASIGNAR CALIFICACIÓN BASE A TODOS (BULK ACTION) -->
+  <div id="modal-bulk-grade" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(79, 70, 229, 0.12); color: var(--color-primary); display: flex; align-items: center; justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+          </div>
+          <h3>Asignar Calificación Base Masiva</h3>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="form-bulk-grade">
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 14px;">
+          Aplica de forma simultánea una calificación o puntaje a todos los alumnos del grupo seleccionado.
+        </p>
+        <div class="form-group">
+          <label for="bulk-grade-activity-select">Actividad / Evaluación a calificar *</label>
+          <select id="bulk-grade-activity-select" class="form-select" required></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bulk-grade-score-input">Calificación a asignar *</label>
+            <input type="number" id="bulk-grade-score-input" class="form-input" min="0" max="100" step="0.1" placeholder="Ej: 10" required>
+          </div>
+          <div class="form-group">
+            <label for="bulk-grade-overwrite-select">Modo de aplicación</label>
+            <select id="bulk-grade-overwrite-select" class="form-select">
+              <option value="all">Asignar a TODOS (reemplazar existentes)</option>
+              <option value="empty-only">Solo a alumnos sin nota previa</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Aplicar a Todos los Alumnos
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: APLICAR INCIDENCIA / OBSERVACIÓN MASIVA (BULK ACTION) -->
+  <div id="modal-bulk-incident" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16, 185, 129, 0.12); color: #059669; display: flex; align-items: center; justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3>Anotación Masiva para <span id="bulk-incident-count-label">0</span> alumnos</h3>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="form-bulk-incident">
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px;">
+          Esta observación quedará registrada simultáneamente en la ficha académica y disciplinaria de todos los alumnos seleccionados.
+        </p>
+        <div class="form-group">
+          <label for="bulk-incident-type">Tipo de Anotación *</label>
+          <select id="bulk-incident-type" class="form-select" required>
+            <option value="positive">Positiva (+) - Felicitación / Buen desempeño</option>
+            <option value="negative">Negativa (-) - Falta disciplinaria / Tarea incumplida</option>
+            <option value="note">Nota / Observación pedagógica general</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="bulk-incident-title">Título o Motivo *</label>
+          <input type="text" id="bulk-incident-title" class="form-input" placeholder="Ej: Trabajo en equipo sobresaliente, Entrega de guía formativa" required>
+        </div>
+        <div class="form-group">
+          <label for="bulk-incident-comment">Descripción u Observaciones adicionales</label>
+          <textarea id="bulk-incident-comment" class="form-textarea" placeholder="Escribe detalles específicos para la anotación grupal..." rows="3"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Guardar en Alumnos Seleccionados
           </button>
         </div>
       </form>

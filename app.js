@@ -308,6 +308,24 @@ const DataService = {
     }
   },
 
+  setBulkAttendanceStatus(studentIds, classroomId, date, status) {
+    let all = JSON.parse(localStorage.getItem(STORAGE_KEYS.ATTENDANCE) || '[]');
+    studentIds.forEach(studentId => {
+      const idx = all.findIndex(a => a.studentId === studentId && a.classroomId === classroomId && a.date === date);
+      if (idx >= 0) {
+        all[idx].status = status;
+      } else {
+        all.push({ id: 'att_' + Date.now() + '_' + Math.floor(Math.random()*1000), studentId, classroomId, date, status });
+      }
+    });
+    localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(all));
+    syncToIndexedDB(STORAGE_KEYS.ATTENDANCE, all);
+
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
+  },
+
   getIncidents(studentId) {
     const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.INCIDENTS) || '[]');
     return all.filter(i => i.studentId === studentId);
@@ -320,6 +338,27 @@ const DataService = {
     syncToIndexedDB(STORAGE_KEYS.INCIDENTS, all);
 
     // Sincronización automática o encolado offline
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
+  },
+
+  addBulkIncidents(studentIds, incidentData) {
+    const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.INCIDENTS) || '[]');
+    const date = incidentData.date || new Date().toISOString().split('T')[0];
+    studentIds.forEach((studentId, i) => {
+      all.unshift({
+        id: 'inc_' + (Date.now() + i) + '_' + Math.floor(Math.random()*1000),
+        studentId,
+        type: incidentData.type,
+        title: incidentData.title,
+        comment: incidentData.comment || '',
+        date
+      });
+    });
+    localStorage.setItem(STORAGE_KEYS.INCIDENTS, JSON.stringify(all));
+    syncToIndexedDB(STORAGE_KEYS.INCIDENTS, all);
+
     if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
       window.GoogleDriveService.scheduleAutoSync();
     }
@@ -380,6 +419,37 @@ const DataService = {
     }
   },
 
+  setBulkGrades(gradeItemId, classroomId, score, overwriteMode = 'all') {
+    let all = JSON.parse(localStorage.getItem(STORAGE_KEYS.GRADES) || '[]');
+    const students = this.getStudents(classroomId);
+    const numScore = parseFloat(score);
+
+    students.forEach((student, i) => {
+      const idx = all.findIndex(g => g.studentId === student.id && g.gradeItemId === gradeItemId);
+      if (idx >= 0) {
+        if (overwriteMode === 'all') {
+          all[idx].score = numScore;
+        }
+        // Si es 'empty-only', no sobreescribir si ya tiene nota
+      } else {
+        all.push({
+          id: 'gr_' + (Date.now() + i) + '_' + Math.floor(Math.random()*1000),
+          gradeItemId,
+          studentId: student.id,
+          classroomId,
+          score: numScore
+        });
+      }
+    });
+
+    localStorage.setItem(STORAGE_KEYS.GRADES, JSON.stringify(all));
+    syncToIndexedDB(STORAGE_KEYS.GRADES, all);
+
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
+  },
+
   // --- PERFIL DEL DOCENTE ---
   getTeacherProfile() {
     const raw = localStorage.getItem(STORAGE_KEYS.TEACHER);
@@ -414,6 +484,7 @@ const UIController = {
   selectedGradeItemId: '',
   selectedDate: new Date().toISOString().split('T')[0],
   studentSortOrder: 'lastName-asc', // 'lastName-asc' | 'lastName-desc' | 'firstName-asc' | 'firstName-desc'
+  selectedStudentIds: new Set(), // Conjunto para selección múltiple / Bulk Actions
 
   sortStudents(studentsList) {
     const list = [...studentsList];
@@ -855,6 +926,7 @@ const UIController = {
     // Filtros y ordenamiento de estudiantes
     document.getElementById('filter-classroom-select').addEventListener('change', (e) => {
       this.selectedClassroomId = e.target.value;
+      this.selectedStudentIds.clear();
       this.renderStudents();
     });
 
@@ -870,6 +942,107 @@ const UIController = {
     document.getElementById('student-search-input').addEventListener('input', () => {
       this.renderStudents();
     });
+
+    // Checkbox 'Seleccionar Todos' en cabecera de la tabla de estudiantes
+    const selectAllCheckbox = document.getElementById('students-select-all');
+    if (selectAllCheckbox) {
+      selectAllCheckbox.addEventListener('change', (e) => {
+        this.toggleSelectAllStudents(e.target.checked);
+      });
+    }
+
+    // Botones de la barra flotante de acciones masivas de estudiantes
+    const btnBulkIncident = document.getElementById('btn-bulk-incident');
+    if (btnBulkIncident) {
+      btnBulkIncident.addEventListener('click', () => {
+        this.openBulkIncidentModal();
+      });
+    }
+
+    const btnBulkClear = document.getElementById('btn-bulk-clear-selection');
+    if (btnBulkClear) {
+      btnBulkClear.addEventListener('click', () => {
+        this.selectedStudentIds.clear();
+        this.renderStudents();
+      });
+    }
+
+    // Envío del formulario de Anotación Masiva para Alumnos
+    const formBulkIncident = document.getElementById('form-bulk-incident');
+    if (formBulkIncident) {
+      formBulkIncident.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const type = document.getElementById('bulk-incident-type').value;
+        const title = document.getElementById('bulk-incident-title').value.trim();
+        const comment = document.getElementById('bulk-incident-comment').value.trim();
+
+        if (!title) return alert('Por favor indica un título para la anotación');
+
+        const studentIdsArray = Array.from(this.selectedStudentIds);
+        DataService.addBulkIncidents(studentIdsArray, {
+          type,
+          title,
+          comment,
+          date: new Date().toISOString().split('T')[0]
+        });
+
+        alert(`¡Anotación asignada con éxito a ${studentIdsArray.length} alumno(s)!`);
+        this.closeModal('modal-bulk-incident');
+        this.renderStudents();
+      });
+    }
+
+    // Botones de Operaciones en Lote de Asistencia (Cabecera)
+    const btnAttendPresent = document.getElementById('btn-bulk-attend-present');
+    if (btnAttendPresent) {
+      btnAttendPresent.addEventListener('click', () => {
+        this.markAllAttendanceStatus('PRESENT');
+      });
+    }
+
+    const btnAttendLate = document.getElementById('btn-bulk-attend-late');
+    if (btnAttendLate) {
+      btnAttendLate.addEventListener('click', () => {
+        this.markAllAttendanceStatus('LATE');
+      });
+    }
+
+    const btnAttendAbsent = document.getElementById('btn-bulk-attend-absent');
+    if (btnAttendAbsent) {
+      btnAttendAbsent.addEventListener('click', () => {
+        this.markAllAttendanceStatus('ABSENT');
+      });
+    }
+
+    // Botón de Operación en Lote: Asignar Calificación Base (Cabecera de Notas)
+    const btnBulkAssignGrade = document.getElementById('btn-bulk-assign-grade');
+    if (btnBulkAssignGrade) {
+      btnBulkAssignGrade.addEventListener('click', () => {
+        this.openBulkGradeModal();
+      });
+    }
+
+    // Envío del formulario de Calificación Base Masiva
+    const formBulkGrade = document.getElementById('form-bulk-grade');
+    if (formBulkGrade) {
+      formBulkGrade.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const select = document.getElementById('grades-classroom-select');
+        const currentClassId = select ? select.value : this.selectedClassroomId;
+        const gradeItemId = document.getElementById('bulk-grade-activity-select').value;
+        const score = document.getElementById('bulk-grade-score-input').value;
+        const overwriteMode = document.getElementById('bulk-grade-overwrite-select').value;
+
+        if (!currentClassId || !gradeItemId || score === '') {
+          return alert('Por favor completa todos los campos requeridos.');
+        }
+
+        DataService.setBulkGrades(gradeItemId, currentClassId, score, overwriteMode);
+        this.closeModal('modal-bulk-grade');
+        this.renderGrades();
+        alert('Calificación base asignada exitosamente a todos los alumnos del grupo.');
+      });
+    }
 
     // Filtros de asistencia
     const attSelect = document.getElementById('attendance-classroom-select');
@@ -1360,11 +1533,16 @@ const UIController = {
 
     students = this.sortStudents(students);
 
+    // Filtrar IDs seleccionados para que solo permanezcan los que existen en el listado actual
+    const currentStudentIds = new Set(students.map(s => s.id));
+    this.selectedStudentIds = new Set(Array.from(this.selectedStudentIds).filter(id => currentStudentIds.has(id)));
+    this.updateBulkStudentsUI(students.length);
+
     const tbody = document.getElementById('students-table-body');
     tbody.innerHTML = '';
 
     if (students.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 32px;">No hay alumnos registrados en este grupo.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--color-text-muted); padding: 32px;">No hay alumnos registrados en este grupo.</td></tr>`;
       return;
     }
 
@@ -1373,6 +1551,7 @@ const UIController = {
       const assignedClasses = classrooms.filter(c => studentClassIds.includes(c.id));
       const incidents = DataService.getIncidents(std.id);
       const initials = (std.firstName[0] || '') + (std.lastName[0] || '');
+      const isSelected = this.selectedStudentIds.has(std.id);
 
       let groupsHTML = '<span style="color: var(--color-text-muted); font-size: 0.75rem;">Sin grupo</span>';
       if (assignedClasses.length > 0) {
@@ -1385,7 +1564,12 @@ const UIController = {
       }
 
       const tr = document.createElement('tr');
+      if (isSelected) tr.classList.add('row-selected');
+
       tr.innerHTML = `
+        <td style="width: 44px; text-align: center;">
+          <input type="checkbox" class="student-row-checkbox form-checkbox" data-student-id="${std.id}" ${isSelected ? 'checked' : ''} title="Seleccionar para acción en lote">
+        </td>
         <td data-label="Alumno">
           <div class="student-identity">
             <div class="student-avatar" style="background-color: ${std.avatarColor || '#4F46E5'}">${initials}</div>
@@ -1417,8 +1601,72 @@ const UIController = {
           </div>
         </td>
       `;
+
+      // Escuchar clic en el checkbox individual
+      const chk = tr.querySelector('.student-row-checkbox');
+      chk.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          this.selectedStudentIds.add(std.id);
+          tr.classList.add('row-selected');
+        } else {
+          this.selectedStudentIds.delete(std.id);
+          tr.classList.remove('row-selected');
+        }
+        this.updateBulkStudentsUI(students.length);
+      });
+
       tbody.appendChild(tr);
     });
+  },
+
+  updateBulkStudentsUI(totalVisibleStudents = 0) {
+    const bulkBar = document.getElementById('students-bulk-bar');
+    const bulkCount = document.getElementById('students-bulk-count');
+    const selectAllCheckbox = document.getElementById('students-select-all');
+    const selectedCount = this.selectedStudentIds.size;
+
+    if (bulkCount) bulkCount.textContent = selectedCount;
+
+    if (bulkBar) {
+      if (selectedCount > 0) {
+        bulkBar.style.display = 'flex';
+      } else {
+        bulkBar.style.display = 'none';
+      }
+    }
+
+    if (selectAllCheckbox) {
+      if (totalVisibleStudents > 0 && selectedCount === totalVisibleStudents) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+      } else if (selectedCount > 0 && selectedCount < totalVisibleStudents) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+      } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+      }
+    }
+  },
+
+  toggleSelectAllStudents(checkAll) {
+    const search = document.getElementById('student-search-input').value.toLowerCase().trim();
+    let students = DataService.getStudents(this.selectedClassroomId || undefined);
+
+    if (search) {
+      students = students.filter(s => 
+        (s.firstName + ' ' + s.lastName).toLowerCase().includes(search) ||
+        (s.email && s.email.toLowerCase().includes(search))
+      );
+    }
+
+    if (checkAll) {
+      students.forEach(s => this.selectedStudentIds.add(s.id));
+    } else {
+      this.selectedStudentIds.clear();
+    }
+
+    this.renderStudents();
   },
 
   renderAttendance() {
@@ -1478,14 +1726,61 @@ const UIController = {
     this.renderAttendance();
   },
 
-  markAllPresent() {
+  markAllAttendanceStatus(status = 'PRESENT') {
     const select = document.getElementById('attendance-classroom-select');
-    const targetClassroomId = select.value;
+    const targetClassroomId = select ? select.value : this.selectedClassroomId;
+    if (!targetClassroomId) return alert('Por favor selecciona un grupo primero.');
+
     const students = DataService.getStudents(targetClassroomId);
-    students.forEach(std => {
-      DataService.setAttendanceStatus(std.id, targetClassroomId, this.selectedDate, 'PRESENT');
-    });
+    if (students.length === 0) return alert('No hay estudiantes en este grupo para registrar asistencia.');
+
+    const studentIds = students.map(s => s.id);
+    DataService.setBulkAttendanceStatus(studentIds, targetClassroomId, this.selectedDate, status);
     this.renderAttendance();
+  },
+
+  markAllPresent() {
+    this.markAllAttendanceStatus('PRESENT');
+  },
+
+  openBulkGradeModal() {
+    const select = document.getElementById('grades-classroom-select');
+    const currentClassId = select ? select.value : this.selectedClassroomId;
+    if (!currentClassId) return alert('Por favor selecciona un grupo primero.');
+
+    const gradeItems = DataService.getGradeItems(currentClassId);
+    if (gradeItems.length === 0) {
+      alert('Este grupo aún no tiene actividades o exámenes creados. Crea primero una actividad para poder asignarle calificación.');
+      this.openGradeItemModal();
+      return;
+    }
+
+    const activitySelect = document.getElementById('bulk-grade-activity-select');
+    if (activitySelect) {
+      activitySelect.innerHTML = gradeItems.map(g => `<option value="${g.id}">${g.title} (Máx: ${g.maxScore})</option>`).join('');
+    }
+
+    const scoreInput = document.getElementById('bulk-grade-score-input');
+    if (scoreInput) {
+      scoreInput.value = gradeItems[0].maxScore || 10;
+    }
+
+    this.openModal('modal-bulk-grade');
+  },
+
+  openBulkIncidentModal() {
+    const count = this.selectedStudentIds.size;
+    if (count === 0) {
+      return alert('Por favor selecciona al menos una casilla de alumno para aplicar una anotación masiva.');
+    }
+
+    const countLabel = document.getElementById('bulk-incident-count-label');
+    if (countLabel) countLabel.textContent = count;
+
+    document.getElementById('bulk-incident-title').value = '';
+    document.getElementById('bulk-incident-comment').value = '';
+
+    this.openModal('modal-bulk-incident');
   },
 
   removeStudent(id) {
