@@ -1900,11 +1900,13 @@ form {
   /* Barra de navegación inferior móvil visible */
   .bottom-nav {
     display: flex;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* Margen inferior para no tapar contenido con la barra inferior */
+  /* Margen inferior amplio para no tapar el último elemento ni la última tarjeta de notas con la barra inferior */
   .main-content {
-    padding-bottom: 70px;
+    padding-bottom: calc(95px + env(safe-area-inset-bottom, 0px));
   }
 
   /* Header compacto sin desbordamientos */
@@ -2067,6 +2069,7 @@ form {
     flex-direction: column;
     gap: 14px;
     width: 100%;
+    padding-bottom: 24px;
   }
 
   html:not([data-view-mode="table"]) .students-table tr {
@@ -2079,6 +2082,10 @@ form {
     padding: 16px;
     gap: 12px;
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  html:not([data-view-mode="table"]) .students-table tr:last-child {
+    margin-bottom: 16px;
   }
 
   html:not([data-view-mode="table"]) .students-table tr:hover {
@@ -2157,6 +2164,7 @@ form {
     flex-direction: column;
     gap: 16px;
     width: 100%;
+    padding-bottom: 30px; /* Margen extra para asegurar que la última tarjeta y su promedio queden 100% visibles */
   }
 
   html:not([data-view-mode="table"]) .grades-table tr {
@@ -2169,6 +2177,10 @@ form {
     padding: 16px;
     gap: 10px;
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  html:not([data-view-mode="table"]) .grades-table tr:last-child {
+    margin-bottom: 20px;
   }
 
   html:not([data-view-mode="table"]) .grades-table td {
@@ -2201,8 +2213,8 @@ form {
 
   html:not([data-view-mode="table"]) .grades-table td.grade-cell-average {
     background-color: var(--color-surface-hover);
-    margin: 6px -16px -16px -16px;
-    padding: 12px 16px;
+    margin: 8px -16px -16px -16px;
+    padding: 14px 16px;
     border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     border-top: 1px solid var(--color-border);
     border-bottom: none;
