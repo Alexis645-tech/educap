@@ -2075,12 +2075,16 @@ form {
   html:not([data-view-mode="table"]) .students-table tr {
     display: flex;
     flex-direction: column;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     padding: 16px;
     gap: 12px;
+    box-sizing: border-box;
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
   }
 
@@ -2097,10 +2101,12 @@ form {
     align-items: center;
     justify-content: space-between;
     padding: 0;
+    height: auto !important;
     border-bottom: 1px dashed var(--color-border);
     padding-bottom: 10px;
     font-size: 0.85rem;
     white-space: normal;
+    box-sizing: border-box;
   }
 
   html:not([data-view-mode="table"]) .students-table td:last-child {
@@ -2147,36 +2153,52 @@ form {
   }
 
   html:not([data-view-mode="table"]) .grades-table-container {
-    overflow: visible;
+    overflow: visible !important;
+    max-height: none !important;
+    min-height: auto !important;
+    height: auto !important;
   }
 
   html:not([data-view-mode="table"]) .grades-table {
-    display: block;
-    width: 100%;
+    display: block !important;
+    width: 100% !important;
   }
 
   html:not([data-view-mode="table"]) .grades-table thead {
-    display: none; /* Ocultar cabecera tabular rígida */
+    display: none !important; /* Ocultar cabecera tabular rígida */
   }
 
   html:not([data-view-mode="table"]) .grades-table tbody {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    width: 100%;
-    padding-bottom: 30px; /* Margen extra para asegurar que la última tarjeta y su promedio queden 100% visibles */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    width: 100% !important;
+    padding-bottom: 30px !important; /* Margen extra para asegurar que la última tarjeta y su promedio queden 100% visibles */
   }
 
-  html:not([data-view-mode="table"]) .grades-table tr {
-    display: flex;
-    flex-direction: column;
+  html:not([data-view-mode="table"]) .grades-table tr,
+  html:not([data-view-mode="table"]) .grades-table tr.virtual-row {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     padding: 16px;
     gap: 10px;
+    box-sizing: border-box;
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  html:not([data-view-mode="table"]) .grades-table tr.virtual-spacer-row {
+    display: none !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
   }
 
   html:not([data-view-mode="table"]) .grades-table tr:last-child {
@@ -2184,14 +2206,17 @@ form {
   }
 
   html:not([data-view-mode="table"]) .grades-table td {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 8px 0 !important;
+    height: auto !important;
+    min-height: 40px !important;
     border-bottom: 1px dashed var(--color-border);
     font-size: 0.85rem;
     white-space: normal;
     text-align: left !important;
+    box-sizing: border-box;
   }
 
   html:not([data-view-mode="table"]) .grades-table td:last-child {
@@ -2246,7 +2271,10 @@ form {
   /* --- MODO TABLA CLÁSICA EN MÓVILES (data-view-mode="table") --- */
   html[data-view-mode="table"] .students-table-container,
   html[data-view-mode="table"] .grades-table-container {
-    overflow-x: auto;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    max-height: calc(100vh - 280px) !important;
+    min-height: 320px !important;
     -webkit-overflow-scrolling: touch;
     border-radius: var(--radius-md);
     background-color: var(--color-surface);

@@ -629,6 +629,23 @@ const UIController = {
       const btnMode = btn.getAttribute('data-view');
       btn.classList.toggle('active', btnMode === validMode);
     });
+
+    // Resetear posición de scroll en contenedores de tabla para evitar desalineación al alternar
+    const gradesContainer = document.querySelector('.grades-table-container');
+    if (gradesContainer) {
+      gradesContainer.scrollLeft = 0;
+      gradesContainer.scrollTop = 0;
+    }
+    const studentsContainer = document.querySelector('.students-table-container');
+    if (studentsContainer) {
+      studentsContainer.scrollLeft = 0;
+      studentsContainer.scrollTop = 0;
+    }
+
+    // Re-renderizar calificaciones si existe estado virtual activo
+    if (this.gradesVirtualState) {
+      this.renderVirtualGradesWindow();
+    }
   },
 
   toggleViewMode() {
@@ -2060,6 +2077,8 @@ const UIController = {
       const container = document.querySelector('.grades-table-container');
       if (container) {
         container.addEventListener('scroll', () => {
+          const isMobileCards = document.documentElement.getAttribute('data-view-mode') !== 'table' && window.innerWidth <= 768;
+          if (isMobileCards) return;
           this.renderVirtualGradesWindow();
         }, { passive: true });
         window.addEventListener('resize', () => {
@@ -2199,6 +2218,14 @@ const UIController = {
   },
 
   renderFullGradesRows(students, visibleGradeItems, allGrades, currentClassId, avgHeaderTitle, tableBody) {
+    const container = document.querySelector('.grades-table-container');
+    if (container) {
+      container.scrollLeft = 0;
+      container.scrollTop = 0;
+    }
+    const statsBadge = document.getElementById('grades-virtual-stats');
+    if (statsBadge) statsBadge.style.display = 'none';
+
     let html = '';
     students.forEach((std, rowIndex) => {
       const initials = (std.firstName[0] || '') + (std.lastName[0] || '');
@@ -2345,13 +2372,16 @@ const UIController = {
     const rowHeight = (this.gradesVirtualState && this.gradesVirtualState.rowHeight) || 58;
 
     if (container && nextRow !== currentRow) {
-      const targetScrollTop = nextRow * rowHeight;
-      const currentScrollTop = container.scrollTop;
-      const clientHeight = container.clientHeight || 450;
+      const isMobileCards = document.documentElement.getAttribute('data-view-mode') !== 'table' && window.innerWidth <= 768;
+      if (!isMobileCards) {
+        const targetScrollTop = nextRow * rowHeight;
+        const currentScrollTop = container.scrollTop;
+        const clientHeight = container.clientHeight || 450;
 
-      if (targetScrollTop < currentScrollTop || targetScrollTop + rowHeight > currentScrollTop + clientHeight) {
-        container.scrollTop = Math.max(0, targetScrollTop - (clientHeight / 2));
-        this.renderVirtualGradesWindow();
+        if (targetScrollTop < currentScrollTop || targetScrollTop + rowHeight > currentScrollTop + clientHeight) {
+          container.scrollTop = Math.max(0, targetScrollTop - (clientHeight / 2));
+          this.renderVirtualGradesWindow();
+        }
       }
     }
 
