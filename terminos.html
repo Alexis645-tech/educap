@@ -142,6 +142,32 @@
       line-height: 1.6;
     }
 
+    .terms-card,
+    .terms-section,
+    .terms-header,
+    .terms-callout-box {
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+
+    .terms-section a,
+    .terms-section code,
+    .terms-section strong,
+    .terms-section li,
+    .terms-section p {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .terms-section code {
+      background: var(--color-surface-hover);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85em;
+      border: 1px solid var(--color-border);
+    }
+
     .terms-footer {
       text-align: center;
       margin-top: 32px;
@@ -168,6 +194,49 @@
       background: var(--color-surface);
       border-color: var(--color-primary);
       color: var(--color-primary);
+    }
+
+    /* Adaptación Mobile Responsive */
+    @media (max-width: 640px) {
+      .terms-container {
+        margin: 20px auto 40px;
+        padding: 0 16px;
+      }
+
+      .terms-header {
+        padding: 24px 18px;
+        margin-bottom: 20px;
+      }
+
+      .terms-title {
+        font-size: 1.5rem;
+      }
+
+      .terms-card {
+        padding: 20px 18px;
+        gap: 22px;
+      }
+
+      .terms-brand-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .back-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .terms-badge {
+        font-size: 0.72rem;
+        padding: 6px 10px;
+        white-space: normal;
+        line-height: 1.4;
+      }
+
+      .terms-callout-box {
+        padding: 16px;
+      }
     }
   </style>
 </head>

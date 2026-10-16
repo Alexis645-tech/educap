@@ -142,6 +142,48 @@
       line-height: 1.6;
     }
 
+    .privacy-card,
+    .privacy-section,
+    .privacy-header,
+    .google-compliance-box {
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+
+    .privacy-section a,
+    .privacy-section code,
+    .privacy-section strong,
+    .privacy-section li,
+    .privacy-section p {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .privacy-section code {
+      background: var(--color-surface-hover);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85em;
+      border: 1px solid var(--color-border);
+    }
+
+    .scope-url {
+      display: inline-block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88rem;
+      background: rgba(99, 102, 241, 0.08);
+      color: var(--color-primary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      overflow-wrap: anywhere;
+      word-break: break-all;
+      max-width: 100%;
+      vertical-align: middle;
+      margin-bottom: 4px;
+    }
+
     .privacy-footer {
       text-align: center;
       margin-top: 32px;
@@ -168,6 +210,49 @@
       background: var(--color-surface);
       border-color: var(--color-primary);
       color: var(--color-primary);
+    }
+
+    /* Adaptación Mobile Responsive */
+    @media (max-width: 640px) {
+      .privacy-container {
+        margin: 20px auto 40px;
+        padding: 0 16px;
+      }
+
+      .privacy-header {
+        padding: 24px 18px;
+        margin-bottom: 20px;
+      }
+
+      .privacy-title {
+        font-size: 1.5rem;
+      }
+
+      .privacy-card {
+        padding: 20px 18px;
+        gap: 22px;
+      }
+
+      .privacy-brand-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .back-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .privacy-badge {
+        font-size: 0.72rem;
+        padding: 6px 10px;
+        white-space: normal;
+        line-height: 1.4;
+      }
+
+      .google-compliance-box {
+        padding: 16px;
+      }
     }
   </style>
 </head>
@@ -225,8 +310,8 @@
           EduPlan se integra con los servicios de Google Identity Services y Google Drive API mediante permisos estrictamente delimitados (<em>Non-Sensitive Scopes</em>):
         </p>
         <ul>
-          <li><strong>https://www.googleapis.com/auth/drive.file:</strong> Permite a la aplicación crear, leer y actualizar <em>únicamente</em> el archivo de copia de seguridad generado por EduPlan (<code>educap_backup_data.json</code>) dentro de su Google Drive. <strong>EduPlan NO tiene acceso</strong> a sus fotos, documentos personales, hojas de cálculo ajenas u otros archivos presentes en su cuenta de Google.</li>
-          <li><strong>https://www.googleapis.com/auth/userinfo.profile</strong> y <strong>https://www.googleapis.com/auth/userinfo.email:</strong> Utilizados exclusivamente para identificar al docente dentro de la aplicación y mostrar su nombre y avatar en el encabezado.</li>
+          <li><code class="scope-url">https://www.googleapis.com/auth/drive.file</code>: Permite a la aplicación crear, leer y actualizar <em>únicamente</em> el archivo de copia de seguridad generado por EduPlan (<code>educap_backup_data.json</code>) dentro de su Google Drive. <strong>EduPlan NO tiene acceso</strong> a sus fotos, documentos personales, hojas de cálculo ajenas u otros archivos presentes en su cuenta de Google.</li>
+          <li><code class="scope-url">https://www.googleapis.com/auth/userinfo.profile</code> y <code class="scope-url">https://www.googleapis.com/auth/userinfo.email</code>: Utilizados exclusivamente para identificar al docente dentro de la aplicación y mostrar su nombre y avatar en el encabezado.</li>
         </ul>
 
         <div class="google-compliance-box">
