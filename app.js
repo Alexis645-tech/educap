@@ -1193,7 +1193,7 @@ const UIController = {
         </div>
         <div class="roster-actions">
           <button class="status-btn ${currentStatus === 'PRESENT' ? 'selected-PRESENT' : ''}" onclick="UIController.updateStatus('${std.id}', '${targetClassroomId}', 'PRESENT')">Presente</button>
-          <button class="status-btn ${currentStatus === 'LATE' ? 'selected-LATE' : ''}" onclick="UIController.updateStatus('${std.id}', '${targetClassroomId}', 'LATE')">Retraso</button>
+          <button class="status-btn ${currentStatus === 'LATE' ? 'selected-LATE' : ''}" onclick="UIController.updateStatus('${std.id}', '${targetClassroomId}', 'LATE')">Atraso</button>
           <button class="status-btn ${currentStatus === 'ABSENT' ? 'selected-ABSENT' : ''}" onclick="UIController.updateStatus('${std.id}', '${targetClassroomId}', 'ABSENT')">Falta</button>
         </div>
       `;
