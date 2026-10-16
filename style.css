@@ -368,6 +368,27 @@ body {
   transform: scale(1.05);
 }
 
+.btn-secondary-ghost {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.btn-secondary-ghost:hover {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-primary);
+}
+
 .btn-icon-ghost {
   background: transparent;
   border: none;

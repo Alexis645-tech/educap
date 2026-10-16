@@ -352,14 +352,15 @@
     <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
   </div>
 
-  <!-- MODAL: CREAR GRUPO -->
+  <!-- MODAL: CREAR / EDITAR GRUPO -->
   <div id="modal-class" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>Crear Nuevo Grupo de Alumnos</h3>
+        <h3 id="modal-class-title">Crear Nuevo Grupo de Alumnos</h3>
         <button class="modal-close-btn">&times;</button>
       </div>
       <form id="form-create-class">
+        <input type="hidden" id="class-edit-id" value="">
         <div class="form-group">
           <label for="class-name">Nombre de la Asignatura / Grupo *</label>
           <input type="text" id="class-name" class="form-input" placeholder="Ej: Biología Celular" required>
@@ -373,6 +374,10 @@
           <input type="text" id="class-year" class="form-input" value="2026 - 2027">
         </div>
         <div class="form-group">
+          <label for="class-desc">Descripción o Notas de la Asignatura</label>
+          <input type="text" id="class-desc" class="form-input" placeholder="Ej: Aritmética, cálculo básico y resolución de problemas.">
+        </div>
+        <div class="form-group">
           <label>Color de Identificación</label>
           <div class="color-picker-palette">
             <label class="color-choice"><input type="radio" name="class-color" value="#4F46E5" checked><span style="background:#4F46E5"></span></label>
@@ -384,7 +389,7 @@
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar Grupo</button>
+          <button type="submit" id="btn-submit-class" class="btn btn-primary">Guardar Grupo</button>
         </div>
       </form>
     </div>

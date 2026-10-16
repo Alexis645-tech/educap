@@ -105,6 +105,25 @@ const DataService = {
     const list = this.getClassrooms();
     list.push(cls);
     localStorage.setItem(STORAGE_KEYS.CLASSROOMS, JSON.stringify(list));
+
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
+  },
+
+  updateClassroom(id, updatedFields) {
+    const list = this.getClassrooms();
+    const index = list.findIndex(c => c.id === id);
+    if (index !== -1) {
+      list[index] = { ...list[index], ...updatedFields };
+      localStorage.setItem(STORAGE_KEYS.CLASSROOMS, JSON.stringify(list));
+
+      if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+        window.GoogleDriveService.scheduleAutoSync();
+      }
+      return list[index];
+    }
+    return null;
   },
 
   deleteClassroom(classroomId) {
@@ -442,7 +461,7 @@ const UIController = {
     // Botón de acción rápida superior
     document.getElementById('btn-quick-action').addEventListener('click', () => {
       if (this.currentTab === 'classes-tab') {
-        this.openModal('modal-class');
+        this.openClassroomModal();
       } else if (this.currentTab === 'students-tab') {
         this.openStudentModal();
       } else if (this.currentTab === 'attendance-tab') {
@@ -586,26 +605,43 @@ const UIController = {
       });
     }
 
-    // Envío formulario clase
+    // Envío formulario clase (Crear o Editar)
     document.getElementById('form-create-class').addEventListener('submit', (e) => {
       e.preventDefault();
+      const editId = document.getElementById('class-edit-id').value;
       const name = document.getElementById('class-name').value.trim();
       const grade = document.getElementById('class-grade').value.trim();
       const year = document.getElementById('class-year').value.trim();
+      const desc = document.getElementById('class-desc').value.trim();
       const color = document.querySelector('input[name="class-color"]:checked').value;
 
-      DataService.addClassroom({
-        id: 'cls_' + Date.now(),
-        name,
-        gradeLevel: grade,
-        academicYear: year,
-        color,
-        createdAt: new Date().toISOString()
-      });
+      if (editId) {
+        // Actualizar clase existente
+        DataService.updateClassroom(editId, {
+          name,
+          gradeLevel: grade,
+          academicYear: year,
+          description: desc,
+          color
+        });
+      } else {
+        // Crear nueva clase
+        DataService.addClassroom({
+          id: 'cls_' + Date.now(),
+          name,
+          gradeLevel: grade,
+          academicYear: year,
+          description: desc,
+          color,
+          createdAt: new Date().toISOString()
+        });
+      }
 
       document.getElementById('form-create-class').reset();
+      document.getElementById('class-edit-id').value = '';
       this.closeModal('modal-class');
       this.renderClassrooms();
+      this.populateClassroomSelects();
     });
 
     // Envío formulario estudiante
@@ -923,10 +959,16 @@ const UIController = {
           </div>
         </div>
         <div class="classroom-card-actions">
-          <button class="btn btn-danger-ghost btn-sm" title="Eliminar clase" aria-label="Eliminar clase" onclick="UIController.confirmDeleteClassroom('${cls.id}', '${cls.name.replace(/'/g, "\\'")}')">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-            <span class="btn-delete-text">Eliminar</span>
-          </button>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button class="btn btn-secondary-ghost btn-sm" title="Editar información del grupo" aria-label="Editar grupo" onclick="UIController.openEditClassroomModal('${cls.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <span>Editar</span>
+            </button>
+            <button class="btn btn-danger-ghost btn-sm" title="Eliminar clase" aria-label="Eliminar clase" onclick="UIController.confirmDeleteClassroom('${cls.id}', '${cls.name.replace(/'/g, "\\'")}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              <span class="btn-delete-text">Eliminar</span>
+            </button>
+          </div>
           <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
             <button class="btn btn-secondary btn-sm" onclick="UIController.goToAttendance('${cls.id}')">Asistencia</button>
             <button class="btn btn-secondary btn-sm" onclick="UIController.goToGrades('${cls.id}')">Notas</button>
@@ -943,7 +985,7 @@ const UIController = {
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-subtle)" stroke-width="1.5" style="margin-bottom: 12px;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           <h3 style="font-size: 1.1rem; margin-bottom: 6px;">No tienes ningún grupo registrado</h3>
           <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 18px;">Crea una nueva clase para comenzar a gestionar alumnos y asistencia.</p>
-          <button class="btn btn-primary" onclick="UIController.openModal('modal-class')">Crear Nueva Clase</button>
+          <button class="btn btn-primary" onclick="UIController.openClassroomModal()">Crear Nueva Clase</button>
         </div>
       `;
     }
@@ -970,6 +1012,50 @@ const UIController = {
       // Si estamos en otra pestaña o hay selects abiertos, mantenerlos actualizados
       this.populateClassroomSelects();
     }
+  },
+
+  openClassroomModal() {
+    const form = document.getElementById('form-create-class');
+    if (form) form.reset();
+    const editIdInput = document.getElementById('class-edit-id');
+    if (editIdInput) editIdInput.value = '';
+
+    const modalTitle = document.getElementById('modal-class-title');
+    if (modalTitle) modalTitle.textContent = 'Crear Nuevo Grupo de Alumnos';
+
+    const submitBtn = document.getElementById('btn-submit-class');
+    if (submitBtn) submitBtn.textContent = 'Guardar Grupo';
+
+    // Seleccionar color por defecto
+    const defaultColorRadio = document.querySelector('input[name="class-color"][value="#4F46E5"]');
+    if (defaultColorRadio) defaultColorRadio.checked = true;
+
+    this.openModal('modal-class');
+  },
+
+  openEditClassroomModal(classroomId) {
+    const classroom = DataService.getClassrooms().find(c => c.id === classroomId);
+    if (!classroom) return;
+
+    const modalTitle = document.getElementById('modal-class-title');
+    if (modalTitle) modalTitle.textContent = 'Editar Grupo de Alumnos';
+
+    const submitBtn = document.getElementById('btn-submit-class');
+    if (submitBtn) submitBtn.textContent = 'Guardar Cambios';
+
+    document.getElementById('class-edit-id').value = classroom.id;
+    document.getElementById('class-name').value = classroom.name || '';
+    document.getElementById('class-grade').value = classroom.gradeLevel || '';
+    document.getElementById('class-year').value = classroom.academicYear || '';
+    document.getElementById('class-desc').value = classroom.description || '';
+
+    // Marcar color correspondiente
+    const colorRadio = document.querySelector(`input[name="class-color"][value="${classroom.color}"]`);
+    if (colorRadio) {
+      colorRadio.checked = true;
+    }
+
+    this.openModal('modal-class');
   },
 
   goToStudents(classroomId) {
