@@ -2066,7 +2066,7 @@ const UIController = {
         <th class="grade-col-activity">
           <div class="activity-th-header">
             <span class="activity-th-title">${item.title}</span>
-            <div style="display: flex; gap: 4px; align-items: center;">
+            <div style="display: flex; gap: 4px; align-items: center; justify-content: center;">
               <span class="activity-th-badge">${typeLabels[item.type] || item.type} • /${item.maxScore}</span>
               <button class="btn-danger-ghost" title="Eliminar actividad" onclick="UIController.confirmDeleteGradeItem('${item.id}', '${item.title.replace(/'/g, "\\'")}')" style="padding: 2px;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
