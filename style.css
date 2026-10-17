@@ -2086,6 +2086,7 @@ form {
     gap: 12px;
     box-sizing: border-box;
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    position: relative;
   }
 
   html:not([data-view-mode="table"]) .students-table tr:last-child {
@@ -2116,20 +2117,50 @@ form {
     justify-content: flex-end;
   }
 
-  /* Cabecera de la tarjeta: Nombre y avatar del alumno */
+  /* Celda de selección en tarjeta móvil: ubicada a la izquierda, a la misma altura del avatar y nombre */
+  html:not([data-view-mode="table"]) .students-table td.student-select-cell,
+  html:not([data-view-mode="table"]) .students-table td:has(.student-row-checkbox),
+  html:not([data-view-mode="table"]) .students-table td:first-child:not([data-label]) {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    width: 24px !important;
+    height: 38px !important;
+    border-bottom: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    cursor: pointer;
+  }
+
+  html:not([data-view-mode="table"]) .students-table td.student-select-cell::before,
+  html:not([data-view-mode="table"]) .students-table td:has(.student-row-checkbox)::before,
+  html:not([data-view-mode="table"]) .students-table td:first-child:not([data-label])::before {
+    display: none !important;
+    content: none !important;
+    margin: 0 !important;
+  }
+
+  /* Cabecera de la tarjeta: Nombre y avatar del alumno alineado con el checkbox a la izquierda */
   html:not([data-view-mode="table"]) .students-table td[data-label="Alumno"] {
     justify-content: flex-start;
     border-bottom: 1px solid var(--color-border);
     padding-bottom: 12px;
+    padding-left: 34px;
     margin-bottom: 2px;
+    min-height: 38px;
+    box-sizing: border-box;
   }
 
   html:not([data-view-mode="table"]) .students-table td[data-label="Alumno"]::before {
-    display: none;
+    display: none !important;
   }
 
   /* Etiquetas descriptoras antes de cada dato */
-  html:not([data-view-mode="table"]) .students-table td:not([data-label="Alumno"])::before {
+  html:not([data-view-mode="table"]) .students-table td:not([data-label="Alumno"]):not(.student-select-cell):not(:has(.student-row-checkbox))::before {
     content: attr(data-label);
     font-size: 0.72rem;
     font-weight: 700;
@@ -2321,6 +2352,19 @@ form {
     font-size: 0.8rem;
     white-space: nowrap;
     border-bottom: 1px solid var(--color-border);
+  }
+
+  html[data-view-mode="table"] .students-table td.student-select-cell {
+    position: static !important;
+    width: 44px !important;
+    height: auto !important;
+    padding: 12px 14px !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    display: table-cell !important;
+  }
+
+  html[data-view-mode="table"] .students-table td[data-label="Alumno"] {
+    padding-left: 14px !important;
   }
 
   html[data-view-mode="table"] .students-table td::before,

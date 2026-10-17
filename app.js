@@ -1661,7 +1661,7 @@ const UIController = {
       if (isSelected) tr.classList.add('row-selected');
 
       tr.innerHTML = `
-        <td style="width: 44px; text-align: center;">
+        <td class="student-select-cell" style="width: 44px; text-align: center;">
           <input type="checkbox" class="student-row-checkbox form-checkbox" data-student-id="${std.id}" ${isSelected ? 'checked' : ''} title="Seleccionar para acción en lote">
         </td>
         <td data-label="Alumno">
@@ -1698,6 +1698,7 @@ const UIController = {
 
       // Escuchar clic en el checkbox individual
       const chk = tr.querySelector('.student-row-checkbox');
+      const selectCell = tr.querySelector('.student-select-cell');
       chk.addEventListener('change', (e) => {
         if (e.target.checked) {
           this.selectedStudentIds.add(std.id);
@@ -1708,6 +1709,15 @@ const UIController = {
         }
         this.updateBulkStudentsUI(students.length);
       });
+
+      if (selectCell) {
+        selectCell.addEventListener('click', (e) => {
+          if (e.target !== chk) {
+            chk.checked = !chk.checked;
+            chk.dispatchEvent(new Event('change'));
+          }
+        });
+      }
 
       tbody.appendChild(tr);
     });
