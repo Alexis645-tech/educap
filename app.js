@@ -151,7 +151,7 @@ const DataService = {
     localStorage.setItem(STORAGE_KEYS.CLASSROOMS, JSON.stringify(classrooms));
     syncToIndexedDB(STORAGE_KEYS.CLASSROOMS, classrooms);
 
-    // 2. Alumnos: desvincular de la clase; si el alumno solo pertenecía a esta clase, se elimina completamente
+    // 2. Estudiantes: desvincular de la clase; si el estudiante solo pertenecía a esta clase, se elimina completamente
     const allStudents = JSON.parse(localStorage.getItem(STORAGE_KEYS.STUDENTS) || '[]');
     const studentIdsFullyRemoved = new Set();
 
@@ -173,7 +173,7 @@ const DataService = {
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(updatedStudents));
     syncToIndexedDB(STORAGE_KEYS.STUDENTS, updatedStudents);
 
-    // 3. Limpiar incidencias sólo de los alumnos que fueron eliminados totalmente
+    // 3. Limpiar incidencias sólo de los estudiantes que fueron eliminados totalmente
     const allIncidents = JSON.parse(localStorage.getItem(STORAGE_KEYS.INCIDENTS) || '[]');
     const remainingIncidents = allIncidents.filter(i => !studentIdsFullyRemoved.has(i.studentId));
     localStorage.setItem(STORAGE_KEYS.INCIDENTS, JSON.stringify(remainingIncidents));
@@ -275,7 +275,7 @@ const DataService = {
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(list));
     syncToIndexedDB(STORAGE_KEYS.STUDENTS, list);
 
-    // Limpiar notas del alumno eliminado
+    // Limpiar notas del estudiante eliminado
     const allGrades = JSON.parse(localStorage.getItem(STORAGE_KEYS.GRADES) || '[]');
     const remainingGrades = allGrades.filter(g => g.studentId !== id);
     localStorage.setItem(STORAGE_KEYS.GRADES, JSON.stringify(remainingGrades));
@@ -956,7 +956,7 @@ const UIController = {
       const classroomIds = checkedBoxes.map(cb => cb.value);
 
       if (classroomIds.length === 0) {
-        alert('Por favor selecciona al menos un grupo o materia para el alumno.');
+        alert('Por favor selecciona al menos un grupo o materia para el estudiante.');
         return;
       }
 
@@ -1044,7 +1044,7 @@ const UIController = {
       });
     }
 
-    // Envío del formulario de Anotación Masiva para Alumnos
+    // Envío del formulario de Anotación Masiva para Estudiantes
     const formBulkIncident = document.getElementById('form-bulk-incident');
     if (formBulkIncident) {
       formBulkIncident.addEventListener('submit', (e) => {
@@ -1063,7 +1063,7 @@ const UIController = {
           date: new Date().toISOString().split('T')[0]
         });
 
-        alert(`¡Anotación asignada con éxito a ${studentIdsArray.length} alumno(s)!`);
+        alert(`¡Anotación asignada con éxito a ${studentIdsArray.length} estudiante(s)!`);
         this.closeModal('modal-bulk-incident');
         this.renderStudents();
       });
@@ -1117,7 +1117,7 @@ const UIController = {
         DataService.setBulkGrades(gradeItemId, currentClassId, score, overwriteMode);
         this.closeModal('modal-bulk-grade');
         this.renderGrades();
-        alert('Calificación base asignada exitosamente a todos los alumnos del grupo.');
+        alert('Calificación base asignada exitosamente a todos los estudiantes del grupo.');
       });
     }
 
@@ -1428,9 +1428,9 @@ const UIController = {
       pageSubtitle.textContent = 'Organiza tus asignaturas, niveles académicos y matrículas';
       quickBtnText.textContent = 'Nueva Clase';
     } else if (tabId === 'students-tab') {
-      pageTitle.textContent = 'Fichas de Alumnos';
+      pageTitle.textContent = 'Fichas de Estudiantes';
       pageSubtitle.textContent = 'Gestión integral, contactos e incidencias de conducta';
-      quickBtnText.textContent = 'Añadir Alumno';
+      quickBtnText.textContent = 'Añadir Estudiante';
     } else if (tabId === 'attendance-tab') {
       pageTitle.textContent = 'Control de Asistencia';
       pageSubtitle.textContent = 'Pasa lista de forma rápida en un solo clic';
@@ -1475,7 +1475,7 @@ const UIController = {
           </div>
           <p class="classroom-card-desc">${cls.description || 'Sin descripción adicional.'}</p>
           <div class="classroom-card-meta">
-            <span><strong>${studentCount}</strong> Alumnos</span>
+            <span><strong>${studentCount}</strong> Estudiantes</span>
             <span>${cls.academicYear}</span>
           </div>
         </div>
@@ -1493,7 +1493,7 @@ const UIController = {
           <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
             <button class="btn btn-secondary btn-sm" onclick="UIController.goToAttendance('${cls.id}')">Asistencia</button>
             <button class="btn btn-secondary btn-sm" onclick="UIController.goToGrades('${cls.id}')">Notas</button>
-            <button class="btn btn-primary btn-sm" onclick="UIController.goToStudents('${cls.id}')">Alumnos</button>
+            <button class="btn btn-primary btn-sm" onclick="UIController.goToStudents('${cls.id}')">Estudiantes</button>
           </div>
         </div>
       `;
@@ -1505,7 +1505,7 @@ const UIController = {
         <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; background: var(--color-surface); border-radius: var(--radius-lg); border: 1px dashed var(--color-border);">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-subtle)" stroke-width="1.5" style="margin-bottom: 12px;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           <h3 style="font-size: 1.1rem; margin-bottom: 6px;">No tienes ningún grupo registrado</h3>
-          <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 18px;">Crea una nueva clase para comenzar a gestionar alumnos y asistencia.</p>
+          <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 18px;">Crea una nueva clase para comenzar a gestionar estudiantes y asistencia.</p>
           <button class="btn btn-primary" onclick="UIController.openClassroomModal()">Crear Nueva Clase</button>
         </div>
       `;
@@ -1517,7 +1517,7 @@ const UIController = {
     const count = students.length;
     let message = `¿Estás seguro de que deseas eliminar la clase "${className}"?`;
     if (count > 0) {
-      message += `\n\n⚠️ Atención: Afectará a los ${count} alumno(s) asignados a esta materia o grupo (se desvincularán de esta clase, y si no pertenecen a otro grupo serán eliminados).`;
+      message += `\n\n⚠️ Atención: Afectará a los ${count} estudiante(s) asignados a esta materia o grupo (se desvincularán de esta clase, y si no pertenecen a otro grupo serán eliminados).`;
     }
 
     if (confirm(message)) {
@@ -1542,7 +1542,7 @@ const UIController = {
     if (editIdInput) editIdInput.value = '';
 
     const modalTitle = document.getElementById('modal-class-title');
-    if (modalTitle) modalTitle.textContent = 'Crear Nuevo Grupo de Alumnos';
+    if (modalTitle) modalTitle.textContent = 'Crear Nuevo Grupo de Estudiantes';
 
     const submitBtn = document.getElementById('btn-submit-class');
     if (submitBtn) submitBtn.textContent = 'Guardar Grupo';
@@ -1559,7 +1559,7 @@ const UIController = {
     if (!classroom) return;
 
     const modalTitle = document.getElementById('modal-class-title');
-    if (modalTitle) modalTitle.textContent = 'Editar Grupo de Alumnos';
+    if (modalTitle) modalTitle.textContent = 'Editar Grupo de Estudiantes';
 
     const submitBtn = document.getElementById('btn-submit-class');
     if (submitBtn) submitBtn.textContent = 'Guardar Cambios';
@@ -1636,7 +1636,7 @@ const UIController = {
     tbody.innerHTML = '';
 
     if (students.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--color-text-muted); padding: 32px;">No hay alumnos registrados en este grupo.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--color-text-muted); padding: 32px;">No hay estudiantes registrados en este grupo.</td></tr>`;
       return;
     }
 
@@ -1664,7 +1664,7 @@ const UIController = {
         <td class="student-select-cell" style="width: 44px; text-align: center;">
           <input type="checkbox" class="student-row-checkbox form-checkbox" data-student-id="${std.id}" ${isSelected ? 'checked' : ''} title="Seleccionar para acción en lote">
         </td>
-        <td data-label="Alumno">
+        <td data-label="Estudiante">
           <div class="student-identity">
             <div class="student-avatar" style="background-color: ${std.avatarColor || '#4F46E5'}">${initials}</div>
             <div>
@@ -1686,10 +1686,10 @@ const UIController = {
         </td>
         <td data-label="Acciones">
           <div class="actions-cell">
-            <button class="btn-icon-ghost" title="Editar datos del alumno" onclick="UIController.openEditStudentModal('${std.id}')">
+            <button class="btn-icon-ghost" title="Editar datos del estudiante" onclick="UIController.openEditStudentModal('${std.id}')">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
-            <button class="btn-danger-ghost" title="Eliminar alumno" onclick="UIController.removeStudent('${std.id}')">
+            <button class="btn-danger-ghost" title="Eliminar estudiante" onclick="UIController.removeStudent('${std.id}')">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
           </div>
@@ -1875,7 +1875,7 @@ const UIController = {
   openBulkIncidentModal() {
     const count = this.selectedStudentIds.size;
     if (count === 0) {
-      return alert('Por favor selecciona al menos una casilla de alumno para aplicar una anotación masiva.');
+      return alert('Por favor selecciona al menos una casilla de estudiante para aplicar una anotación masiva.');
     }
 
     const countLabel = document.getElementById('bulk-incident-count-label');
@@ -1888,7 +1888,7 @@ const UIController = {
   },
 
   removeStudent(id) {
-    if (confirm('¿Estás seguro de que deseas eliminar este alumno de la lista?')) {
+    if (confirm('¿Estás seguro de que deseas eliminar este estudiante de la lista?')) {
       DataService.deleteStudent(id);
       this.renderStudents();
     }
@@ -1924,10 +1924,10 @@ const UIController = {
     if (editIdInput) editIdInput.value = '';
 
     const modalTitle = document.getElementById('modal-student-title');
-    if (modalTitle) modalTitle.textContent = 'Registrar Nuevo Alumno';
+    if (modalTitle) modalTitle.textContent = 'Registrar Nuevo Estudiante';
 
     const submitBtn = document.getElementById('btn-submit-student');
-    if (submitBtn) submitBtn.textContent = 'Matricular Alumno';
+    if (submitBtn) submitBtn.textContent = 'Matricular Estudiante';
 
     // Por defecto, preseleccionar la clase actual si existe
     const defaultSelection = this.selectedClassroomId ? [this.selectedClassroomId] : [];
@@ -1941,7 +1941,7 @@ const UIController = {
     if (!student) return;
 
     const modalTitle = document.getElementById('modal-student-title');
-    if (modalTitle) modalTitle.textContent = 'Editar Información del Alumno';
+    if (modalTitle) modalTitle.textContent = 'Editar Información del Estudiante';
 
     const submitBtn = document.getElementById('btn-submit-student');
     if (submitBtn) submitBtn.textContent = 'Guardar Cambios';
@@ -2019,7 +2019,7 @@ const UIController = {
     const activitySelect = document.getElementById('grades-activity-select');
 
     if (!currentClassId) {
-      if (headerRow) headerRow.innerHTML = '<th>Alumno</th><th>Promedio</th>';
+      if (headerRow) headerRow.innerHTML = '<th>Estudiante</th><th>Promedio</th>';
       if (tableBody) tableBody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--color-text-muted); padding: 32px;">No hay clases disponibles. Crea un grupo primero.</td></tr>';
       return;
     }
@@ -2059,7 +2059,7 @@ const UIController = {
     }
 
     // Cabecera de la tabla con cada actividad / examen visible
-    let headerHTML = '<th>Alumno</th>';
+    let headerHTML = '<th>Estudiante</th>';
     visibleGradeItems.forEach(item => {
       const typeLabels = { exam: 'Examen', homework: 'Tarea', project: 'Proyecto', participation: 'Part.' };
       headerHTML += `
@@ -2085,7 +2085,7 @@ const UIController = {
       tableBody.innerHTML = '';
 
       if (students.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="${visibleGradeItems.length + 2}" style="text-align: center; color: var(--color-text-muted); padding: 32px;">No hay alumnos matriculados en esta clase.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="${visibleGradeItems.length + 2}" style="text-align: center; color: var(--color-text-muted); padding: 32px;">No hay estudiantes matriculados en esta clase.</td></tr>`;
         return;
       }
 
@@ -2175,7 +2175,7 @@ const UIController = {
 
       const initials = (std.firstName[0] || '') + (std.lastName[0] || '');
       let cellsHTML = `
-        <td data-label="Alumno">
+        <td data-label="Estudiante">
           <div class="student-identity">
             <div class="student-avatar" style="background-color: ${std.avatarColor || '#4F46E5'}">${initials}</div>
             <div class="student-full-name">${std.firstName} ${std.lastName}</div>
@@ -2250,7 +2250,7 @@ const UIController = {
     if (statsBadge && statsText) {
       const renderedCount = (endIndex - startIndex + 1);
       statsBadge.style.display = 'inline-flex';
-      statsText.textContent = `Renderizando ${renderedCount} de ${totalCount} alumnos (DOM Windowing)`;
+      statsText.textContent = `Renderizando ${renderedCount} de ${totalCount} estudiantes (DOM Windowing)`;
     }
   },
 
@@ -2267,7 +2267,7 @@ const UIController = {
     students.forEach((std, rowIndex) => {
       const initials = (std.firstName[0] || '') + (std.lastName[0] || '');
       let cellsHTML = `
-        <td data-label="Alumno">
+        <td data-label="Estudiante">
           <div class="student-identity">
             <div class="student-avatar" style="background-color: ${std.avatarColor || '#4F46E5'}">${initials}</div>
             <div class="student-full-name">${std.firstName} ${std.lastName}</div>
@@ -2437,7 +2437,7 @@ const UIController = {
     if (triggerFullRender) {
       this.renderGrades();
     } else {
-      // Actualización quirúrgica del promedio del alumno sin parpadear ni perder foco
+      // Actualización quirúrgica del promedio del estudiante sin parpadear ni perder foco
       this.refreshStudentRowAverage(studentId, classroomId);
     }
 

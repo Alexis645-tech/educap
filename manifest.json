@@ -77,8 +77,8 @@
       "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
     },
     {
-      "name": "Alumnos y Fichas",
-      "short_name": "Alumnos",
+      "name": "Estudiantes y Fichas",
+      "short_name": "Estudiantes",
       "description": "Directorio de estudiantes e incidencias",
       "url": "./index.html#students",
       "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]

@@ -665,7 +665,7 @@ const GoogleDriveService = {
       if (success) {
         this.hideConflictModal();
         this.pendingConflict = null;
-        alert('✅ ¡Fusión Inteligente Exitosa!\n\nSe han combinado de forma segura las notas, alumnos y asistencias de ambos dispositivos en una sola versión maestra actualizada en Google Drive.');
+        alert('✅ ¡Fusión Inteligente Exitosa!\n\nSe han combinado de forma segura las notas, estudiantes y asistencias de ambos dispositivos en una sola versión maestra actualizada en Google Drive.');
         return true;
       } else {
         alert('Los datos locales se fusionaron con éxito. Se reintentará la subida a Google Drive automáticamente.');
@@ -1074,7 +1074,7 @@ const GoogleDriveService = {
                   </div>
                   <span class="conflict-badge-recommended">⭐ Recomendado</span>
                 </div>
-                <p>Combina alumnos, calificaciones, asistencias e incidencias de ambos lados. Guarda la copia unificada en este equipo y actualiza Google Drive automáticamente.</p>
+                <p>Combina estudiantes, calificaciones, asistencias e incidencias de ambos lados. Guarda la copia unificada en este equipo y actualiza Google Drive automáticamente.</p>
               </div>
 
               <!-- Opción 2: Descargar de Google Drive -->
@@ -1206,7 +1206,7 @@ const GoogleDriveService = {
     if (metricsRemoteEl) {
       metricsRemoteEl.innerHTML = `
         <span class="metric-badge">${remoteData.classrooms ? remoteData.classrooms.length : 0} Aulas</span>
-        <span class="metric-badge">${remoteData.students ? remoteData.students.length : 0} Alumnos</span>
+        <span class="metric-badge">${remoteData.students ? remoteData.students.length : 0} Estudiantes</span>
         <span class="metric-badge">${remoteData.grades ? remoteData.grades.length : 0} Notas</span>
         <span class="metric-badge">${remoteData.attendance ? remoteData.attendance.length : 0} Asistencias</span>
       `;
@@ -1217,7 +1217,7 @@ const GoogleDriveService = {
     if (metricsLocalEl) {
       metricsLocalEl.innerHTML = `
         <span class="metric-badge">${localData.classrooms ? localData.classrooms.length : 0} Aulas</span>
-        <span class="metric-badge">${localData.students ? localData.students.length : 0} Alumnos</span>
+        <span class="metric-badge">${localData.students ? localData.students.length : 0} Estudiantes</span>
         <span class="metric-badge">${localData.grades ? localData.grades.length : 0} Notas</span>
         <span class="metric-badge">${localData.attendance ? localData.attendance.length : 0} Asistencias</span>
       `;

@@ -104,7 +104,7 @@
         </button>
         <button class="nav-item" data-tab="students-tab">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Alumnos & Fichas
+          Estudiantes & Fichas
         </button>
         <button class="nav-item" data-tab="attendance-tab">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
@@ -147,7 +147,7 @@
           </button>
           <div>
             <h1 id="page-title">Gestión de Grupos</h1>
-            <p id="page-subtitle">Administra tus aulas activas y alumnos matriculados</p>
+            <p id="page-subtitle">Administra tus aulas activas y estudiantes matriculados</p>
           </div>
         </div>
         <div class="header-actions">
@@ -251,11 +251,11 @@
           </div>
         </div>
 
-        <!-- Barra flotante de acciones masivas / Bulk Actions para alumnos seleccionados -->
+        <!-- Barra flotante de acciones masivas / Bulk Actions para estudiantes seleccionados -->
         <div id="students-bulk-bar" class="bulk-actions-toolbar" style="display: none;">
           <div class="bulk-bar-info">
             <span class="bulk-count-badge" id="students-bulk-count">0</span>
-            <span>alumnos seleccionados</span>
+            <span>estudiantes seleccionados</span>
           </div>
           <div class="bulk-bar-buttons">
             <button type="button" id="btn-bulk-incident" class="btn btn-secondary btn-sm">
@@ -273,9 +273,9 @@
             <thead>
               <tr>
                 <th style="width: 44px; text-align: center;">
-                  <input type="checkbox" id="students-select-all" class="form-checkbox" title="Seleccionar o deseleccionar a todos los alumnos">
+                  <input type="checkbox" id="students-select-all" class="form-checkbox" title="Seleccionar o deseleccionar a todos los estudiantes">
                 </th>
-                <th>Alumno</th>
+                <th>Estudiante</th>
                 <th>Grupo(s)</th>
                 <th>Email de Contacto</th>
                 <th>Incidencias</th>
@@ -283,7 +283,7 @@
               </tr>
             </thead>
             <tbody id="students-table-body">
-              <!-- Render dinámico de filas de alumnos -->
+              <!-- Render dinámico de filas de estudiantes -->
             </tbody>
           </table>
         </div>
@@ -302,7 +302,7 @@
               <input type="date" id="attendance-date-input" class="form-input">
             </div>
             <div class="control-group">
-              <label for="attendance-sort-select">Ordenar alumnos:</label>
+              <label for="attendance-sort-select">Ordenar estudiantes:</label>
               <select id="attendance-sort-select" class="form-select">
                 <option value="lastName-asc">Apellido (A - Z)</option>
                 <option value="lastName-desc">Apellido (Z - A)</option>
@@ -329,15 +329,15 @@
             <div class="attendance-actions">
               <!-- Botones de Operaciones en Lote / Bulk Actions para Asistencia -->
               <div class="bulk-attendance-group" role="group" aria-label="Acciones masivas de asistencia">
-                <button type="button" id="btn-bulk-attend-present" class="btn btn-secondary btn-sm" title="Marcar a todos los alumnos del grupo como PRESENTES hoy">
+                <button type="button" id="btn-bulk-attend-present" class="btn btn-secondary btn-sm" title="Marcar a todos los estudiantes del grupo como PRESENTES hoy">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                   <span>Todos Presentes</span>
                 </button>
-                <button type="button" id="btn-bulk-attend-late" class="btn btn-secondary btn-sm" title="Marcar a todos los alumnos como ATRASOS">
+                <button type="button" id="btn-bulk-attend-late" class="btn btn-secondary btn-sm" title="Marcar a todos los estudiantes como ATRASOS">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   <span>Todos Atrasos</span>
                 </button>
-                <button type="button" id="btn-bulk-attend-absent" class="btn btn-secondary btn-sm" title="Marcar a todos los alumnos como FALTAS">
+                <button type="button" id="btn-bulk-attend-absent" class="btn btn-secondary btn-sm" title="Marcar a todos los estudiantes como FALTAS">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   <span>Todos Faltas</span>
                 </button>
@@ -376,7 +376,7 @@
               </select>
             </div>
             <div class="control-group">
-              <label for="grades-sort-select">Ordenar alumnos:</label>
+              <label for="grades-sort-select">Ordenar estudiantes:</label>
               <select id="grades-sort-select" class="form-select">
                 <option value="lastName-asc">Apellido (A - Z)</option>
                 <option value="lastName-desc">Apellido (Z - A)</option>
@@ -387,7 +387,7 @@
           </div>
           <div class="grades-actions">
             <!-- Botón de Operación en Lote: Asignar Calificación Base -->
-            <button type="button" id="btn-bulk-assign-grade" class="btn btn-secondary btn-sm" title="Asignar una misma nota o calificación base a todos los alumnos en una actividad seleccionada">
+            <button type="button" id="btn-bulk-assign-grade" class="btn btn-secondary btn-sm" title="Asignar una misma nota o calificación base a todos los estudiantes en una actividad seleccionada">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
               <span>Asignar Calificación Base</span>
             </button>
@@ -447,7 +447,7 @@
             <table class="grades-table">
               <thead>
                 <tr id="grades-table-header">
-                  <th>Alumno</th>
+                  <th>Estudiante</th>
                   <!-- Columnas dinámicas de evaluaciones -->
                   <th>Promedio</th>
                 </tr>
@@ -468,7 +468,7 @@
         </button>
         <button class="bottom-nav-item" data-tab="students-tab">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <span>Alumnos</span>
+          <span>Estudiantes</span>
         </button>
         <button class="bottom-nav-item" data-tab="attendance-tab">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
@@ -489,7 +489,7 @@
   <div id="modal-class" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="modal-class-title">Crear Nuevo Grupo de Alumnos</h3>
+        <h3 id="modal-class-title">Crear Nuevo Grupo de Estudiantes</h3>
         <button class="modal-close-btn">&times;</button>
       </div>
       <form id="form-create-class">
@@ -528,11 +528,11 @@
     </div>
   </div>
 
-  <!-- MODAL: REGISTRAR / EDITAR ALUMNO -->
+  <!-- MODAL: REGISTRAR / EDITAR ESTUDIANTE -->
   <div id="modal-student" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="modal-student-title">Registrar Nuevo Alumno</h3>
+        <h3 id="modal-student-title">Registrar Nuevo Estudiante</h3>
         <button class="modal-close-btn">&times;</button>
       </div>
       <form id="form-create-student">
@@ -542,7 +542,7 @@
           <div id="student-classrooms-checkboxes" class="classroom-checkbox-list">
             <!-- Checkboxes generados dinámicamente con cada clase -->
           </div>
-          <span style="font-size: 0.72rem; color: var(--color-text-muted);">Puedes seleccionar uno o varios grupos para este alumno.</span>
+          <span style="font-size: 0.72rem; color: var(--color-text-muted);">Puedes seleccionar uno o varios grupos para este estudiante.</span>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -555,7 +555,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="student-email">Correo Electrónico (Tutor / Alumno)</label>
+          <label for="student-email">Correo Electrónico (Tutor / Estudiante)</label>
           <input type="email" id="student-email" class="form-input" placeholder="lucas.navarro@familia.com">
         </div>
         <div class="form-group">
@@ -564,25 +564,25 @@
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
-          <button type="submit" id="btn-submit-student" class="btn btn-primary">Matricular Alumno</button>
+          <button type="submit" id="btn-submit-student" class="btn btn-primary">Matricular Estudiante</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: FICHA & INCIDENCIAS DE ALUMNO -->
+  <!-- MODAL: FICHA & INCIDENCIAS DE ESTUDIANTE -->
   <div id="modal-incidents" class="modal-overlay">
     <div class="modal-card modal-lg">
       <div class="modal-header">
         <div class="student-modal-badge">
           <div class="student-avatar-lg" id="modal-student-avatar">AL</div>
           <div>
-            <h3 id="modal-student-name">Nombre Alumno</h3>
+            <h3 id="modal-student-name">Nombre Estudiante</h3>
             <span id="modal-student-details" class="sub-badge">Detalles</span>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <button type="button" id="btn-edit-student-from-incidents" class="btn btn-secondary btn-sm" title="Editar datos del alumno">
+          <button type="button" id="btn-edit-student-from-incidents" class="btn btn-secondary btn-sm" title="Editar datos del estudiante">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Editar Datos
           </button>
@@ -891,7 +891,7 @@
                   </span>
                   <span class="export-option-badge">Completo</span>
                 </div>
-                <p class="export-option-desc">Libro maestro que reúne en un solo archivo Excel las 3 hojas: Acta de Calificaciones, Consolidado de Asistencia y Directorio de Alumnos e Incidencias.</p>
+                <p class="export-option-desc">Libro maestro que reúne en un solo archivo Excel las 3 hojas: Acta de Calificaciones, Consolidado de Asistencia y Directorio de Estudiantes e Incidencias.</p>
               </div>
             </label>
           </div>
@@ -922,7 +922,7 @@
       </div>
       <form id="form-bulk-grade">
         <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 14px;">
-          Aplica de forma simultánea una calificación o puntaje a todos los alumnos del grupo seleccionado.
+          Aplica de forma simultánea una calificación o puntaje a todos los estudiantes del grupo seleccionado.
         </p>
         <div class="form-group">
           <label for="bulk-grade-activity-select">Actividad / Evaluación a calificar *</label>
@@ -937,7 +937,7 @@
             <label for="bulk-grade-overwrite-select">Modo de aplicación</label>
             <select id="bulk-grade-overwrite-select" class="form-select">
               <option value="all">Asignar a TODOS (reemplazar existentes)</option>
-              <option value="empty-only">Solo a alumnos sin nota previa</option>
+              <option value="empty-only">Solo a estudiantes sin nota previa</option>
             </select>
           </div>
         </div>
@@ -945,7 +945,7 @@
           <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
           <button type="submit" class="btn btn-primary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            Aplicar a Todos los Alumnos
+            Aplicar a Todos los Estudiantes
           </button>
         </div>
       </form>
@@ -960,13 +960,13 @@
           <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16, 185, 129, 0.12); color: #059669; display: flex; align-items: center; justify-content: center;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
-          <h3>Anotación Masiva para <span id="bulk-incident-count-label">0</span> alumnos</h3>
+          <h3>Anotación Masiva para <span id="bulk-incident-count-label">0</span> estudiantes</h3>
         </div>
         <button class="modal-close-btn">&times;</button>
       </div>
       <form id="form-bulk-incident">
         <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px;">
-          Esta observación quedará registrada simultáneamente en la ficha académica y disciplinaria de todos los alumnos seleccionados.
+          Esta observación quedará registrada simultáneamente en la ficha académica y disciplinaria de todos los estudiantes seleccionados.
         </p>
         <div class="form-group">
           <label for="bulk-incident-type">Tipo de Anotación *</label>
@@ -988,7 +988,7 @@
           <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
           <button type="submit" class="btn btn-primary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Guardar en Alumnos Seleccionados
+            Guardar en Estudiantes Seleccionados
           </button>
         </div>
       </form>

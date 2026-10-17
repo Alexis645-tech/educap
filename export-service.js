@@ -84,7 +84,7 @@ const ExportService = {
     headerRow.push('Rendimiento / Estado');
     sheetData.push(headerRow);
 
-    // Filas de Alumnos
+    // Filas de Estudiantes
     let totalAveragesSum = 0;
     let studentsWithGradesCount = 0;
     let passedCount = 0;
@@ -150,7 +150,7 @@ const ExportService = {
     });
 
     if (students.length === 0) {
-      sheetData.push(['—', 'No hay alumnos matriculados en esta clase.', '—']);
+      sheetData.push(['—', 'No hay estudiantes matriculados en esta clase.', '—']);
     }
 
     // Fila en blanco
@@ -187,11 +187,11 @@ const ExportService = {
 
     sheetData.push([]);
     sheetData.push(['', 'RESUMEN ESTADÍSTICO INSTITUCIONAL']);
-    sheetData.push(['', 'Total Alumnos Matriculados:', students.length]);
-    sheetData.push(['', 'Alumnos con Evaluaciones:', studentsWithGradesCount]);
+    sheetData.push(['', 'Total Estudiantes Matriculados:', students.length]);
+    sheetData.push(['', 'Estudiantes con Evaluaciones:', studentsWithGradesCount]);
     sheetData.push(['', 'Promedio General del Curso:', generalGroupAvg]);
-    sheetData.push(['', 'Alumnos Aprobados:', passedCount]);
-    sheetData.push(['', 'Alumnos en Riesgo Académico:', atRiskCount]);
+    sheetData.push(['', 'Estudiantes Aprobados:', passedCount]);
+    sheetData.push(['', 'Estudiantes en Riesgo Académico:', atRiskCount]);
     sheetData.push(['', 'Tasa de Aprobación Trimestral:', approvalRate]);
 
     const wsGrades = XLSX.utils.aoa_to_sheet(sheetData);
@@ -218,7 +218,7 @@ const ExportService = {
         ['DESGLOSE DE ACTIVIDADES EVALUADAS'],
         ['Grupo:', `${classroom.name} (${classroom.gradeLevel})`, '', 'Docente:', teacherFull],
         [],
-        ['Nº', 'Título de la Actividad', 'Tipo de Evaluación', 'Puntaje Máximo', 'Fecha de Registro', 'Promedio Obtenido', 'Alumnos Evaluados']
+        ['Nº', 'Título de la Actividad', 'Tipo de Evaluación', 'Puntaje Máximo', 'Fecha de Registro', 'Promedio Obtenido', 'Estudiantes Evaluados']
       ];
 
       gradeItems.forEach((item, idx) => {
@@ -349,7 +349,7 @@ const ExportService = {
       });
 
       if (students.length === 0) {
-        consolData.push(['—', 'No hay alumnos matriculados en esta clase.', '—']);
+        consolData.push(['—', 'No hay estudiantes matriculados en esta clase.', '—']);
       }
 
       // Resumen institucional al pie
@@ -368,7 +368,7 @@ const ExportService = {
       const wsConsol = XLSX.utils.aoa_to_sheet(consolData);
       wsConsol['!cols'] = [
         { wch: 6 },  // Nº
-        { wch: 32 }, // Alumno
+        { wch: 32 }, // Estudiante
         { wch: 28 }, // Email
         { wch: 15 }, // Sesiones
         { wch: 14 }, // Presentes
@@ -486,15 +486,15 @@ const ExportService = {
       });
 
       if (students.length === 0) {
-        dayData.push(['—', 'No hay alumnos matriculados en esta clase.', '—']);
+        dayData.push(['—', 'No hay estudiantes matriculados en esta clase.', '—']);
       }
 
       dayData.push([]);
       dayData.push(['', 'RESUMEN DEL DÍA']);
-      dayData.push(['', 'Alumnos Presentes:', p]);
-      dayData.push(['', 'Alumnos con Atraso:', l]);
+      dayData.push(['', 'Estudiantes Presentes:', p]);
+      dayData.push(['', 'Estudiantes con Atraso:', l]);
       dayData.push(['', 'Inasistencias (Faltas):', a]);
-      dayData.push(['', 'Total Alumnos:', students.length]);
+      dayData.push(['', 'Total Estudiantes:', students.length]);
 
       const wsDay = XLSX.utils.aoa_to_sheet(dayData);
       wsDay['!cols'] = [
@@ -639,7 +639,7 @@ const ExportService = {
     // HOJA 3: DIRECTORIO DE ESTUDIANTES E INCIDENCIAS
     const dirData = [
       [schoolName],
-      ['DIRECTORIO DE ALUMNOS E HISTORIAL CONDUCTUAL'],
+      ['DIRECTORIO DE ESTUDIANTES E HISTORIAL CONDUCTUAL'],
       ['Grupo:', `${classroom.name} (${classroom.gradeLevel})`, '', 'Docente:', teacherFull],
       [],
       ['Nº', 'Apellidos y Nombres', 'Correo Electrónico', 'Teléfono de Contacto', 'Anotaciones Positivas', 'Anotaciones Negativas', 'Total Incidencias']

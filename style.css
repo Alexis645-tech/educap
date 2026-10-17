@@ -1627,7 +1627,7 @@ form {
   box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--color-primary);
 }
 
-/* SELECTOR MULTI-GRUPO PARA ALUMNOS */
+/* SELECTOR MULTI-GRUPO PARA ESTUDIANTES */
 .classroom-checkbox-list {
   display: flex;
   flex-direction: column;
@@ -2056,7 +2056,7 @@ form {
     gap: 16px;
   }
 
-  /* Barra de filtros de alumnos */
+  /* Barra de filtros de estudiantes */
   .filter-bar {
     flex-direction: column;
     padding: 14px;
@@ -2182,7 +2182,8 @@ form {
     margin: 0 !important;
   }
 
-  /* Cabecera de la tarjeta: Nombre y avatar del alumno alineado con el checkbox a la izquierda */
+  /* Cabecera de la tarjeta: Nombre y avatar del estudiante alineado con el checkbox a la izquierda */
+  html:not([data-view-mode="table"]) .students-table td[data-label="Estudiante"],
   html:not([data-view-mode="table"]) .students-table td[data-label="Alumno"] {
     justify-content: flex-start;
     border-bottom: 1px solid var(--color-border);
@@ -2193,12 +2194,13 @@ form {
     box-sizing: border-box;
   }
 
+  html:not([data-view-mode="table"]) .students-table td[data-label="Estudiante"]::before,
   html:not([data-view-mode="table"]) .students-table td[data-label="Alumno"]::before {
     display: none !important;
   }
 
   /* Etiquetas descriptoras antes de cada dato */
-  html:not([data-view-mode="table"]) .students-table td:not([data-label="Alumno"]):not(.student-select-cell):not(:has(.student-row-checkbox))::before {
+  html:not([data-view-mode="table"]) .students-table td:not([data-label="Estudiante"]):not([data-label="Alumno"]):not(.student-select-cell):not(:has(.student-row-checkbox))::before {
     content: attr(data-label);
     font-size: 0.72rem;
     font-weight: 700;
@@ -2294,6 +2296,7 @@ form {
     padding-top: 10px;
   }
 
+  html:not([data-view-mode="table"]) .grades-table td[data-label="Estudiante"],
   html:not([data-view-mode="table"]) .grades-table td[data-label="Alumno"] {
     justify-content: flex-start;
     border-bottom: 1px solid var(--color-border);
@@ -2301,6 +2304,7 @@ form {
     margin-bottom: 4px;
   }
 
+  html:not([data-view-mode="table"]) .grades-table td[data-label="Estudiante"]::before,
   html:not([data-view-mode="table"]) .grades-table td[data-label="Alumno"]::before {
     display: none;
   }
@@ -2314,7 +2318,7 @@ form {
     border-bottom: none;
   }
 
-  html:not([data-view-mode="table"]) .grades-table td:not([data-label="Alumno"])::before {
+  html:not([data-view-mode="table"]) .grades-table td:not([data-label="Estudiante"]):not([data-label="Alumno"])::before {
     content: attr(data-label);
     font-size: 0.72rem;
     font-weight: 700;
@@ -2402,6 +2406,7 @@ form {
     display: table-cell !important;
   }
 
+  html[data-view-mode="table"] .students-table td[data-label="Estudiante"],
   html[data-view-mode="table"] .students-table td[data-label="Alumno"] {
     padding-left: 14px !important;
   }
@@ -3511,7 +3516,7 @@ form {
   color: #dc2626;
 }
 
-/* Barra flotante de acciones masivas en directorio de alumnos */
+/* Barra flotante de acciones masivas en directorio de estudiantes */
 .bulk-actions-toolbar {
   position: sticky;
   top: 10px;
@@ -3616,7 +3621,7 @@ form {
   vertical-align: middle;
 }
 
-/* Fila seleccionada en tabla de alumnos */
+/* Fila seleccionada en tabla de estudiantes */
 .students-table tr.row-selected {
   background-color: rgba(79, 70, 229, 0.08) !important;
 }
