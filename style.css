@@ -2911,8 +2911,26 @@ form {
     box-sizing: border-box;
   }
 
+  .modal-card.modal-lg,
+  .import-modal-card,
+  .export-reports-modal-card {
+    width: 95%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
   .modal-header {
     padding: 16px 18px;
+    box-sizing: border-box;
+  }
+
+  .modal-header > div:first-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .modal-header h3 {
+    word-break: break-word;
   }
 
   form {
@@ -2931,6 +2949,79 @@ form {
 
   .color-picker-palette {
     justify-content: space-around;
+  }
+
+  /* Tips y badges en modales móvil: apilamiento vertical para evitar desborde de texto */
+  .format-tip-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .format-tip-item > span:not(.tip-badge) {
+    width: 100%;
+    min-width: 0;
+    word-break: break-word;
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .import-format-tips {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .import-order-options {
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .import-order-chip {
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: flex-start;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+  }
+
+  .import-method-tabs {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .import-tab-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+
+  .import-template-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .import-step-card {
+    padding: 12px 14px;
+  }
+
+  .import-modal-body {
+    padding: 14px 12px;
+    gap: 12px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -4245,8 +4336,11 @@ form {
   max-width: 740px;
   width: 94vw;
   max-height: 90vh;
+  max-height: 90dvh;
   display: flex;
   flex-direction: column;
+  margin: auto;
+  box-sizing: border-box;
 }
 
 .import-modal-body {
@@ -4379,6 +4473,13 @@ form {
   gap: 10px;
   line-height: 1.4;
   color: var(--color-text);
+  min-width: 0;
+}
+
+.format-tip-item > span:not(.tip-badge) {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .tip-badge {
@@ -4619,10 +4720,14 @@ form {
 }
 
 .import-preview-table-container {
-  max-height: 220px;
+  max-height: 240px;
   overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .import-preview-table {
@@ -4672,13 +4777,126 @@ form {
 }
 
 @media (max-width: 640px) {
+  .import-modal-card {
+    width: 96vw;
+    margin: auto;
+  }
+
+  .import-modal-body {
+    padding: 14px 12px;
+    gap: 12px;
+  }
+
+  .import-step-card {
+    padding: 12px 12px;
+  }
+
   .import-template-actions button {
     width: 100%;
     justify-content: center;
   }
-  .preview-header-bar {
+
+  /* Formato y tips de columnas en móvil: apilado vertical para evitar desbordes */
+  .import-format-tips {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+
+  .format-tip-item {
     flex-direction: column;
     align-items: flex-start;
+    gap: 5px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .format-tip-item > span:not(.tip-badge) {
+    width: 100%;
+    min-width: 0;
+    word-break: break-word;
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .tip-badge {
+    margin-bottom: 2px;
+  }
+
+  /* Selector de orden de nombres en móvil: ancho completo tipo lista táctil */
+  .import-order-options {
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .import-order-chip {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    justify-content: flex-start;
+  }
+
+  /* Pestañas de método de importación en móvil */
+  .import-method-tabs {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .import-tab-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+
+  .file-dropzone {
+    padding: 18px 12px;
+    gap: 8px;
+  }
+
+  .dropzone-main-text {
+    font-size: 0.85rem;
+  }
+
+  .dropzone-badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+  }
+
+  /* Barra de previsualización */
+  .preview-header-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .preview-actions-group {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .btn-swap-names {
+    flex: 1;
+    justify-content: center;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .import-preview-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    box-sizing: border-box;
+    max-height: 240px;
+  }
+
+  .import-preview-table {
+    min-width: 480px;
   }
 }
 
