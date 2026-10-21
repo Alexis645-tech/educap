@@ -4,6 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>EduPlan - Cuaderno Digital del Profesor</title>
+  <meta name="description" content="EduPlan es el cuaderno digital docente definitivo. Gestiona aulas, pasa asistencia, registra calificaciones, evalúa actividades y sincroniza automáticamente con tu Google Drive personal con soporte offline total.">
+  <meta name="keywords" content="cuaderno docente, cuaderno digital del profesor, gestión escolar, pasar asistencia, registro de calificaciones, notas escolares, Google Drive sync, app profesores">
+  <meta name="author" content="EduPlan">
+
+  <!-- Metadatos Sociales / Open Graph (Facebook, WhatsApp, LinkedIn, Instagram) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="EduPlan">
+  <meta property="og:title" content="EduPlan - Cuaderno Digital del Profesor">
+  <meta property="og:description" content="Cuaderno digital docente con soporte offline total y sincronización automática con Google Drive. Administra clases, estudiantes, asistencia y calificaciones fácilmente.">
+  <meta property="og:image" content="icons/icon-512x512.png">
+  <meta property="og:image:alt" content="EduPlan - Cuaderno Digital Docente">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:locale" content="es_ES">
+
+  <!-- Metadatos para Twitter / X Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="EduPlan - Cuaderno Digital del Profesor">
+  <meta name="twitter:description" content="Cuaderno digital docente con soporte offline total y sincronización automática en Google Drive personal. Calificaciones, asistencia y fichas de alumnos.">
+  <meta name="twitter:image" content="icons/icon-512x512.png">
+  <meta name="twitter:image:alt" content="EduPlan Cuaderno Digital">
+
   <!-- PWA Meta Tags & Manifest -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4F46E5">
@@ -235,6 +257,17 @@
           </div>
           <div class="filter-item search-box">
             <input type="text" id="student-search-input" placeholder="Buscar por nombre o apellido..." class="form-input">
+          </div>
+          <div class="filter-item filter-action-item">
+            <button type="button" id="btn-open-import-students" class="btn btn-secondary btn-icon btn-import-students" title="Importar lista masiva de estudiantes desde archivo Excel (.xlsx, .xls) o CSV">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/>
+                <line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+              <span>Importar Excel / CSV</span>
+            </button>
           </div>
           <div class="filter-item mobile-view-selector">
             <span class="mobile-view-label">Vista móvil:</span>
@@ -534,6 +567,15 @@
       <div class="modal-header">
         <h3 id="modal-student-title">Registrar Nuevo Estudiante</h3>
         <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-import-shortcut">
+        <div class="shortcut-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        </div>
+        <div class="shortcut-text">
+          <span>¿Tienes una lista de estudiantes en Excel?</span>
+          <button type="button" id="btn-shortcut-import-modal" class="btn-text-link">Subir lista completa en un clic &rarr;</button>
+        </div>
       </div>
       <form id="form-create-student">
         <input type="hidden" id="student-edit-id" value="">
@@ -994,6 +1036,180 @@
       </form>
     </div>
   </div>
+
+  <!-- MODAL: IMPORTACIÓN MASIVA DE ESTUDIANTES (EXCEL / CSV / PORTAPAPELES) -->
+  <div id="modal-import-students" class="modal-overlay">
+    <div class="modal-card modal-lg import-modal-card">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; border-radius: var(--radius-md); background: rgba(16, 185, 129, 0.14); color: #059669; display: flex; align-items: center; justify-content: center;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem;">Subir e Importar Lista de Estudiantes</h3>
+            <span style="font-size: 0.78rem; color: var(--color-text-muted);">Carga masiva rápida mediante Excel (.xlsx, .xls) o archivo CSV</span>
+          </div>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body import-modal-body">
+        <!-- PASO 1: SELECCIONAR GRUPO DE DESTINO -->
+        <div class="import-step-card">
+          <div class="import-step-title">
+            <span class="step-number">1</span>
+            <h4>Grupo o Materia de Destino</h4>
+          </div>
+          <div class="form-group" style="margin-top: 8px;">
+            <label for="import-classroom-select">Selecciona el grupo donde se matricularán los estudiantes:</label>
+            <select id="import-classroom-select" class="form-select"></select>
+          </div>
+        </div>
+
+        <!-- PASO 2: DESCARGAR PLANTILLA OFICIAL GUIADA -->
+        <div class="import-step-card">
+          <div class="import-step-title">
+            <span class="step-number">2</span>
+            <h4>Plantilla Oficial y Formato Recomendado</h4>
+          </div>
+          <p class="import-step-desc">
+            Para garantizar que tus datos se carguen sin errores, puedes descargar nuestra plantilla oficial prediseñada, llenarla y volver a subirla aquí:
+          </p>
+          <div class="import-template-actions">
+            <button type="button" id="btn-download-import-template-xlsx" class="btn btn-outline-success">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+              <span>Descargar Plantilla Excel (.xlsx)</span>
+            </button>
+            <button type="button" id="btn-download-import-template-csv" class="btn btn-outline-secondary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Descargar en CSV (.csv)</span>
+            </button>
+          </div>
+          <div class="import-format-tips">
+            <div class="format-tip-item">
+              <span class="tip-badge">Columnas detectadas</span>
+              <span><strong>Nombres</strong> y <strong>Apellidos</strong> (obligatorios), <strong>Correo</strong> y <strong>Teléfono</strong> (opcionales).</span>
+            </div>
+            <div class="format-tip-item">
+              <span class="tip-badge tip-badge-smart">Auto-Detección Inteligente</span>
+              <span>Si tu archivo tiene una sola columna con nombres completos (ej: <em>«Pérez Gómez, Juan Carlos»</em>), ¡EduPlan los separa automáticamente!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASO 3: SUBIR ARCHIVO O PEGAR COPIA -->
+        <div class="import-step-card">
+          <div class="import-step-title">
+            <span class="step-number">3</span>
+            <h4>Subir tu Lista de Alumnos</h4>
+          </div>
+
+          <!-- Pestañas para elegir método: Archivo vs Portapapeles -->
+          <div class="import-method-tabs">
+            <button type="button" class="import-tab-btn active" data-import-method="file" id="tab-btn-import-file">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Subir Archivo Excel o CSV</span>
+            </button>
+            <button type="button" class="import-tab-btn" data-import-method="paste" id="tab-btn-import-paste">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+              <span>Pegar desde Portapapeles (Copiar/Pegar)</span>
+            </button>
+          </div>
+
+          <!-- Método 1: Dropzone de Archivo -->
+          <div id="import-method-file-content" class="import-method-pane active">
+            <div id="import-file-dropzone" class="file-dropzone" tabindex="0" role="button" aria-label="Zona para arrastrar y soltar archivo Excel o CSV">
+              <input type="file" id="import-students-file-input" accept=".xlsx, .xls, .csv, text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style="display: none;">
+              <div class="dropzone-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
+                  <path d="M12 12v9"/>
+                  <path d="m16 16-4-4-4 4"/>
+                </svg>
+              </div>
+              <div class="dropzone-text">
+                <p class="dropzone-main-text">Arrastra y suelta tu archivo <strong>Excel (.xlsx, .xls)</strong> o <strong>CSV</strong> aquí</p>
+                <p class="dropzone-sub-text">o haz clic para explorar en tus carpetas</p>
+              </div>
+              <span class="dropzone-badge">Soporta formatos .xlsx, .xls y .csv</span>
+            </div>
+
+            <div id="import-loaded-file-badge" class="loaded-file-badge" style="display: none;">
+              <div class="loaded-file-info">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#107C41" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div>
+                  <strong id="import-file-name">archivo.xlsx</strong>
+                  <span id="import-file-size" style="font-size: 0.75rem; color: var(--color-text-muted);">0 KB</span>
+                </div>
+              </div>
+              <button type="button" id="btn-remove-import-file" class="btn-icon-subtle" title="Quitar archivo">&times;</button>
+            </div>
+          </div>
+
+          <!-- Método 2: Textarea para Copiar y Pegar directo -->
+          <div id="import-method-paste-content" class="import-method-pane" style="display: none;">
+            <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 8px;">
+              Selecciona las filas en tu hoja de cálculo (Excel, Numbers o Google Sheets), presiona <code>Ctrl+C</code> y pégalas aquí:
+            </p>
+            <textarea id="import-paste-textarea" class="form-textarea import-textarea" rows="5" placeholder="Sofía	Rodríguez Martínez	sofia@colegio.edu&#10;Mateo	Gómez Hernández	mateo@colegio.edu&#10;Valentina	López Castro	valentina@colegio.edu"></textarea>
+            <button type="button" id="btn-parse-paste-text" class="btn btn-secondary btn-sm" style="margin-top: 8px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+              <span>Procesar Texto Pegado</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 4: PREVISUALIZACIÓN DE ESTUDIANTES DETECTADOS -->
+        <div id="import-preview-section" class="import-preview-section" style="display: none;">
+          <div class="preview-header-bar">
+            <div class="preview-title-group">
+              <span class="preview-count-chip" id="import-detected-count-badge">0 detectados</span>
+              <h4 style="margin: 0; font-size: 0.95rem;">Previsualización de Estudiantes a Importar</h4>
+            </div>
+            <span id="import-target-class-preview" class="preview-target-badge">Grupo destino</span>
+          </div>
+
+          <div id="import-warnings-box" class="import-warnings-box" style="display: none;"></div>
+
+          <div class="import-preview-table-container">
+            <table class="import-preview-table">
+              <thead>
+                <tr>
+                  <th style="width: 36px;">#</th>
+                  <th>Nombres</th>
+                  <th>Apellidos</th>
+                  <th>Correo Electrónico</th>
+                  <th>Teléfono</th>
+                  <th style="width: 80px; text-align: center;">Estado</th>
+                </tr>
+              </thead>
+              <tbody id="import-preview-tbody">
+                <!-- Filas renderizadas dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="padding: 16px 24px; border-top: 1px solid var(--color-border); background: var(--color-surface);">
+        <button type="button" class="btn btn-secondary btn-cancel-modal">Cancelar</button>
+        <button type="button" id="btn-confirm-import-students" class="btn btn-primary btn-import-confirm" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="m19 11 2 2 4-4"/>
+          </svg>
+          <span id="btn-import-confirm-text">Matricular Estudiantes</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- SDKs OFICIALES DE GOOGLE (Identity Services & GAPI) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>

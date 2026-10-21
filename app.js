@@ -240,6 +240,38 @@ const DataService = {
     }
   },
 
+  addStudentsBulk(studentsList, classroomIds = []) {
+    if (!Array.isArray(studentsList) || studentsList.length === 0) return 0;
+
+    const currentStudents = this.getStudents();
+    const colors = ['#4F46E5', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#3B82F6', '#EF4444', '#06B6D4'];
+    const targetClasses = Array.isArray(classroomIds) ? classroomIds : (classroomIds ? [classroomIds] : []);
+
+    const newStudents = studentsList.map((s, idx) => {
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      return {
+        id: 'std_' + (Date.now() + idx) + '_' + Math.random().toString(36).substr(2, 4),
+        classroomIds: targetClasses,
+        classroomId: targetClasses[0] || '',
+        firstName: (s.firstName || '').trim(),
+        lastName: (s.lastName || '').trim(),
+        email: (s.email || '').trim(),
+        phone: (s.phone || '').trim(),
+        avatarColor: randomColor
+      };
+    });
+
+    const updatedList = [...currentStudents, ...newStudents];
+    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(updatedList));
+    syncToIndexedDB(STORAGE_KEYS.STUDENTS, updatedList);
+
+    if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
+      window.GoogleDriveService.scheduleAutoSync();
+    }
+
+    return newStudents.length;
+  },
+
   updateStudent(id, updatedFields) {
     const list = this.getStudents();
     const index = list.findIndex(s => s.id === id);
@@ -488,6 +520,7 @@ const UIController = {
   selectedDate: new Date().toISOString().split('T')[0],
   studentSortOrder: 'lastName-asc', // 'lastName-asc' | 'lastName-desc' | 'firstName-asc' | 'firstName-desc'
   selectedStudentIds: new Set(), // Conjunto para selección múltiple / Bulk Actions
+  pendingImportStudents: [],
 
   sortStudents(studentsList) {
     const list = [...studentsList];
@@ -1066,6 +1099,122 @@ const UIController = {
         alert(`¡Anotación asignada con éxito a ${studentIdsArray.length} estudiante(s)!`);
         this.closeModal('modal-bulk-incident');
         this.renderStudents();
+      });
+    }
+
+    // --- IMPORTACIÓN MASIVA DE ESTUDIANTES (.XLSX / .CSV / PORTAPAPELES) ---
+    const btnOpenImportStudents = document.getElementById('btn-open-import-students');
+    if (btnOpenImportStudents) {
+      btnOpenImportStudents.addEventListener('click', () => {
+        this.openImportStudentsModal(this.selectedClassroomId);
+      });
+    }
+
+    const btnShortcutImportModal = document.getElementById('btn-shortcut-import-modal');
+    if (btnShortcutImportModal) {
+      btnShortcutImportModal.addEventListener('click', () => {
+        this.closeModal('modal-student');
+        this.openImportStudentsModal(this.selectedClassroomId);
+      });
+    }
+
+    // Descarga de plantillas oficiales
+    const btnDlTemplateXlsx = document.getElementById('btn-download-import-template-xlsx');
+    if (btnDlTemplateXlsx) {
+      btnDlTemplateXlsx.addEventListener('click', () => {
+        if (window.ExportService) window.ExportService.downloadStudentTemplate('xlsx');
+      });
+    }
+
+    const btnDlTemplateCsv = document.getElementById('btn-download-import-template-csv');
+    if (btnDlTemplateCsv) {
+      btnDlTemplateCsv.addEventListener('click', () => {
+        if (window.ExportService) window.ExportService.downloadStudentTemplate('csv');
+      });
+    }
+
+    // Pestañas de método de carga (Archivo vs Copiar/Pegar)
+    document.querySelectorAll('.import-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const method = btn.getAttribute('data-import-method');
+        document.querySelectorAll('.import-tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        const fileContent = document.getElementById('import-method-file-content');
+        const pasteContent = document.getElementById('import-method-paste-content');
+        if (fileContent) fileContent.style.display = (method === 'file') ? 'block' : 'none';
+        if (pasteContent) pasteContent.style.display = (method === 'paste') ? 'block' : 'none';
+      });
+    });
+
+    // Dropzone y selector de archivos
+    const importDropzone = document.getElementById('import-file-dropzone');
+    const importFileInput = document.getElementById('import-students-file-input');
+
+    if (importDropzone && importFileInput) {
+      importDropzone.addEventListener('click', (e) => {
+        if (e.target !== importFileInput) {
+          importFileInput.click();
+        }
+      });
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        importDropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          importDropzone.classList.add('drag-over');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        importDropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          importDropzone.classList.remove('drag-over');
+        });
+      });
+
+      importDropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length > 0) {
+          this.handleImportFile(dt.files[0]);
+        }
+      });
+
+      importFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          this.handleImportFile(e.target.files[0]);
+        }
+      });
+    }
+
+    const btnRemoveImportFile = document.getElementById('btn-remove-import-file');
+    if (btnRemoveImportFile) {
+      btnRemoveImportFile.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.resetImportModalUI();
+      });
+    }
+
+    // Botón para procesar texto pegado desde portapapeles
+    const btnParsePasteText = document.getElementById('btn-parse-paste-text');
+    if (btnParsePasteText) {
+      btnParsePasteText.addEventListener('click', () => {
+        this.handleImportPasteText();
+      });
+    }
+
+    // Cambio de grupo de destino en el modal de importación
+    const importClassSelect = document.getElementById('import-classroom-select');
+    if (importClassSelect) {
+      importClassSelect.addEventListener('change', () => {
+        this.updateImportTargetPreview();
+      });
+    }
+
+    // Confirmación final de importación
+    const btnConfirmImportStudents = document.getElementById('btn-confirm-import-students');
+    if (btnConfirmImportStudents) {
+      btnConfirmImportStudents.addEventListener('click', () => {
+        this.confirmImportStudents();
       });
     }
 
@@ -1995,6 +2144,236 @@ const UIController = {
       container.appendChild(div);
     });
   },
+
+  // --- IMPORTACIÓN MASIVA DE ESTUDIANTES (CONTROLADOR) ---
+  openImportStudentsModal(defaultClassroomId) {
+    const classrooms = DataService.getClassrooms();
+    const classSelect = document.getElementById('import-classroom-select');
+    if (classSelect) {
+      if (classrooms.length === 0) {
+        classSelect.innerHTML = '<option value="">No hay grupos creados todavía. Crea un grupo primero.</option>';
+      } else {
+        const targetId = defaultClassroomId || this.selectedClassroomId || classrooms[0].id;
+        classSelect.innerHTML = classrooms.map(c => 
+          `<option value="${c.id}" ${c.id === targetId ? 'selected' : ''}>${c.name} (${c.gradeLevel || 'Sin nivel'})</option>`
+        ).join('');
+      }
+    }
+
+    this.pendingImportStudents = [];
+    this.resetImportModalUI();
+    this.updateImportTargetPreview();
+    this.openModal('modal-import-students');
+  },
+
+  resetImportModalUI() {
+    this.pendingImportStudents = [];
+    const fileInput = document.getElementById('import-students-file-input');
+    if (fileInput) fileInput.value = '';
+
+    const dropzone = document.getElementById('import-file-dropzone');
+    if (dropzone) dropzone.style.display = 'flex';
+
+    const fileBadge = document.getElementById('import-loaded-file-badge');
+    if (fileBadge) fileBadge.style.display = 'none';
+
+    const pasteArea = document.getElementById('import-paste-textarea');
+    if (pasteArea) pasteArea.value = '';
+
+    const previewSection = document.getElementById('import-preview-section');
+    if (previewSection) previewSection.style.display = 'none';
+
+    const previewTbody = document.getElementById('import-preview-tbody');
+    if (previewTbody) previewTbody.innerHTML = '';
+
+    const warningsBox = document.getElementById('import-warnings-box');
+    if (warningsBox) {
+      warningsBox.style.display = 'none';
+      warningsBox.innerHTML = '';
+    }
+
+    const confirmBtn = document.getElementById('btn-confirm-import-students');
+    if (confirmBtn) confirmBtn.disabled = true;
+
+    const confirmBtnText = document.getElementById('btn-import-confirm-text');
+    if (confirmBtnText) confirmBtnText.textContent = 'Matricular Estudiantes';
+
+    document.querySelectorAll('.import-tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-import-method') === 'file');
+    });
+    const filePane = document.getElementById('import-method-file-content');
+    const pastePane = document.getElementById('import-method-paste-content');
+    if (filePane) filePane.style.display = 'block';
+    if (pastePane) pastePane.style.display = 'none';
+  },
+
+  updateImportTargetPreview() {
+    const classSelect = document.getElementById('import-classroom-select');
+    const previewBadge = document.getElementById('import-target-class-preview');
+    if (!classSelect || !previewBadge) return;
+
+    const selectedOption = classSelect.options[classSelect.selectedIndex];
+    const className = selectedOption ? selectedOption.text : 'Grupo no seleccionado';
+    previewBadge.textContent = `Destino: ${className}`;
+  },
+
+  handleImportFile(file) {
+    if (!file) return;
+
+    const allowedExtensions = ['.xlsx', '.xls', '.csv'];
+    const fileName = file.name.toLowerCase();
+    const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+    if (!isAllowed) {
+      alert('Formato de archivo no soportado. Por favor sube un archivo Excel (.xlsx, .xls) o CSV (.csv).');
+      return;
+    }
+
+    const nameEl = document.getElementById('import-file-name');
+    const sizeEl = document.getElementById('import-file-size');
+    const badgeEl = document.getElementById('import-loaded-file-badge');
+
+    if (nameEl) nameEl.textContent = file.name;
+    if (sizeEl) {
+      const sizeKB = (file.size / 1024).toFixed(1);
+      sizeEl.textContent = `${sizeKB} KB`;
+    }
+    if (badgeEl) badgeEl.style.display = 'flex';
+
+    if (!window.ExportService || !window.ExportService.parseStudentsFile) {
+      alert('El servicio de procesamiento de archivos aún no está listo. Por favor recarga o espera unos instantes.');
+      return;
+    }
+
+    window.ExportService.parseStudentsFile(file).then(res => {
+      this.handleParsedImportResult(res);
+    });
+  },
+
+  handleImportPasteText() {
+    const textarea = document.getElementById('import-paste-textarea');
+    if (!textarea) return;
+    const text = textarea.value.trim();
+
+    if (!text) {
+      alert('Por favor pega el listado de estudiantes en el cuadro de texto antes de procesar.');
+      return;
+    }
+
+    if (!window.ExportService || !window.ExportService.parseStudentsText) {
+      alert('El servicio de procesamiento no está listo. Por favor intenta de nuevo.');
+      return;
+    }
+
+    const res = window.ExportService.parseStudentsText(text);
+    this.handleParsedImportResult(res);
+  },
+
+  handleParsedImportResult(res) {
+    if (!res || !res.success) {
+      alert((res && res.error) ? res.error : 'No se detectaron estudiantes en los datos proporcionados.');
+      const confirmBtn = document.getElementById('btn-confirm-import-students');
+      if (confirmBtn) confirmBtn.disabled = true;
+      const previewSection = document.getElementById('import-preview-section');
+      if (previewSection) previewSection.style.display = 'none';
+      return;
+    }
+
+    this.pendingImportStudents = res.students || [];
+
+    const previewSection = document.getElementById('import-preview-section');
+    if (previewSection) previewSection.style.display = 'block';
+
+    const countBadge = document.getElementById('import-detected-count-badge');
+    if (countBadge) countBadge.textContent = `${this.pendingImportStudents.length} estudiantes detectados`;
+
+    this.updateImportTargetPreview();
+
+    const warningsBox = document.getElementById('import-warnings-box');
+    if (warningsBox) {
+      if (res.warnings && res.warnings.length > 0) {
+        warningsBox.style.display = 'block';
+        warningsBox.innerHTML = `<strong>Aviso:</strong> ${res.warnings.join('<br>')}`;
+      } else {
+        warningsBox.style.display = 'none';
+        warningsBox.innerHTML = '';
+      }
+    }
+
+    const tbody = document.getElementById('import-preview-tbody');
+    if (tbody) {
+      tbody.innerHTML = this.pendingImportStudents.map((s, idx) => `
+        <tr>
+          <td><span style="font-weight: 600; color: var(--color-text-muted);">${idx + 1}</span></td>
+          <td><strong>${this.escapeHtml(s.firstName)}</strong></td>
+          <td><strong>${this.escapeHtml(s.lastName)}</strong></td>
+          <td>${s.email ? this.escapeHtml(s.email) : '<span style="color: var(--color-text-muted);">—</span>'}</td>
+          <td>${s.phone ? this.escapeHtml(s.phone) : '<span style="color: var(--color-text-muted);">—</span>'}</td>
+          <td style="text-align: center;"><span class="badge-valid-student">&#10003; Listo</span></td>
+        </tr>
+      `).join('');
+    }
+
+    const confirmBtn = document.getElementById('btn-confirm-import-students');
+    if (confirmBtn) confirmBtn.disabled = false;
+
+    const confirmBtnText = document.getElementById('btn-import-confirm-text');
+    if (confirmBtnText) confirmBtnText.textContent = `Matricular ${this.pendingImportStudents.length} Estudiante(s)`;
+  },
+
+  confirmImportStudents() {
+    if (!this.pendingImportStudents || this.pendingImportStudents.length === 0) {
+      alert('No hay estudiantes listos para importar.');
+      return;
+    }
+
+    const classSelect = document.getElementById('import-classroom-select');
+    const targetClassroomId = classSelect ? classSelect.value : '';
+
+    if (!targetClassroomId) {
+      alert('Por favor selecciona un grupo o materia de destino.');
+      return;
+    }
+
+    const classrooms = DataService.getClassrooms();
+    const targetClass = classrooms.find(c => c.id === targetClassroomId);
+    const className = targetClass ? targetClass.name : 'el grupo seleccionado';
+
+    const importedCount = DataService.addStudentsBulk(this.pendingImportStudents, [targetClassroomId]);
+
+    this.closeModal('modal-import-students');
+
+    this.selectedClassroomId = targetClassroomId;
+    const filterSelect = document.getElementById('filter-classroom-select');
+    if (filterSelect) filterSelect.value = targetClassroomId;
+
+    this.renderStudents();
+    this.renderClassrooms();
+    if (this.currentTab === 'attendance-tab') this.renderAttendance();
+    if (this.currentTab === 'grades-tab') this.renderGrades();
+
+    if (window.ExportService && window.ExportService.showExportSuccessToast) {
+      window.ExportService.showExportSuccessToast(
+        `Se matricularon ${importedCount} estudiantes en ${className}`,
+        '¡Importación Exitosa!'
+      );
+    } else {
+      alert(`¡Éxito! Se matricularon ${importedCount} estudiantes en ${className}.`);
+    }
+
+    this.pendingImportStudents = [];
+  },
+
+  escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  },
+
 
   // --- GESTIÓN DE CALIFICACIONES ---
   openGradeItemModal() {

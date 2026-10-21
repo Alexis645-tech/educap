@@ -704,6 +704,271 @@ const ExportService = {
     setTimeout(() => {
       toast.classList.remove('active');
     }, 4500);
+  },
+
+  // -------------------------------------------------------------
+  // 4. PLANTILLA E IMPORTACIÓN MASIVA DE ESTUDIANTES (.XLSX / .CSV)
+  // -------------------------------------------------------------
+  downloadStudentTemplate(format = 'xlsx') {
+    if (format === 'csv') {
+      const csvHeader = 'Nombres,Apellidos,Correo Electrónico,Teléfono de Contacto\r\n';
+      const sampleRows = [
+        'Sofía,Rodríguez Martínez,sofia.rodriguez@colegio.edu,+52 555 123 4567',
+        'Mateo,Gómez Hernández,mateo.gomez@colegio.edu,+52 555 234 5678',
+        'Valentina,López Castro,valentina.lopez@colegio.edu,+52 555 345 6789',
+        'Santiago,Torres Morales,santiago.torres@colegio.edu,+52 555 456 7890',
+        'Camila,Vargas Silva,camila.vargas@colegio.edu,+52 555 567 8901',
+        'Alejandro,Mendoza Ruiz,alejandro.mendoza@colegio.edu,+52 555 678 9012'
+      ].join('\r\n');
+      
+      const blob = new Blob(['\uFEFF' + csvHeader + sampleRows], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'Plantilla_Estudiantes_EduPlan.csv';
+      link.click();
+      this.showExportSuccessToast('Plantilla_Estudiantes_EduPlan.csv', 'Plantilla Oficial CSV');
+      return true;
+    }
+
+    if (!this.isXlsxReady()) {
+      alert('La biblioteca de procesamiento Excel aún está cargando. Por favor intenta de nuevo en unos segundos.');
+      return false;
+    }
+
+    const wb = XLSX.utils.book_new();
+    const templateData = [
+      ['Nombres', 'Apellidos', 'Correo Electrónico', 'Teléfono de Contacto'],
+      ['Sofía', 'Rodríguez Martínez', 'sofia.rodriguez@colegio.edu', '+52 555 123 4567'],
+      ['Mateo', 'Gómez Hernández', 'mateo.gomez@colegio.edu', '+52 555 234 5678'],
+      ['Valentina', 'López Castro', 'valentina.lopez@colegio.edu', '+52 555 345 6789'],
+      ['Santiago', 'Torres Morales', 'santiago.torres@colegio.edu', '+52 555 456 7890'],
+      ['Camila', 'Vargas Silva', 'camila.vargas@colegio.edu', '+52 555 567 8901'],
+      ['Alejandro', 'Mendoza Ruiz', 'alejandro.mendoza@colegio.edu', '+52 555 678 9012']
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(templateData);
+    ws['!cols'] = [
+      { wch: 22 },
+      { wch: 26 },
+      { wch: 32 },
+      { wch: 22 }
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Estudiantes');
+
+    // Hoja secundaria con Guía e Instrucciones
+    const guideData = [
+      ['GUÍA RÁPIDA PARA RELLENAR LA PLANTILLA DE ESTUDIANTES - EDUPLAN'],
+      [],
+      ['1. Columnas obligatorias:', 'Nombres y Apellidos del alumno.'],
+      ['2. Columnas opcionales:', 'Correo electrónico y Teléfono de contacto (tutor o estudiante).'],
+      ['3. Nombre completo en 1 columna:', 'Si tienes los nombres y apellidos juntos (ej: "Pérez Gómez, Juan"), ¡EduPlan los separa automáticamente al importar!'],
+      ['4. Carga fácil:', 'Guarda este archivo e impórtalo directamente en EduPlan.'],
+      [],
+      ['¡Listo para importar en un solo clic!']
+    ];
+    const wsGuide = XLSX.utils.aoa_to_sheet(guideData);
+    wsGuide['!cols'] = [{ wch: 28 }, { wch: 60 }];
+    XLSX.utils.book_append_sheet(wb, wsGuide, 'Instrucciones');
+
+    const fileName = 'Plantilla_Estudiantes_EduPlan.xlsx';
+    XLSX.writeFile(wb, fileName);
+    this.showExportSuccessToast(fileName, 'Plantilla Oficial Excel');
+    return true;
+  },
+
+  // Analizar matriz 2D de filas
+  parseStudentsData(rawRows) {
+    if (!Array.isArray(rawRows) || rawRows.length === 0) {
+      return { success: false, error: 'El archivo o texto no contiene filas legibles.' };
+    }
+
+    const cleanRows = rawRows.filter(r => Array.isArray(r) && r.some(cell => String(cell ?? '').trim().length > 0));
+    if (cleanRows.length === 0) {
+      return { success: false, error: 'No se detectaron datos en el archivo.' };
+    }
+
+    const normalize = (str) => String(str ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+
+    let headerRowIndex = -1;
+    let firstIdx = -1;
+    let lastIdx = -1;
+    let fullIdx = -1;
+    let emailIdx = -1;
+    let phoneIdx = -1;
+
+    for (let r = 0; r < Math.min(4, cleanRows.length); r++) {
+      const row = cleanRows[r];
+      let foundHeadersInRow = 0;
+      for (let c = 0; c < row.length; c++) {
+        const text = normalize(row[c]);
+        if (/^(nombres?|first\s*name)$/.test(text)) { firstIdx = c; foundHeadersInRow++; }
+        else if (/^(apellidos?|last\s*name)$/.test(text)) { lastIdx = c; foundHeadersInRow++; }
+        else if (/^(nombre\s*completo|estudiante|alumno|estudiantes|alumnos|nombres?\s*y\s*apellidos?|apellidos?\s*y\s*nombres?)$/.test(text)) { fullIdx = c; foundHeadersInRow++; }
+        else if (/^(correo|email|e-mail|correo\s*electronico|mail)$/.test(text)) { emailIdx = c; foundHeadersInRow++; }
+        else if (/^(telefono|celular|movil|phone|contacto|acudiente|tutor)$/.test(text)) { phoneIdx = c; foundHeadersInRow++; }
+      }
+      if (foundHeadersInRow > 0 && (firstIdx !== -1 || fullIdx !== -1 || (lastIdx !== -1 && row.length >= 2))) {
+        headerRowIndex = r;
+        break;
+      }
+    }
+
+    const dataRows = (headerRowIndex !== -1) ? cleanRows.slice(headerRowIndex + 1) : cleanRows;
+    if (dataRows.length === 0) {
+      return { success: false, error: 'Solo se encontraron encabezados pero ninguna fila de estudiantes.' };
+    }
+
+    if (firstIdx === -1 && fullIdx === -1 && lastIdx === -1) {
+      if (cleanRows[0].length >= 2) {
+        firstIdx = 0;
+        lastIdx = 1;
+        if (cleanRows[0].length >= 3) emailIdx = 2;
+        if (cleanRows[0].length >= 4) phoneIdx = 3;
+      } else {
+        fullIdx = 0;
+      }
+    }
+
+    const students = [];
+    const warnings = [];
+
+    const titleCase = (s) => s.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.substr(1).toLowerCase());
+
+    dataRows.forEach((row, i) => {
+      let firstName = '';
+      let lastName = '';
+      let email = emailIdx !== -1 ? String(row[emailIdx] ?? '').trim() : '';
+      let phone = phoneIdx !== -1 ? String(row[phoneIdx] ?? '').trim() : '';
+
+      if (firstIdx !== -1 && lastIdx !== -1) {
+        firstName = String(row[firstIdx] ?? '').trim();
+        lastName = String(row[lastIdx] ?? '').trim();
+      } else if (firstIdx !== -1) {
+        firstName = String(row[firstIdx] ?? '').trim();
+        lastName = (lastIdx !== -1 ? String(row[lastIdx] ?? '') : '').trim();
+      } else if (fullIdx !== -1) {
+        const rawFull = String(row[fullIdx] ?? '').trim();
+        if (rawFull.includes(',')) {
+          const parts = rawFull.split(',');
+          lastName = parts[0].trim();
+          firstName = parts.slice(1).join(' ').trim();
+        } else {
+          const words = rawFull.split(/\s+/).filter(w => w.length > 0);
+          if (words.length <= 1) {
+            firstName = words[0] || '';
+            lastName = '';
+          } else if (words.length === 2) {
+            firstName = words[0];
+            lastName = words[1];
+          } else if (words.length === 3) {
+            firstName = words[0];
+            lastName = words.slice(1).join(' ');
+          } else {
+            firstName = words.slice(0, 2).join(' ');
+            lastName = words.slice(2).join(' ');
+          }
+        }
+      } else {
+        firstName = String(row[0] ?? '').trim();
+        lastName = String(row[1] ?? '').trim();
+      }
+
+      if (firstName && (firstName === firstName.toUpperCase() || firstName === firstName.toLowerCase())) {
+        firstName = titleCase(firstName);
+      }
+      if (lastName && (lastName === lastName.toUpperCase() || lastName === lastName.toLowerCase())) {
+        lastName = titleCase(lastName);
+      }
+
+      if (firstName || lastName) {
+        students.push({
+          firstName: firstName || '(Sin nombre)',
+          lastName: lastName || '',
+          email,
+          phone,
+          rowNumber: i + 1
+        });
+      } else {
+        warnings.push(`Fila ${i + 1} omitida por no contener nombre.`);
+      }
+    });
+
+    if (students.length === 0) {
+      return { success: false, error: 'No se encontraron estudiantes válidos en las filas procesadas.' };
+    }
+
+    return {
+      success: true,
+      students,
+      totalCount: students.length,
+      warnings
+    };
+  },
+
+  // Parsear archivo cargado (.xlsx, .xls, .csv)
+  parseStudentsFile(file) {
+    return new Promise((resolve) => {
+      if (!file) {
+        return resolve({ success: false, error: 'No se ha seleccionado ningún archivo.' });
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        try {
+          if (!this.isXlsxReady()) {
+            return resolve({ success: false, error: 'La biblioteca SheetJS aún no está cargada.' });
+          }
+
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+            return resolve({ success: false, error: 'El archivo Excel no contiene hojas de cálculo.' });
+          }
+
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rawRows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+          const result = this.parseStudentsData(rawRows);
+          resolve(result);
+        } catch (err) {
+          console.error('[ExportService] Error procesando archivo:', err);
+          resolve({ success: false, error: 'Error al leer el archivo. Asegúrate de que sea un archivo Excel (.xlsx, .xls) o CSV válido.' });
+        }
+      };
+
+      reader.onerror = () => {
+        resolve({ success: false, error: 'Error al abrir el archivo en tu navegador.' });
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+  },
+
+  // Parsear texto pegado desde portapapeles
+  parseStudentsText(text) {
+    if (!text || !text.trim()) {
+      return { success: false, error: 'Por favor pega el contenido antes de analizar.' };
+    }
+
+    const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+    if (lines.length === 0) {
+      return { success: false, error: 'El texto pegado no contiene líneas válidas.' };
+    }
+
+    const firstLine = lines[0];
+    let sep = '\t';
+    if (!firstLine.includes('\t')) {
+      if (firstLine.includes(';')) sep = ';';
+      else if (firstLine.includes(',')) sep = ',';
+    }
+
+    const rawRows = lines.map(line => line.split(sep).map(cell => cell.trim()));
+    return this.parseStudentsData(rawRows);
   }
 };
 
