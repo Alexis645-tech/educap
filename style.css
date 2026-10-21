@@ -1545,13 +1545,13 @@ body {
   inset: 0;
   background-color: rgba(15, 23, 42, 0.5);
   backdrop-filter: blur(4px);
-  z-index: 100;
+  z-index: 1000;
   align-items: center;
   justify-content: center;
 }
 
 .modal-overlay.active {
-  display: flex;
+  display: flex !important;
 }
 
 .modal-card {
@@ -4468,5 +4468,19 @@ form {
     align-items: flex-start;
   }
 }
+
+.btn-import-students {
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-import-students * {
+  pointer-events: none;
+}
+
+#modal-import-students {
+  z-index: 1050;
+}
+
 
 

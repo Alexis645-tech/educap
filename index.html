@@ -40,7 +40,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=1.0.2">
 </head>
 <body>
   <!-- PANTALLA DE INICIO DE SESIÓN / LOGIN CON GOOGLE -->
@@ -259,7 +259,7 @@
             <input type="text" id="student-search-input" placeholder="Buscar por nombre o apellido..." class="form-input">
           </div>
           <div class="filter-item filter-action-item">
-            <button type="button" id="btn-open-import-students" class="btn btn-secondary btn-icon btn-import-students" title="Importar lista masiva de estudiantes desde archivo Excel (.xlsx, .xls) o CSV">
+            <button type="button" id="btn-open-import-students" class="btn btn-secondary btn-icon btn-import-students" onclick="if(window.UIController && typeof window.UIController.openImportStudentsModal === 'function'){window.UIController.openImportStudentsModal();}else{var m=document.getElementById('modal-import-students');if(m)m.classList.add('active');}" title="Importar lista masiva de estudiantes desde archivo Excel (.xlsx, .xls) o CSV">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
@@ -574,7 +574,7 @@
         </div>
         <div class="shortcut-text">
           <span>¿Tienes una lista de estudiantes en Excel?</span>
-          <button type="button" id="btn-shortcut-import-modal" class="btn-text-link">Subir lista completa en un clic &rarr;</button>
+          <button type="button" id="btn-shortcut-import-modal" class="btn-text-link" onclick="document.querySelectorAll('.modal-overlay').forEach(function(m){m.classList.remove('active');});if(window.UIController && typeof window.UIController.openImportStudentsModal === 'function'){window.UIController.openImportStudentsModal();}else{var m=document.getElementById('modal-import-students');if(m)m.classList.add('active');}">Subir lista completa en un clic &rarr;</button>
         </div>
       </div>
       <form id="form-create-student">
@@ -1215,9 +1215,9 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
   <!-- Motor de Persistencia IndexedDB con Soporte Offline Total -->
-  <script src="db.js"></script>
+  <script src="db.js?v=1.0.2"></script>
   <!-- Lógica de Google Drive -->
-  <script src="google-drive.js"></script>
+  <script src="google-drive.js?v=1.0.2"></script>
   <!-- Generación de Documentos y Hojas de Cálculo Excel (.xlsx) con SheetJS -->
   <script src="xlsx.full.min.js"></script>
   <script>
@@ -1226,8 +1226,8 @@
     }
   </script>
   <!-- Servicio de Exportación de Reportes Excel -->
-  <script src="export-service.js"></script>
+  <script src="export-service.js?v=1.0.2"></script>
   <!-- Lógica Principal -->
-  <script src="app.js"></script>
+  <script src="app.js?v=1.0.2"></script>
 </body>
 </html>

@@ -2147,23 +2147,38 @@ const UIController = {
 
   // --- IMPORTACIÓN MASIVA DE ESTUDIANTES (CONTROLADOR) ---
   openImportStudentsModal(defaultClassroomId) {
-    const classrooms = DataService.getClassrooms();
-    const classSelect = document.getElementById('import-classroom-select');
-    if (classSelect) {
-      if (classrooms.length === 0) {
-        classSelect.innerHTML = '<option value="">No hay grupos creados todavía. Crea un grupo primero.</option>';
-      } else {
-        const targetId = defaultClassroomId || this.selectedClassroomId || classrooms[0].id;
-        classSelect.innerHTML = classrooms.map(c => 
-          `<option value="${c.id}" ${c.id === targetId ? 'selected' : ''}>${c.name} (${c.gradeLevel || 'Sin nivel'})</option>`
-        ).join('');
+    try {
+      const self = this || window.UIController;
+      const classrooms = (window.DataService && typeof window.DataService.getClassrooms === 'function')
+        ? window.DataService.getClassrooms()
+        : [];
+      const classSelect = document.getElementById('import-classroom-select');
+      if (classSelect) {
+        if (!classrooms || classrooms.length === 0) {
+          classSelect.innerHTML = '<option value="">No hay grupos creados todavía. Crea un grupo primero.</option>';
+        } else {
+          const currentSelected = self ? self.selectedClassroomId : '';
+          const targetId = defaultClassroomId || currentSelected || (classrooms[0] && classrooms[0].id) || '';
+          classSelect.innerHTML = classrooms.map(c => 
+            `<option value="${c.id}" ${c.id === targetId ? 'selected' : ''}>${c.name} (${c.gradeLevel || 'Sin nivel'})</option>`
+          ).join('');
+        }
       }
-    }
 
-    this.pendingImportStudents = [];
-    this.resetImportModalUI();
-    this.updateImportTargetPreview();
-    this.openModal('modal-import-students');
+      if (self && typeof self.resetImportModalUI === 'function') {
+        self.pendingImportStudents = [];
+        self.resetImportModalUI();
+        self.updateImportTargetPreview();
+        self.openModal('modal-import-students');
+      } else {
+        const modal = document.getElementById('modal-import-students');
+        if (modal) modal.classList.add('active');
+      }
+    } catch (err) {
+      console.error('[EduPlan] Error abriendo modal de importación:', err);
+      const modal = document.getElementById('modal-import-students');
+      if (modal) modal.classList.add('active');
+    }
   },
 
   resetImportModalUI() {
