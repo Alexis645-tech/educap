@@ -40,7 +40,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.0.7">
+  <link rel="stylesheet" href="style.css?v=1.0.8">
 </head>
 <body>
   <!-- PANTALLA DE INICIO DE SESIÓN / LOGIN CON GOOGLE -->
@@ -184,6 +184,7 @@
               </svg>
               <span id="google-btn-text" class="google-btn-text">Google Drive</span>
               <span id="google-sync-indicator" class="google-sync-indicator idle" title="Estado de sincronización"></span>
+              <span id="google-pending-count-badge" class="google-pending-count-badge" style="display: none;" title="Cambios pendientes de sincronizar con Google Drive">0</span>
             </button>
           </div>
 
@@ -400,6 +401,28 @@
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- BARRA RECONFORTANTE DE ESTADO DE SINCRONIZACIÓN Y OFFLINE -->
+        <div id="attendance-sync-banner" class="attendance-sync-banner sync-state-synced">
+          <div class="sync-banner-icon-col">
+            <div class="sync-banner-icon" id="attendance-sync-banner-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><polyline points="9 13 12 16 17 11"/></svg>
+            </div>
+          </div>
+          <div class="sync-banner-info">
+            <div class="sync-banner-title-row">
+              <h4 id="attendance-sync-banner-title">Asistencias al día en Google Drive</h4>
+              <span id="attendance-sync-banner-pill" class="sync-status-pill pill-synced">☁️ Al día en Drive</span>
+            </div>
+            <p id="attendance-sync-banner-desc">Tus registros están guardados localmente en este dispositivo y respaldados en la nube.</p>
+          </div>
+          <div class="sync-banner-actions">
+            <button type="button" id="btn-attendance-sync-action" class="btn btn-secondary-subtle btn-xs" onclick="if(window.UIController && window.UIController.openGoogleSyncModal){window.UIController.openGoogleSyncModal();}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span>Ver estado</span>
+            </button>
           </div>
         </div>
 
@@ -867,6 +890,49 @@
           </button>
         </div>
 
+        <!-- Resumen de Almacenamiento Local y Seguridad Offline -->
+        <div class="device-storage-reassurance-card">
+          <div class="storage-reassurance-header">
+            <div class="storage-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </div>
+            <div style="flex: 1;">
+              <h4 style="margin: 0; font-size: 0.92rem; font-weight: 700; color: var(--color-text-main);">Almacenamiento en este Dispositivo</h4>
+              <span style="font-size: 0.76rem; color: var(--color-text-muted);">Protegido localmente en memoria de alta capacidad (IndexedDB)</span>
+            </div>
+            <span class="device-safe-badge">✓ 100% Seguro Offline</span>
+          </div>
+          <div class="device-stats-grid">
+            <div class="device-stat-chip">
+              <span class="stat-number" id="modal-stat-classrooms">0</span>
+              <span class="stat-label">Aulas</span>
+            </div>
+            <div class="device-stat-chip">
+              <span class="stat-number" id="modal-stat-students">0</span>
+              <span class="stat-label">Estudiantes</span>
+            </div>
+            <div class="device-stat-chip">
+              <span class="stat-number" id="modal-stat-attendance">0</span>
+              <span class="stat-label">Asistencias</span>
+            </div>
+            <div class="device-stat-chip">
+              <span class="stat-number" id="modal-stat-grades">0</span>
+              <span class="stat-label">Notas</span>
+            </div>
+          </div>
+          <div class="device-pending-sync-status">
+            <span class="pending-status-dot"></span>
+            <span class="pending-status-text" id="modal-pending-status-text">Sin cambios pendientes de sincronizar</span>
+          </div>
+          <p class="storage-reassurance-note">
+            💡 <strong>Garantía para el aula:</strong> Puedes pasar lista o calificar sin internet. Nada se borra al cerrar el navegador o apagar el equipo. En cuanto haya conexión, los cambios se subirán a tu Google Drive automáticamente.
+          </p>
+        </div>
+
         <!-- Enlace de sesión -->
         <div class="google-footer-settings" style="justify-content: flex-end;">
           <button type="button" id="btn-google-signout" class="btn-link text-danger" style="display: none;">
@@ -1296,9 +1362,9 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
   <!-- Motor de Persistencia IndexedDB con Soporte Offline Total -->
-  <script src="db.js?v=1.0.4"></script>
+  <script src="db.js?v=1.0.8"></script>
   <!-- Lógica de Google Drive -->
-  <script src="google-drive.js?v=1.0.4"></script>
+  <script src="google-drive.js?v=1.0.8"></script>
   <!-- Generación de Documentos y Hojas de Cálculo Excel (.xlsx) con SheetJS -->
   <script src="xlsx.full.min.js"></script>
   <script>
@@ -1307,8 +1373,8 @@
     }
   </script>
   <!-- Servicio de Exportación de Reportes Excel -->
-  <script src="export-service.js?v=1.0.5"></script>
+  <script src="export-service.js?v=1.0.8"></script>
   <!-- Lógica Principal -->
-  <script src="app.js?v=1.0.5"></script>
+  <script src="app.js?v=1.0.8"></script>
 </body>
 </html>

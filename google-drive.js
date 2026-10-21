@@ -38,25 +38,71 @@ const GoogleDriveService = {
   isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
   hasPendingOfflineChanges: false,
   pendingConflictPayload: null, // Si surge un conflicto, guarda el archivo remoto para que el docente elija
+  pendingChangesCount: 0,
 
   init() {
     this.loadSavedAuth();
+    this.initPendingChangesCount();
     this.createSessionNotificationUI();
     this.setupNetworkListeners();
     this.checkPendingOfflineSync();
+    this.updateAllSyncIndicators();
   },
 
-  // Escuchar eventos de desconexión y reconexión a Internet
+  initPendingChangesCount() {
+    try {
+      const stored = localStorage.getItem('educap_pending_changes_count');
+      this.pendingChangesCount = stored ? parseInt(stored, 10) || 0 : 0;
+      if (this.pendingChangesCount > 0) {
+        this.hasPendingOfflineChanges = true;
+      }
+    } catch (e) {
+      this.pendingChangesCount = 0;
+    }
+  },
+
+  getPendingChangesCount() {
+    try {
+      const stored = localStorage.getItem('educap_pending_changes_count');
+      return stored ? parseInt(stored, 10) || 0 : this.pendingChangesCount || 0;
+    } catch (e) {
+      return this.pendingChangesCount || 0;
+    }
+  },
+
+  incrementPendingChanges(count = 1, desc = '') {
+    this.pendingChangesCount = (this.getPendingChangesCount() || 0) + (count > 0 ? count : 1);
+    this.hasPendingOfflineChanges = true;
+    try {
+      localStorage.setItem('educap_pending_changes_count', String(this.pendingChangesCount));
+      localStorage.setItem('educap_pending_drive_sync', 'true');
+    } catch (e) {}
+    this.updateAllSyncIndicators();
+  },
+
+  resetPendingChanges() {
+    this.pendingChangesCount = 0;
+    this.hasPendingOfflineChanges = false;
+    try {
+      localStorage.removeItem('educap_pending_changes_count');
+      localStorage.removeItem('educap_pending_drive_sync');
+    } catch (e) {}
+    this.updateAllSyncIndicators();
+  },
+
+  // Escuchar eventos de desconexión y reconexión a Internet con feedback claro
   setupNetworkListeners() {
     window.addEventListener('online', () => {
       console.log('📡 Conexión a Internet restablecida (online).');
       this.isOnline = true;
       this.hideOfflineToast();
       this.showOnlineToast();
+      this.updateAllSyncIndicators();
       // Si el docente hizo cambios mientras estaba offline, sincronizar de inmediato
-      if (this.hasPendingOfflineChanges || this.getPendingOfflineFlag()) {
-        console.log('🔄 Sincronizando cambios acumulados en modo offline con Google Drive...');
-        this.scheduleAutoSync(500);
+      const pendingCount = this.getPendingChangesCount();
+      if (this.hasPendingOfflineChanges || this.getPendingOfflineFlag() || pendingCount > 0) {
+        console.log(`🔄 Sincronizando ${pendingCount} cambios acumulados en modo offline con Google Drive...`);
+        this.scheduleAutoSync(600, 0, 'Sincronización al reconectar');
       } else if (this.currentUser) {
         this.setSyncStatus('synced', 'Conexión restablecida');
       }
@@ -65,8 +111,9 @@ const GoogleDriveService = {
     window.addEventListener('offline', () => {
       console.warn('⚠️ Se perdió la conexión a Internet (offline).');
       this.isOnline = false;
-      this.setSyncStatus('offline', 'Sin conexión (guardando localmente)');
+      this.setSyncStatus('offline', 'Modo Offline (guardando en este dispositivo)');
       this.showOfflineToast();
+      this.updateAllSyncIndicators();
     });
   },
 
@@ -81,11 +128,12 @@ const GoogleDriveService = {
     } else {
       localStorage.removeItem('educap_pending_drive_sync');
     }
+    this.updateAllSyncIndicators();
   },
 
   checkPendingOfflineSync() {
-    if (this.getPendingOfflineFlag() && navigator.onLine && this.currentUser) {
-      this.scheduleAutoSync(1000);
+    if ((this.getPendingOfflineFlag() || this.getPendingChangesCount() > 0) && navigator.onLine && this.currentUser) {
+      this.scheduleAutoSync(1000, 0, 'Chequeo inicial de cambios pendientes');
     }
   },
 
@@ -841,26 +889,33 @@ const GoogleDriveService = {
 
       this.lastSyncTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       this.setPendingOfflineFlag(false);
+      this.resetPendingChanges();
       this.pendingConflict = null;
       this.saveAuth(this.currentUser);
       this.setSyncStatus('synced', `Guardado en Drive (${this.lastSyncTime})`);
+      this.updateAllSyncIndicators();
       return true;
     } catch (err) {
       console.error('Error sincronizando con Google Drive:', err);
       if (!navigator.onLine) {
         this.setPendingOfflineFlag(true);
-        this.setSyncStatus('offline', 'Guardado local (sin internet)');
+        const pendingCount = this.getPendingChangesCount();
+        this.setSyncStatus('offline', `Guardado local (${pendingCount} pendientes)`);
       } else {
         this.setSyncStatus('error', 'Error al sincronizar con Drive');
       }
+      this.updateAllSyncIndicators();
       return false;
     }
   },
 
   // Planifica sincronización automática con debounce para no saturar la API
-  scheduleAutoSync(delayMs = 1500) {
+  scheduleAutoSync(delayMs = 1500, count = 1, desc = '') {
     // Registrar el timestamp de la modificación local
     this.recordLocalModifiedTime();
+    if (count > 0) {
+      this.incrementPendingChanges(count, desc);
+    }
 
     if (this.autoSyncTimer) {
       clearTimeout(this.autoSyncTimer);
@@ -868,13 +923,17 @@ const GoogleDriveService = {
 
     if (!navigator.onLine) {
       this.setPendingOfflineFlag(true);
-      this.setSyncStatus('offline', 'Guardado local (sin conexión)');
+      const pendingCount = this.getPendingChangesCount();
+      this.setSyncStatus('offline', `Guardado en este equipo (${pendingCount} pendientes)`);
+      this.updateAllSyncIndicators();
       return;
     }
 
     this.autoSyncTimer = setTimeout(() => {
       if (this.currentUser) {
         this.syncToDrive();
+      } else {
+        this.updateAllSyncIndicators();
       }
     }, delayMs);
   },
@@ -896,6 +955,7 @@ const GoogleDriveService = {
       this.lastKnownRemoteModified = file.modifiedTime || new Date().toISOString();
       this.lastSyncTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       this.setPendingOfflineFlag(false);
+      this.resetPendingChanges();
       this.pendingConflict = null;
       this.saveAuth(this.currentUser);
       this.setSyncStatus('synced', `Restaurado con éxito (${this.lastSyncTime})`);
@@ -932,6 +992,155 @@ const GoogleDriveService = {
         btnText.textContent = shortName;
       }
     }
+    this.updateAllSyncIndicators();
+  },
+
+  updateAllSyncIndicators() {
+    const isOnline = navigator.onLine;
+    const pendingCount = this.getPendingChangesCount();
+    const hasUser = Boolean(this.currentUser);
+
+    // 1. Badge flotante con contador en el botón de Google Drive del Header
+    const pendingBadge = document.getElementById('google-pending-count-badge');
+    const syncDot = document.getElementById('google-sync-indicator');
+    const btnText = document.getElementById('google-btn-text');
+
+    if (pendingBadge) {
+      if (pendingCount > 0) {
+        pendingBadge.style.display = 'inline-flex';
+        pendingBadge.textContent = pendingCount > 99 ? '99+' : String(pendingCount);
+        pendingBadge.className = 'google-pending-count-badge active';
+        pendingBadge.title = `${pendingCount} cambio(s) guardados en este equipo, pendientes de sincronizar con Drive`;
+      } else {
+        pendingBadge.style.display = 'none';
+        pendingBadge.textContent = '0';
+        pendingBadge.className = 'google-pending-count-badge';
+      }
+    }
+
+    if (syncDot) {
+      let statusClass = this.syncStatus || 'idle';
+      if (!isOnline) {
+        statusClass = 'offline';
+      } else if (this.pendingConflict) {
+        statusClass = 'conflict';
+      } else if (pendingCount > 0 && !hasUser) {
+        statusClass = 'local';
+      }
+      syncDot.className = 'google-sync-indicator ' + statusClass;
+    }
+
+    if (btnText && this.syncStatus !== 'conflict') {
+      if (hasUser && this.currentUser.name) {
+        const shortName = this.currentUser.name.split(' ')[0];
+        btnText.textContent = shortName;
+      } else {
+        btnText.textContent = 'Google Drive';
+      }
+    }
+
+    // 2. Banner de estado de sincronización en la pestaña de Asistencia
+    this.updateAttendanceBanner();
+
+    // 3. Tarjeta de estadísticas en el modal de Google Drive
+    this.updateModalStorageStats();
+  },
+
+  updateAttendanceBanner() {
+    const banner = document.getElementById('attendance-sync-banner');
+    if (!banner) return;
+
+    const isOnline = navigator.onLine;
+    const pendingCount = this.getPendingChangesCount();
+    const hasUser = Boolean(this.currentUser);
+    const hasConflict = Boolean(this.pendingConflict);
+
+    const iconEl = document.getElementById('attendance-sync-banner-icon');
+    const titleEl = document.getElementById('attendance-sync-banner-title');
+    const descEl = document.getElementById('attendance-sync-banner-desc');
+    const pillEl = document.getElementById('attendance-sync-banner-pill');
+
+    banner.className = 'attendance-sync-banner';
+
+    if (hasConflict) {
+      banner.classList.add('sync-state-conflict');
+      if (iconEl) iconEl.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+      if (titleEl) titleEl.textContent = 'Diferencias detectadas entre este equipo y Google Drive';
+      if (descEl) descEl.textContent = 'Tus asistencias están intactas. Haz clic en "Ver estado" para combinarlas sin perder ningún dato.';
+      if (pillEl) {
+        pillEl.className = 'sync-status-pill pill-warning';
+        pillEl.textContent = '⚠️ Resolver diferencias';
+      }
+    } else if (!isOnline) {
+      banner.classList.add('sync-state-offline');
+      if (iconEl) iconEl.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>`;
+      if (titleEl) titleEl.textContent = `Modo Aula Sin Conexión • Guardado 100% en este dispositivo`;
+      if (descEl) descEl.textContent = `Puedes pasar lista con total tranquilidad: cada marca se guarda en la memoria segura de tu equipo (IndexedDB) y se subirá a Drive cuando vuelva la señal.`;
+      if (pillEl) {
+        pillEl.className = 'sync-status-pill pill-warning';
+        pillEl.textContent = pendingCount > 0 ? `💾 ${pendingCount} pendiente${pendingCount > 1 ? 's' : ''}` : '💾 Modo Offline seguro';
+      }
+    } else if (this.syncStatus === 'syncing') {
+      banner.classList.add('sync-state-syncing');
+      if (iconEl) iconEl.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>`;
+      if (titleEl) titleEl.textContent = 'Sincronizando asistencias con Google Drive...';
+      if (descEl) descEl.textContent = 'Subiendo los registros tomados en clase a la nube sin interrumpir tu trabajo.';
+      if (pillEl) {
+        pillEl.className = 'sync-status-pill pill-syncing';
+        pillEl.textContent = '🔄 Sincronizando...';
+      }
+    } else if (hasUser) {
+      banner.classList.add('sync-state-synced');
+      if (iconEl) iconEl.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><polyline points="9 13 12 16 17 11"/></svg>`;
+      const timeStr = this.lastSyncTime ? ` (Último guardado: ${this.lastSyncTime})` : '';
+      if (titleEl) titleEl.textContent = `Asistencias al día en Google Drive${timeStr}`;
+      if (descEl) descEl.textContent = 'Tus registros están guardados localmente en este dispositivo y respaldados en la nube.';
+      if (pillEl) {
+        pillEl.className = 'sync-status-pill pill-synced';
+        pillEl.textContent = '☁️ Al día en Drive';
+      }
+    } else {
+      banner.classList.add('sync-state-local');
+      if (iconEl) iconEl.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
+      if (titleEl) titleEl.textContent = 'Modo Local Activo • Guardado en este equipo';
+      if (descEl) descEl.textContent = 'Tus asistencias se almacenan con seguridad en este navegador. Conecta Google Drive si deseas copia en la nube.';
+      if (pillEl) {
+        pillEl.className = 'sync-status-pill pill-neutral';
+        pillEl.textContent = '💾 Almacenamiento local';
+      }
+    }
+  },
+
+  updateModalStorageStats() {
+    const keys = this.getKeys();
+    try {
+      const cls = JSON.parse(localStorage.getItem(keys.CLASSROOMS) || '[]');
+      const std = JSON.parse(localStorage.getItem(keys.STUDENTS) || '[]');
+      const att = JSON.parse(localStorage.getItem(keys.ATTENDANCE) || '[]');
+      const grd = JSON.parse(localStorage.getItem(keys.GRADES) || '[]');
+
+      const elCls = document.getElementById('modal-stat-classrooms');
+      const elStd = document.getElementById('modal-stat-students');
+      const elAtt = document.getElementById('modal-stat-attendance');
+      const elGrd = document.getElementById('modal-stat-grades');
+
+      if (elCls) elCls.textContent = cls.length;
+      if (elStd) elStd.textContent = std.length;
+      if (elAtt) elAtt.textContent = att.length;
+      if (elGrd) elGrd.textContent = grd.length;
+
+      const pendingText = document.getElementById('modal-pending-status-text');
+      const count = this.getPendingChangesCount();
+      if (pendingText) {
+        if (count > 0) {
+          pendingText.innerHTML = `<strong>${count} cambio${count > 1 ? 's' : ''}</strong> pendiente${count > 1 ? 's' : ''} de sincronizar con Google Drive`;
+        } else if (this.currentUser && this.lastSyncTime) {
+          pendingText.textContent = `Todos los datos están al día con Google Drive (${this.lastSyncTime})`;
+        } else {
+          pendingText.textContent = 'Todos los datos están guardados en este dispositivo';
+        }
+      }
+    } catch (e) {}
   },
 
   // Modal amigable flotante para renovar autorización y resolver conflictos
@@ -965,12 +1174,12 @@ const GoogleDriveService = {
 
       <div id="offline-network-banner" class="network-status-toast network-offline" style="display: none;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
-        <span><strong>Modo Offline:</strong> Sin conexión a Internet. Todos los datos que ingreses se guardan localmente y se subirán a Drive en cuanto regrese la señal.</span>
+        <span><strong>Modo Aula Sin Conexión:</strong> Sin internet. Todas las asistencias y notas que ingreses se guardan con seguridad en este dispositivo y se subirán a Drive en cuanto regrese la señal.</span>
       </div>
 
       <div id="online-network-banner" class="network-status-toast network-online" style="display: none;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
-        <span><strong>¡Conexión restablecida!</strong> Sincronizando datos automáticamente con Google Drive...</span>
+        <span id="online-toast-text"><strong>¡Conexión a Internet restablecida!</strong> Sincronizando datos automáticamente con Google Drive...</span>
       </div>
 
       <!-- MODAL DE CONTROL DE CONFLICTOS MULTI-DISPOSITIVO & MERGING -->
@@ -982,8 +1191,8 @@ const GoogleDriveService = {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               </span>
               <div>
-                <h3 style="color: var(--color-text-main); font-size: 1.15rem; font-weight: 700;">Conflicto de Sincronización Detectado</h3>
-                <p style="font-size: 0.82rem; color: var(--color-text-muted);">Los datos en Google Drive son más recientes que tu versión local temporal</p>
+                <h3 style="color: var(--color-text-main); font-size: 1.15rem; font-weight: 700;">¡Tus datos están protegidos!</h3>
+                <p style="font-size: 0.82rem; color: var(--color-text-muted);">Detectamos cambios en este dispositivo y también en Google Drive</p>
               </div>
             </div>
             <button type="button" class="modal-close-btn" id="btn-conflict-close" aria-label="Cerrar">&times;</button>
@@ -997,7 +1206,7 @@ const GoogleDriveService = {
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
               <div>
-                Tu archivo en Google Drive fue modificado desde otro dispositivo con fecha posterior a tu última sincronización. EduPlan protege tus notas para evitar sobrescrituras accidentales.
+                Registraste datos en este dispositivo sin conexión a internet, pero también hay una versión guardada en Google Drive desde otro momento. <strong>Ningún dato se ha perdido.</strong> Elige la opción más conveniente para ti:
               </div>
             </div>
 
@@ -1015,12 +1224,12 @@ const GoogleDriveService = {
                     </svg>
                   </span>
                   <div>
-                    <h4>Google Drive (Nube)</h4>
-                    <span class="source-tag tag-newer">Más reciente</span>
+                    <h4>Google Drive (Copia previa)</h4>
+                    <span class="source-tag tag-newer">En la nube</span>
                   </div>
                 </div>
                 <div class="conflict-source-time">
-                  <span class="time-label">Modificado:</span>
+                  <span class="time-label">Guardado en Drive:</span>
                   <strong id="conflict-remote-time">—</strong>
                 </div>
                 <div class="conflict-metrics-list" id="conflict-remote-metrics">
@@ -1040,17 +1249,22 @@ const GoogleDriveService = {
                   </span>
                   <div>
                     <h4>Este Dispositivo (Local)</h4>
-                    <span class="source-tag tag-local">Versión en pantalla</span>
+                    <span class="source-tag tag-local">En este equipo</span>
                   </div>
                 </div>
                 <div class="conflict-source-time">
-                  <span class="time-label">Último cambio:</span>
+                  <span class="time-label">Último registro aquí:</span>
                   <strong id="conflict-local-time">—</strong>
                 </div>
                 <div class="conflict-metrics-list" id="conflict-local-metrics">
                   <span class="metric-badge">Cargando datos...</span>
                 </div>
               </div>
+            </div>
+
+            <div class="conflict-reassurance-tip" style="margin-bottom: 14px; padding: 10px 14px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: var(--radius-md); font-size: 0.82rem; color: var(--color-text-main); display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.1rem;">💡</span>
+              <span><strong>Garantía de Cero Pérdidas:</strong> La opción <em>«Combinar todo automáticamente»</em> une ambas fuentes para que no pierdas ninguna asistencia ni calificación de las que tomaste hoy.</span>
             </div>
 
             <!-- OPCIONES DE RESOLUCIÓN -->
@@ -1068,16 +1282,32 @@ const GoogleDriveService = {
                       </svg>
                     </div>
                     <div>
-                      <h4>Fusión Inteligente (Merging)</h4>
-                      <span class="conflict-option-subtitle">Unir ambas versiones sin perder ningún dato</span>
+                      <h4>⭐ Combinar todo automáticamente (100% Seguro)</h4>
+                      <span class="conflict-option-subtitle">Unir asistencias y notas de ambos lados sin borrar nada</span>
                     </div>
                   </div>
-                  <span class="conflict-badge-recommended">⭐ Recomendado</span>
+                  <span class="conflict-badge-recommended">Recomendado</span>
                 </div>
-                <p>Combina estudiantes, calificaciones, asistencias e incidencias de ambos lados. Guarda la copia unificada en este equipo y actualiza Google Drive automáticamente.</p>
+                <p>Junta los datos de este equipo con los de Google Drive. Es la opción ideal: conserva todas las asistencias que registraste hoy en el aula sin internet y también los datos que tenías en la nube.</p>
               </div>
 
-              <!-- Opción 2: Descargar de Google Drive -->
+              <!-- Opción 2: Sobrescribir la Nube con este Dispositivo -->
+              <div class="conflict-option-card" id="btn-conflict-overwrite">
+                <div class="conflict-card-header">
+                  <div class="option-icon overwrite-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4>Conservar lo registrado en este equipo</h4>
+                    <span class="conflict-option-subtitle">Actualizar Google Drive con la versión de esta pantalla</span>
+                  </div>
+                </div>
+                <p>Usa las asistencias y notas que acabas de ingresar en este teléfono o computadora y guárdalas como la copia definitiva en Google Drive.</p>
+              </div>
+
+              <!-- Opción 3: Descargar de Google Drive -->
               <div class="conflict-option-card" id="btn-conflict-download">
                 <div class="conflict-card-header">
                   <div class="option-icon download-icon">
@@ -1088,27 +1318,11 @@ const GoogleDriveService = {
                     </svg>
                   </div>
                   <div>
-                    <h4>Conservar versión de Google Drive</h4>
-                    <span class="conflict-option-subtitle">Reemplazar los datos de este equipo con la copia de la nube</span>
+                    <h4>Conservar los datos de Google Drive</h4>
+                    <span class="conflict-option-subtitle">Descargar la copia de la nube y descartar cambios locales</span>
                   </div>
                 </div>
-                <p>Descarga la copia más reciente guardada en Google Drive. Los cambios sin guardar hechos en este dispositivo se descartarán.</p>
-              </div>
-
-              <!-- Opción 3: Sobrescribir la Nube con este Dispositivo -->
-              <div class="conflict-option-card" id="btn-conflict-overwrite">
-                <div class="conflict-card-header">
-                  <div class="option-icon overwrite-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4>Conservar versión de este Dispositivo</h4>
-                    <span class="conflict-option-subtitle">Sobrescribir la nube con estos datos</span>
-                  </div>
-                </div>
-                <p>Fuerza la subida de los datos que estás viendo en tu pantalla, reemplazando la copia en Google Drive.</p>
+                <p>Restaura en este equipo lo que tenías guardado previamente en Google Drive. Los cambios temporales de este equipo se descartarán.</p>
               </div>
             </div>
 
@@ -1235,7 +1449,15 @@ const GoogleDriveService = {
 
   showOfflineToast() {
     const el = document.getElementById('offline-network-banner');
-    if (el) el.style.display = 'flex';
+    if (el) {
+      const count = this.getPendingChangesCount();
+      const countText = count > 0 ? ` (${count} pendientes de sincronizar)` : '';
+      el.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        <span><strong>Modo Aula Sin Conexión:</strong> Sin internet. Todas las asistencias y notas que ingreses se guardan con total seguridad en este dispositivo y se subirán a Drive en cuanto regrese la señal${countText}.</span>
+      `;
+      el.style.display = 'flex';
+    }
   },
 
   hideOfflineToast() {
@@ -1246,10 +1468,18 @@ const GoogleDriveService = {
   showOnlineToast() {
     const el = document.getElementById('online-network-banner');
     if (el) {
+      const count = this.getPendingChangesCount();
+      const actionText = count > 0 
+        ? `Sincronizando ${count} cambio(s) guardado(s) en este dispositivo con Google Drive...`
+        : `Tus datos están al día con Google Drive.`;
+      el.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        <span><strong>¡Conexión a Internet restablecida!</strong> ${actionText}</span>
+      `;
       el.style.display = 'flex';
       setTimeout(() => {
         el.style.display = 'none';
-      }, 4000);
+      }, 4500);
     }
   },
 

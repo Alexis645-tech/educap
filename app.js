@@ -337,9 +337,9 @@ const DataService = {
     localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(all));
     syncToIndexedDB(STORAGE_KEYS.ATTENDANCE, all);
 
-    // Sincronización automática o encolado offline
+    // Sincronización automática y seguimiento offline
     if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
-      window.GoogleDriveService.scheduleAutoSync();
+      window.GoogleDriveService.scheduleAutoSync(1500, 1, 'Asistencia registrada');
     }
   },
 
@@ -357,7 +357,7 @@ const DataService = {
     syncToIndexedDB(STORAGE_KEYS.ATTENDANCE, all);
 
     if (window.GoogleDriveService && window.GoogleDriveService.scheduleAutoSync) {
-      window.GoogleDriveService.scheduleAutoSync();
+      window.GoogleDriveService.scheduleAutoSync(1500, studentIds.length, 'Asistencia masiva');
     }
   },
 
@@ -522,6 +522,31 @@ const UIController = {
   studentNameDisplayOrder: (typeof localStorage !== 'undefined' && localStorage.getItem('educap_name_display_order')) || 'first-last', // 'first-last' | 'last-first'
   selectedStudentIds: new Set(), // Conjunto para selección múltiple / Bulk Actions
   pendingImportStudents: [],
+  _saveToastTimer: null,
+
+  showSaveToast(msg, type = 'local') {
+    let toast = document.getElementById('educap-save-microtoast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'educap-save-microtoast';
+      document.body.appendChild(toast);
+    }
+
+    const iconSvg = type === 'cloud'
+      ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><polyline points="9 13 12 16 17 11"/></svg>`
+      : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
+
+    toast.className = `educap-save-microtoast ${type}`;
+    toast.innerHTML = `${iconSvg}<span>${msg}</span>`;
+    toast.style.display = 'flex';
+
+    if (this._saveToastTimer) {
+      clearTimeout(this._saveToastTimer);
+    }
+    this._saveToastTimer = setTimeout(() => {
+      if (toast) toast.style.display = 'none';
+    }, 2800);
+  },
 
   formatStudentName(std) {
     if (!std) return '';
@@ -1736,6 +1761,9 @@ const UIController = {
     } else if (this.currentTab === 'grades-tab') {
       this.renderGrades();
     }
+    if (window.GoogleDriveService && typeof window.GoogleDriveService.updateAllSyncIndicators === 'function') {
+      window.GoogleDriveService.updateAllSyncIndicators();
+    }
   },
 
   renderClassrooms() {
@@ -2086,6 +2114,11 @@ const UIController = {
     document.getElementById('stat-late-count').textContent = lCount;
     document.getElementById('stat-absent-count').textContent = aCount;
 
+    // Actualizar barra de estado de sincronización y offline de asistencia
+    if (window.GoogleDriveService && typeof window.GoogleDriveService.updateAttendanceBanner === 'function') {
+      window.GoogleDriveService.updateAttendanceBanner();
+    }
+
     const roster = document.getElementById('attendance-roster-container');
     roster.innerHTML = '';
 
@@ -2105,7 +2138,13 @@ const UIController = {
       card.innerHTML = `
         <div class="student-identity">
           <div class="student-avatar" style="background-color: ${std.avatarColor || '#4F46E5'}">${initials}</div>
-          <div class="student-full-name">${this.escapeHtml(displayName)}</div>
+          <div class="student-name-group">
+            <div class="student-full-name">${this.escapeHtml(displayName)}</div>
+            <span class="roster-local-indicator" title="Registro seguro guardado en este dispositivo (IndexedDB)">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              En este dispositivo
+            </span>
+          </div>
         </div>
         <div class="roster-actions">
           <button class="status-btn ${currentStatus === 'PRESENT' ? 'selected-PRESENT' : ''}" onclick="UIController.updateStatus('${std.id}', '${targetClassroomId}', 'PRESENT')">Presente</button>
@@ -2120,6 +2159,14 @@ const UIController = {
   updateStatus(studentId, classroomId, status) {
     DataService.setAttendanceStatus(studentId, classroomId, this.selectedDate, status);
     this.renderAttendance();
+
+    const isOnlineWithDrive = navigator.onLine && window.GoogleDriveService && window.GoogleDriveService.currentUser;
+    const statusLabel = status === 'PRESENT' ? 'Presente' : (status === 'LATE' ? 'Atraso' : 'Falta');
+    if (isOnlineWithDrive) {
+      this.showSaveToast(`Marcado como ${statusLabel} • Guardado en este equipo y sincronizando con Drive ✓`, 'cloud');
+    } else {
+      this.showSaveToast(`Marcado como ${statusLabel} • Guardado 100% en este dispositivo ✓`, 'local');
+    }
   },
 
   markAllAttendanceStatus(status = 'PRESENT') {
@@ -2133,6 +2180,14 @@ const UIController = {
     const studentIds = students.map(s => s.id);
     DataService.setBulkAttendanceStatus(studentIds, targetClassroomId, this.selectedDate, status);
     this.renderAttendance();
+
+    const isOnlineWithDrive = navigator.onLine && window.GoogleDriveService && window.GoogleDriveService.currentUser;
+    const statusLabel = status === 'PRESENT' ? 'Presentes' : (status === 'LATE' ? 'Atrasos' : 'Faltas');
+    if (isOnlineWithDrive) {
+      this.showSaveToast(`Todo el grupo marcado como ${statusLabel} • Guardado y sincronizando con Drive ✓`, 'cloud');
+    } else {
+      this.showSaveToast(`Todo el grupo marcado como ${statusLabel} • Guardado 100% en este equipo ✓`, 'local');
+    }
   },
 
   markAllPresent() {
