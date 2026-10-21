@@ -518,10 +518,80 @@ const UIController = {
   selectedClassroomId: '',
   selectedGradeType: '',
   selectedGradeItemId: '',
-  selectedDate: new Date().toISOString().split('T')[0],
   studentSortOrder: 'lastName-asc', // 'lastName-asc' | 'lastName-desc' | 'firstName-asc' | 'firstName-desc'
+  studentNameDisplayOrder: (typeof localStorage !== 'undefined' && localStorage.getItem('educap_name_display_order')) || 'first-last', // 'first-last' | 'last-first'
   selectedStudentIds: new Set(), // Conjunto para selección múltiple / Bulk Actions
   pendingImportStudents: [],
+
+  formatStudentName(std) {
+    if (!std) return '';
+    const first = (std.firstName || '').trim();
+    const last = (std.lastName || '').trim();
+    if (!first && !last) return 'Sin nombre';
+    if (!last) return first;
+    if (!first) return last;
+
+    if (this.studentNameDisplayOrder === 'last-first') {
+      return `${last}, ${first}`;
+    }
+    return `${first} ${last}`;
+  },
+
+  formatStudentInitials(std) {
+    if (!std) return '';
+    const first = (std.firstName || '').trim();
+    const last = (std.lastName || '').trim();
+    if (this.studentNameDisplayOrder === 'last-first') {
+      return ((last[0] || '') + (first[0] || '')).toUpperCase();
+    }
+    return ((first[0] || '') + (last[0] || '')).toUpperCase();
+  },
+
+  setStudentNameDisplayOrder(order) {
+    this.studentNameDisplayOrder = order;
+    try {
+      localStorage.setItem('educap_name_display_order', order);
+    } catch (e) {}
+
+    this.syncNameFormatSelects();
+    this.renderStudents();
+    if (this.currentTab === 'attendance-tab') {
+      this.renderAttendance();
+    }
+    if (this.currentTab === 'grades-tab') {
+      this.renderGrades();
+    }
+
+    const toastMsg = (order === 'last-first')
+      ? 'Mostrando: Apellidos primero (Ej: Acaro Ramirez, Cristopher)'
+      : 'Mostrando: Nombres primero (Ej: Cristopher Alexander Acaro)';
+    
+    if (window.ExportService && window.ExportService.showExportSuccessToast) {
+      window.ExportService.showExportSuccessToast(toastMsg, 'Visualización de Estudiantes');
+    }
+  },
+
+  toggleStudentNameDisplayOrder() {
+    const next = (this.studentNameDisplayOrder === 'first-last') ? 'last-first' : 'first-last';
+    this.setStudentNameDisplayOrder(next);
+  },
+
+  syncNameFormatSelects() {
+    const selects = ['student-name-format-select', 'attendance-name-format-select', 'grades-name-format-select'];
+    selects.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.value !== this.studentNameDisplayOrder) {
+        el.value = this.studentNameDisplayOrder;
+      }
+    });
+
+    const badges = document.querySelectorAll('.lbl-name-order-badge');
+    badges.forEach(b => {
+      b.textContent = (this.studentNameDisplayOrder === 'last-first') 
+        ? 'Ver: Nombres primero' 
+        : 'Ver: Apellidos primero';
+    });
+  },
 
   sortStudents(studentsList) {
     const list = [...studentsList];
@@ -578,6 +648,7 @@ const UIController = {
     }
     this.checkAuthScreen();
     this.bindEvents();
+    this.syncNameFormatSelects();
     this.renderCurrentView();
   },
 
@@ -1050,6 +1121,22 @@ const UIController = {
       });
     }
 
+    // Selector de visualización de nombres (Nombres primero vs Apellidos primero)
+    const nameFormatSelect = document.getElementById('student-name-format-select');
+    if (nameFormatSelect) {
+      nameFormatSelect.addEventListener('change', (e) => {
+        this.setStudentNameDisplayOrder(e.target.value);
+      });
+    }
+
+    // Botón en encabezado para alternar orden de nombres
+    const btnToggleNameOrder = document.getElementById('btn-toggle-name-order');
+    if (btnToggleNameOrder) {
+      btnToggleNameOrder.addEventListener('click', () => {
+        this.toggleStudentNameDisplayOrder();
+      });
+    }
+
     document.getElementById('student-search-input').addEventListener('input', () => {
       this.renderStudents();
     });
@@ -1318,6 +1405,13 @@ const UIController = {
       });
     }
 
+    const attNameFormatSelect = document.getElementById('attendance-name-format-select');
+    if (attNameFormatSelect) {
+      attNameFormatSelect.addEventListener('change', (e) => {
+        this.setStudentNameDisplayOrder(e.target.value);
+      });
+    }
+
     const dateInput = document.getElementById('attendance-date-input');
     dateInput.value = this.selectedDate;
     dateInput.addEventListener('change', (e) => {
@@ -1332,6 +1426,13 @@ const UIController = {
         this.studentSortOrder = e.target.value;
         this.syncSortSelects();
         this.renderGrades();
+      });
+    }
+
+    const gradesNameFormatSelect = document.getElementById('grades-name-format-select');
+    if (gradesNameFormatSelect) {
+      gradesNameFormatSelect.addEventListener('change', (e) => {
+        this.setStudentNameDisplayOrder(e.target.value);
       });
     }
 
@@ -1808,6 +1909,8 @@ const UIController = {
     if (search) {
       students = students.filter(s => 
         (s.firstName + ' ' + s.lastName).toLowerCase().includes(search) ||
+        (s.lastName + ' ' + s.firstName).toLowerCase().includes(search) ||
+        (s.lastName + ', ' + s.firstName).toLowerCase().includes(search) ||
         (s.email && s.email.toLowerCase().includes(search))
       );
     }
@@ -1831,7 +1934,8 @@ const UIController = {
       const studentClassIds = Array.isArray(std.classroomIds) ? std.classroomIds : (std.classroomId ? [std.classroomId] : []);
       const assignedClasses = classrooms.filter(c => studentClassIds.includes(c.id));
       const incidents = DataService.getIncidents(std.id);
-      const initials = (std.firstName[0] || '') + (std.lastName[0] || '');
+      const initials = this.formatStudentInitials(std);
+      const displayName = this.formatStudentName(std);
       const isSelected = this.selectedStudentIds.has(std.id);
 
       let groupsHTML = '<span style="color: var(--color-text-muted); font-size: 0.75rem;">Sin grupo</span>';
@@ -1855,7 +1959,7 @@ const UIController = {
           <div class="student-identity">
             <div class="student-avatar" style="background-color: ${std.avatarColor || '#4F46E5'}">${initials}</div>
             <div>
-              <div class="student-full-name">${std.firstName} ${std.lastName}</div>
+              <div class="student-full-name">${this.escapeHtml(displayName)}</div>
               <span style="font-size: 0.75rem; color: var(--color-text-muted);">${std.phone || 'Sin teléfono'}</span>
             </div>
           </div>
@@ -1993,14 +2097,15 @@ const UIController = {
     students.forEach(std => {
       const record = records.find(r => r.studentId === std.id);
       const currentStatus = record ? record.status : 'PRESENT'; // Por defecto presente si no hay registro
-      const initials = (std.firstName[0] || '') + (std.lastName[0] || '');
+      const initials = this.formatStudentInitials(std);
+      const displayName = this.formatStudentName(std);
 
       const card = document.createElement('div');
       card.className = 'roster-card';
       card.innerHTML = `
         <div class="student-identity">
           <div class="student-avatar" style="background-color: ${std.avatarColor || '#4F46E5'}">${initials}</div>
-          <div class="student-full-name">${std.firstName} ${std.lastName}</div>
+          <div class="student-full-name">${this.escapeHtml(displayName)}</div>
         </div>
         <div class="roster-actions">
           <button class="status-btn ${currentStatus === 'PRESENT' ? 'selected-PRESENT' : ''}" onclick="UIController.updateStatus('${std.id}', '${targetClassroomId}', 'PRESENT')">Presente</button>
@@ -2150,9 +2255,9 @@ const UIController = {
     if (!student) return;
 
     document.getElementById('incident-student-id').value = student.id;
-    document.getElementById('modal-student-name').textContent = `${student.firstName} ${student.lastName}`;
+    document.getElementById('modal-student-name').textContent = this.formatStudentName(student);
     document.getElementById('modal-student-details').textContent = student.email || 'Sin correo asociado';
-    document.getElementById('modal-student-avatar').textContent = (student.firstName[0] || '') + (student.lastName[0] || '');
+    document.getElementById('modal-student-avatar').textContent = this.formatStudentInitials(student);
     document.getElementById('modal-student-avatar').style.backgroundColor = student.avatarColor || '#4F46E5';
 
     this.renderIncidentsModal(studentId);
@@ -2593,7 +2698,19 @@ const UIController = {
     }
 
     // Cabecera de la tabla con cada actividad / examen visible
-    let headerHTML = '<th>Estudiante</th>';
+    let headerHTML = `
+      <th class="th-student-col">
+        <div class="th-student-header-wrap">
+          <span>Estudiante</span>
+          <button type="button" class="btn-toggle-name-order" onclick="UIController.toggleStudentNameDisplayOrder()" title="Alternar formato: Nombres primero ⇄ Apellidos primero">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/>
+            </svg>
+            <span class="lbl-name-order-badge">${this.studentNameDisplayOrder === 'last-first' ? 'Ver: Nombres primero' : 'Ver: Apellidos primero'}</span>
+          </button>
+        </div>
+      </th>
+    `;
     visibleGradeItems.forEach(item => {
       const typeLabels = { exam: 'Examen', homework: 'Tarea', project: 'Proyecto', participation: 'Part.' };
       headerHTML += `
@@ -2707,12 +2824,13 @@ const UIController = {
       const std = students[rowIndex];
       if (!std) continue;
 
-      const initials = (std.firstName[0] || '') + (std.lastName[0] || '');
+      const initials = this.formatStudentInitials(std);
+      const displayName = this.formatStudentName(std);
       let cellsHTML = `
         <td data-label="Estudiante">
           <div class="student-identity">
             <div class="student-avatar" style="background-color: ${std.avatarColor || '#4F46E5'}">${initials}</div>
-            <div class="student-full-name">${std.firstName} ${std.lastName}</div>
+            <div class="student-full-name">${this.escapeHtml(displayName)}</div>
           </div>
         </td>
       `;
@@ -2799,12 +2917,13 @@ const UIController = {
 
     let html = '';
     students.forEach((std, rowIndex) => {
-      const initials = (std.firstName[0] || '') + (std.lastName[0] || '');
+      const initials = this.formatStudentInitials(std);
+      const displayName = this.formatStudentName(std);
       let cellsHTML = `
         <td data-label="Estudiante">
           <div class="student-identity">
             <div class="student-avatar" style="background-color: ${std.avatarColor || '#4F46E5'}">${initials}</div>
-            <div class="student-full-name">${std.firstName} ${std.lastName}</div>
+            <div class="student-full-name">${this.escapeHtml(displayName)}</div>
           </div>
         </td>
       `;

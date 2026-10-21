@@ -30,6 +30,22 @@ const ExportService = {
     }
   },
 
+  // Formatear nombre de estudiante según preferencia del docente (Nombres primero o Apellidos primero)
+  formatStudentName(std) {
+    if (!std) return '';
+    const first = (std.firstName || '').trim();
+    const last = (std.lastName || '').trim();
+    if (!first && !last) return 'Sin nombre';
+    if (!last) return first;
+    if (!first) return last;
+
+    const pref = (typeof localStorage !== 'undefined' && localStorage.getItem('educap_name_display_order')) || 'first-last';
+    if (pref === 'first-last') {
+      return `${first} ${last}`;
+    }
+    return `${last}, ${first}`;
+  },
+
   // -------------------------------------------------------------
   // 1. EXPORTACIÓN DE CALIFICACIONES Y NOTAS A EXCEL (.XLSX)
   // -------------------------------------------------------------
@@ -96,7 +112,7 @@ const ExportService = {
     students.forEach((std, idx) => {
       const row = [
         idx + 1,
-        `${std.lastName || ''} ${std.firstName || ''}`.trim(),
+        this.formatStudentName(std),
         std.email || '—'
       ];
 
@@ -337,7 +353,7 @@ const ExportService = {
 
         consolData.push([
           idx + 1,
-          `${std.lastName || ''} ${std.firstName || ''}`.trim(),
+          this.formatStudentName(std),
           std.email || '—',
           totalRecorded || groupTotalSessions,
           pCount,
@@ -404,7 +420,7 @@ const ExportService = {
 
           const row = [
             idx + 1,
-            `${std.lastName || ''} ${std.firstName || ''}`.trim()
+            this.formatStudentName(std)
           ];
 
           uniqueDates.forEach(date => {
@@ -478,7 +494,7 @@ const ExportService = {
 
         dayData.push([
           idx + 1,
-          `${std.lastName || ''} ${std.firstName || ''}`.trim(),
+          this.formatStudentName(std),
           std.email || '—',
           stLabel,
           ''
@@ -566,7 +582,7 @@ const ExportService = {
     gradesSheetData.push(gradesHeader);
 
     students.forEach((std, idx) => {
-      const row = [idx + 1, `${std.lastName || ''} ${std.firstName || ''}`.trim(), std.email || '—'];
+      const row = [idx + 1, this.formatStudentName(std), std.email || '—'];
       let sum = 0, cnt = 0;
       gradeItems.forEach(item => {
         const rec = allGrades.find(g => g.studentId === std.id && g.gradeItemId === item.id);
@@ -621,7 +637,7 @@ const ExportService = {
       const pct = tot > 0 ? parseFloat((((p + l * 0.5) / tot) * 100).toFixed(1)) : 100;
       attData.push([
         idx + 1,
-        `${std.lastName || ''} ${std.firstName || ''}`.trim(),
+        this.formatStudentName(std),
         tot || uniqueDates.length,
         p,
         l,
@@ -651,7 +667,7 @@ const ExportService = {
       const neg = incs.filter(i => i.type === 'negative').length;
       dirData.push([
         idx + 1,
-        `${std.lastName || ''} ${std.firstName || ''}`.trim(),
+        this.formatStudentName(std),
         std.email || '—',
         std.phone || '—',
         pos,

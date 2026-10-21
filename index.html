@@ -40,7 +40,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.0.4">
+  <link rel="stylesheet" href="style.css?v=1.0.5">
 </head>
 <body>
   <!-- PANTALLA DE INICIO DE SESIÓN / LOGIN CON GOOGLE -->
@@ -255,6 +255,13 @@
               <option value="firstName-desc">Nombre (Z - A)</option>
             </select>
           </div>
+          <div class="filter-item">
+            <label for="student-name-format-select">Ver primero:</label>
+            <select id="student-name-format-select" class="form-select">
+              <option value="first-last">Nombres primero (Ej: Juan Pérez)</option>
+              <option value="last-first">Apellidos primero (Ej: Pérez, Juan)</option>
+            </select>
+          </div>
           <div class="filter-item search-box">
             <input type="text" id="student-search-input" placeholder="Buscar por nombre o apellido..." class="form-input">
           </div>
@@ -308,7 +315,17 @@
                 <th style="width: 44px; text-align: center;">
                   <input type="checkbox" id="students-select-all" class="form-checkbox" title="Seleccionar o deseleccionar a todos los estudiantes">
                 </th>
-                <th>Estudiante</th>
+                <th class="th-student-col">
+                  <div class="th-student-header-wrap">
+                    <span>Estudiante</span>
+                    <button type="button" class="btn-toggle-name-order" id="btn-toggle-name-order" title="Alternar visualización: Nombres primero ⇄ Apellidos primero">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/>
+                      </svg>
+                      <span class="lbl-name-order-badge">Ver: Apellidos primero</span>
+                    </button>
+                  </div>
+                </th>
                 <th>Grupo(s)</th>
                 <th>Email de Contacto</th>
                 <th>Incidencias</th>
@@ -341,6 +358,13 @@
                 <option value="lastName-desc">Apellido (Z - A)</option>
                 <option value="firstName-asc">Nombre (A - Z)</option>
                 <option value="firstName-desc">Nombre (Z - A)</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="attendance-name-format-select">Ver primero:</label>
+              <select id="attendance-name-format-select" class="form-select">
+                <option value="first-last">Nombres primero</option>
+                <option value="last-first">Apellidos primero</option>
               </select>
             </div>
           </div>
@@ -415,6 +439,13 @@
                 <option value="lastName-desc">Apellido (Z - A)</option>
                 <option value="firstName-asc">Nombre (A - Z)</option>
                 <option value="firstName-desc">Nombre (Z - A)</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="grades-name-format-select">Ver primero:</label>
+              <select id="grades-name-format-select" class="form-select">
+                <option value="first-last">Nombres primero</option>
+                <option value="last-first">Apellidos primero</option>
               </select>
             </div>
           </div>
@@ -1276,8 +1307,8 @@
     }
   </script>
   <!-- Servicio de Exportación de Reportes Excel -->
-  <script src="export-service.js?v=1.0.4"></script>
+  <script src="export-service.js?v=1.0.5"></script>
   <!-- Lógica Principal -->
-  <script src="app.js?v=1.0.4"></script>
+  <script src="app.js?v=1.0.5"></script>
 </body>
 </html>
