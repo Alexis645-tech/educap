@@ -81,6 +81,8 @@ body {
 .app-layout {
   display: flex;
   height: 100vh;
+  height: 100dvh;
+  min-height: -webkit-fill-available;
   overflow: hidden;
 }
 
@@ -972,7 +974,9 @@ body {
 /* FILTROS Y TABLA DE ESTUDIANTES */
 .filter-bar {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
   margin-bottom: 24px;
   background-color: var(--color-surface);
   padding: 16px 20px;
@@ -984,12 +988,14 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 0 0 auto;
 }
 
 .filter-item label {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
 .form-select, .form-input, .form-textarea {
@@ -1002,6 +1008,8 @@ body {
   color: var(--color-text-main);
   outline: none;
   transition: border-color 0.15s ease;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .form-select:focus, .form-input:focus, .form-textarea:focus {
@@ -1009,7 +1017,8 @@ body {
 }
 
 .search-box {
-  flex: 1;
+  flex: 1 1 200px;
+  min-width: 180px;
 }
 
 .search-box input {
@@ -2083,16 +2092,29 @@ form {
     padding: 10px 16px;
   }
 
-  /* Filtros de estudiantes */
+  /* Filtros de estudiantes en tablet */
   .filter-bar {
+    display: flex;
     flex-wrap: wrap;
     gap: 12px;
     padding: 14px 16px;
+    align-items: center;
   }
 
   .filter-item {
-    flex: 1 1 180px;
-    min-width: 140px;
+    flex: 1 1 200px;
+    min-width: 160px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-item.search-box {
+    flex: 2 1 240px;
+  }
+
+  .filter-item.filter-action-item {
+    flex: 0 0 auto;
   }
 
   /* Asistencia */
@@ -2290,6 +2312,12 @@ form {
     display: none;
   }
 
+  /* Ocultar en móvil botones de cabecera redundantes ya accesibles en el menú lateral para dejar espacio al título */
+  #btn-header-teacher-profile,
+  #btn-header-export-reports {
+    display: none !important;
+  }
+
   #btn-google-drive .google-sync-indicator {
     position: absolute;
     top: 4px;
@@ -2312,6 +2340,7 @@ form {
   }
 
   .grades-controls {
+    display: flex;
     flex-direction: column;
     width: 100%;
     gap: 10px;
@@ -2319,19 +2348,43 @@ form {
 
   .grades-controls .control-group {
     width: 100%;
+    flex: 0 0 auto !important;
+    min-height: auto !important;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .grades-controls .control-group label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-text-muted);
   }
 
   .grades-controls .form-select {
     width: 100%;
+    height: 42px;
+    box-sizing: border-box;
+    font-size: 0.875rem;
+  }
+
+  #btn-toggle-keyboard-hints {
+    display: none !important; /* Ocultar guía de teclas en móviles al tratarse de dispositivos táctiles */
   }
 
   .grades-actions {
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .grades-actions .btn {
     width: 100%;
     justify-content: center;
+    height: 40px;
   }
 
   /* Grid de aulas a 1 columna en móviles */
@@ -2340,33 +2393,69 @@ form {
     gap: 16px;
   }
 
-  /* Barra de filtros de estudiantes */
+  /* Barra de filtros de estudiantes compacta y adaptada a móvil */
   .filter-bar {
+    display: flex;
     flex-direction: column;
     padding: 14px;
-    gap: 12px;
+    gap: 10px;
+    margin-bottom: 16px;
+    border-radius: var(--radius-md);
   }
 
   .filter-item {
+    flex: 0 0 auto !important;
     width: 100%;
+    min-height: auto !important;
+    height: auto !important;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    box-sizing: border-box;
   }
 
   .filter-item label {
-    min-width: 130px;
+    min-width: 0;
+    width: auto;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-text-muted);
+    margin: 0;
   }
 
   .filter-item select,
   .filter-item input {
     width: 100%;
+    height: 42px;
+    box-sizing: border-box;
+    font-size: 0.875rem;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
   }
 
-  /* Mostrar selector de vista en móvil */
+  .filter-item.filter-action-item {
+    margin-top: 4px;
+  }
+
+  .filter-item.filter-action-item .btn {
+    width: 100%;
+    justify-content: center;
+    height: 40px;
+  }
+
+  /* Mostrar selector de vista en móvil con separador limpio */
   .mobile-view-selector {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    margin-top: 2px;
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--color-border);
+    box-sizing: border-box;
   }
 
   /* --- MODO TARJETAS EN MÓVILES (POR DEFECTO O data-view-mode="cards") --- */
@@ -2722,11 +2811,27 @@ form {
 
   .attendance-controls .control-group {
     width: 100%;
+    flex: 0 0 auto !important;
+    min-height: auto !important;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .attendance-controls .control-group label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-text-muted);
   }
 
   .attendance-controls .form-select,
   .attendance-controls .form-input {
     width: 100%;
+    height: 42px;
+    box-sizing: border-box;
+    font-size: 0.875rem;
   }
 
   .attendance-meta {
@@ -2799,9 +2904,11 @@ form {
   /* Modales optimizados para móvil / pantalla táctil */
   .modal-card {
     width: 95%;
-    max-height: 90vh;
+    max-width: 480px;
+    max-height: min(90vh, 90dvh);
     overflow-y: auto;
-    margin: 10px;
+    margin: auto;
+    box-sizing: border-box;
   }
 
   .modal-header {
@@ -2828,6 +2935,61 @@ form {
 }
 
 /* ----------------------------------------------------
+   PANTALLAS INTERMEDIAS / MÓVILES HORIZONTALES (480px - 768px)
+   ---------------------------------------------------- */
+@media (min-width: 480px) and (max-width: 768px) {
+  .filter-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .filter-item:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .filter-item.search-box {
+    grid-column: 1 / -1;
+  }
+
+  .filter-item.filter-action-item {
+    grid-column: 1 / 2;
+    margin-top: 0;
+  }
+
+  .filter-item.mobile-view-selector {
+    grid-column: 2 / 3;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .attendance-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .grades-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .grades-controls .control-group:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .grades-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+}
+
+/* ----------------------------------------------------
    PANTALLAS MUY PEQUEÑAS (<= 480px)
    ---------------------------------------------------- */
 @media (max-width: 480px) {
@@ -2841,19 +3003,21 @@ form {
   }
 
   .header-left h1 {
-    font-size: 0.92rem;
+    font-size: 0.95rem;
     font-weight: 700;
     line-height: 1.2;
+    max-width: 180px;
   }
 
   .header-actions {
-    gap: 3px;
+    gap: 4px;
+  }
+
+  #btn-pwa-install {
+    display: none !important;
   }
 
   #btn-theme-toggle,
-  #btn-pwa-install,
-  #btn-header-teacher-profile,
-  #btn-header-export-reports,
   #btn-google-drive,
   #btn-quick-action {
     width: 34px;
@@ -2863,9 +3027,6 @@ form {
   }
 
   #btn-theme-toggle svg,
-  #btn-pwa-install svg,
-  #btn-header-teacher-profile svg,
-  #btn-header-export-reports svg,
   #btn-quick-action svg {
     width: 16px;
     height: 16px;
@@ -2885,17 +3046,69 @@ form {
     width: 20px;
     height: 20px;
   }
+
+  /* Ajustes para pantalla de inicio / auth en móviles */
+  .auth-screen {
+    padding: 12px;
+  }
+
+  .auth-card {
+    padding: 24px 16px;
+    gap: 16px;
+  }
+
+  .auth-brand h1 {
+    font-size: 1.5rem;
+  }
+
+  .auth-tagline {
+    font-size: 0.8rem;
+  }
+
+  /* Modales en móviles pequeños */
+  .modal-card {
+    width: 98%;
+    border-radius: var(--radius-md);
+  }
+
+  .modal-header {
+    padding: 14px 16px;
+  }
+
+  form {
+    padding: 14px;
+    gap: 12px;
+  }
 }
 
 @media (max-width: 360px) {
   .header-left h1 {
     font-size: 0.84rem;
+    max-width: 140px;
+  }
+
+  .top-header {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  .tab-pane {
+    padding: 10px 8px;
+  }
+
+  .filter-bar {
+    padding: 10px 8px;
+    gap: 8px;
+  }
+
+  .filter-item select,
+  .filter-item input {
+    height: 38px;
+    font-size: 0.82rem;
+    padding: 6px 8px;
   }
 
   #btn-theme-toggle,
-  #btn-pwa-install,
-  #btn-header-teacher-profile,
-  #btn-header-export-reports,
   #btn-google-drive,
   #btn-quick-action {
     width: 30px;
