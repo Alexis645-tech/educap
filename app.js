@@ -1219,6 +1219,37 @@ const UIController = {
       });
     }
 
+    // Invertir Nombres y Apellidos en la importación
+    const btnSwapNames = document.getElementById('btn-swap-import-names');
+    if (btnSwapNames) {
+      btnSwapNames.addEventListener('click', () => {
+        this.swapImportNames(true);
+      });
+    }
+
+    const btnThSwapNames = document.getElementById('btn-th-swap-names');
+    if (btnThSwapNames) {
+      btnThSwapNames.addEventListener('click', () => {
+        this.swapImportNames(true);
+      });
+    }
+
+    const btnThSwapLastnames = document.getElementById('btn-th-swap-lastnames');
+    if (btnThSwapLastnames) {
+      btnThSwapLastnames.addEventListener('click', () => {
+        this.swapImportNames(true);
+      });
+    }
+
+    // Selector de orden de nombres y apellidos (chips)
+    document.querySelectorAll('input[name="import-name-order"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        const val = e.target.value;
+        this.setImportOrderRadio(val);
+        this.reparseCurrentImport();
+      });
+    });
+
     // Botones de Operaciones en Lote de Asistencia (Cabecera)
     const btnAttendPresent = document.getElementById('btn-bulk-attend-present');
     if (btnAttendPresent) {
@@ -2190,8 +2221,25 @@ const UIController = {
     }
   },
 
+  pendingImportStudents: [],
+  importColumnOrder: 'auto',
+  lastImportFile: null,
+  lastImportText: null,
+  lastImportType: null,
+
   resetImportModalUI() {
     this.pendingImportStudents = [];
+    this.lastImportFile = null;
+    this.lastImportText = null;
+    this.lastImportType = null;
+    this.importColumnOrder = 'auto';
+
+    const autoRadio = document.querySelector('input[name="import-name-order"][value="auto"]');
+    if (autoRadio) autoRadio.checked = true;
+    document.querySelectorAll('.import-order-chip').forEach(c => c.classList.remove('active'));
+    const autoChip = document.getElementById('chip-order-auto');
+    if (autoChip) autoChip.classList.add('active');
+
     const fileInput = document.getElementById('import-students-file-input');
     if (fileInput) fileInput.value = '';
 
@@ -2231,6 +2279,74 @@ const UIController = {
     if (pastePane) pastePane.style.display = 'none';
   },
 
+  setImportOrderRadio(val) {
+    this.importColumnOrder = val;
+    document.querySelectorAll('input[name="import-name-order"]').forEach(r => {
+      r.checked = (r.value === val);
+    });
+    document.querySelectorAll('.import-order-chip').forEach(c => {
+      const radio = c.querySelector('input[type="radio"]');
+      if (radio) {
+        c.classList.toggle('active', radio.value === val);
+      }
+    });
+  },
+
+  swapImportNames(showToast = true) {
+    if (!this.pendingImportStudents || this.pendingImportStudents.length === 0) {
+      return;
+    }
+
+    // Invertir nombres y apellidos para todos los estudiantes en memoria
+    this.pendingImportStudents.forEach(s => {
+      const tmp = s.firstName;
+      s.firstName = s.lastName;
+      s.lastName = tmp;
+    });
+
+    // Actualizar indicador visual de chips si estaba en first-last o last-first
+    if (this.importColumnOrder === 'first-last') {
+      this.setImportOrderRadio('last-first');
+    } else if (this.importColumnOrder === 'last-first') {
+      this.setImportOrderRadio('first-last');
+    }
+
+    this.renderImportPreviewTable();
+
+    if (showToast && window.ExportService && window.ExportService.showExportSuccessToast) {
+      window.ExportService.showExportSuccessToast(
+        `Se invirtieron Nombres y Apellidos (${this.pendingImportStudents.length} estudiantes).`,
+        '¡Columnas Invertidas!'
+      );
+    }
+  },
+
+  swapStudentRow(idx) {
+    if (!this.pendingImportStudents || !this.pendingImportStudents[idx]) return;
+    const s = this.pendingImportStudents[idx];
+    const tmp = s.firstName;
+    s.firstName = s.lastName;
+    s.lastName = tmp;
+    this.renderImportPreviewTable();
+  },
+
+  reparseCurrentImport() {
+    if (this.lastImportType === 'file' && this.lastImportFile) {
+      if (window.ExportService && window.ExportService.parseStudentsFile) {
+        window.ExportService.parseStudentsFile(this.lastImportFile, { columnOrder: this.importColumnOrder }).then(res => {
+          this.handleParsedImportResult(res);
+        });
+      }
+    } else if (this.lastImportType === 'paste' && this.lastImportText) {
+      if (window.ExportService && window.ExportService.parseStudentsText) {
+        const res = window.ExportService.parseStudentsText(this.lastImportText, { columnOrder: this.importColumnOrder });
+        this.handleParsedImportResult(res);
+      }
+    } else if (this.pendingImportStudents && this.pendingImportStudents.length > 0) {
+      this.swapImportNames(false);
+    }
+  },
+
   updateImportTargetPreview() {
     const classSelect = document.getElementById('import-classroom-select');
     const previewBadge = document.getElementById('import-target-class-preview');
@@ -2253,6 +2369,9 @@ const UIController = {
       return;
     }
 
+    this.lastImportFile = file;
+    this.lastImportType = 'file';
+
     const nameEl = document.getElementById('import-file-name');
     const sizeEl = document.getElementById('import-file-size');
     const badgeEl = document.getElementById('import-loaded-file-badge');
@@ -2269,7 +2388,7 @@ const UIController = {
       return;
     }
 
-    window.ExportService.parseStudentsFile(file).then(res => {
+    window.ExportService.parseStudentsFile(file, { columnOrder: this.importColumnOrder }).then(res => {
       this.handleParsedImportResult(res);
     });
   },
@@ -2284,13 +2403,37 @@ const UIController = {
       return;
     }
 
+    this.lastImportText = text;
+    this.lastImportType = 'paste';
+
     if (!window.ExportService || !window.ExportService.parseStudentsText) {
       alert('El servicio de procesamiento no está listo. Por favor intenta de nuevo.');
       return;
     }
 
-    const res = window.ExportService.parseStudentsText(text);
+    const res = window.ExportService.parseStudentsText(text, { columnOrder: this.importColumnOrder });
     this.handleParsedImportResult(res);
+  },
+
+  renderImportPreviewTable() {
+    const tbody = document.getElementById('import-preview-tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = this.pendingImportStudents.map((s, idx) => `
+      <tr>
+        <td><span style="font-weight: 600; color: var(--color-text-muted);">${idx + 1}</span></td>
+        <td><strong>${this.escapeHtml(s.firstName)}</strong></td>
+        <td><strong>${this.escapeHtml(s.lastName)}</strong></td>
+        <td>${s.email ? this.escapeHtml(s.email) : '<span style="color: var(--color-text-muted);">—</span>'}</td>
+        <td>${s.phone ? this.escapeHtml(s.phone) : '<span style="color: var(--color-text-muted);">—</span>'}</td>
+        <td style="text-align: center;">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <button type="button" class="btn-swap-row-inline" onclick="UIController.swapStudentRow(${idx})" title="Intercambiar Nombres y Apellidos solo para este estudiante">⇄</button>
+            <span class="badge-valid-student">&#10003; Listo</span>
+          </div>
+        </td>
+      </tr>
+    `).join('');
   },
 
   handleParsedImportResult(res) {
@@ -2324,19 +2467,7 @@ const UIController = {
       }
     }
 
-    const tbody = document.getElementById('import-preview-tbody');
-    if (tbody) {
-      tbody.innerHTML = this.pendingImportStudents.map((s, idx) => `
-        <tr>
-          <td><span style="font-weight: 600; color: var(--color-text-muted);">${idx + 1}</span></td>
-          <td><strong>${this.escapeHtml(s.firstName)}</strong></td>
-          <td><strong>${this.escapeHtml(s.lastName)}</strong></td>
-          <td>${s.email ? this.escapeHtml(s.email) : '<span style="color: var(--color-text-muted);">—</span>'}</td>
-          <td>${s.phone ? this.escapeHtml(s.phone) : '<span style="color: var(--color-text-muted);">—</span>'}</td>
-          <td style="text-align: center;"><span class="badge-valid-student">&#10003; Listo</span></td>
-        </tr>
-      `).join('');
-    }
+    this.renderImportPreviewTable();
 
     const confirmBtn = document.getElementById('btn-confirm-import-students');
     if (confirmBtn) confirmBtn.disabled = false;

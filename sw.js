@@ -2,8 +2,8 @@
 // EDUPLAN - SERVICE WORKER PARA SOPORTE OFFLINE TOTAL (SW.JS)
 // ========================================================
 
-const CACHE_NAME = 'educap-static-v1.0.3';
-const RUNTIME_CACHE_NAME = 'educap-runtime-v1.0.3';
+const CACHE_NAME = 'educap-static-v1.0.4';
+const RUNTIME_CACHE_NAME = 'educap-runtime-v1.0.4';
 
 // Recursos críticos necesarios para funcionamiento 100% offline sin conectividad
 const PRECACHE_ASSETS = [

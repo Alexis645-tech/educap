@@ -40,7 +40,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.0.3">
+  <link rel="stylesheet" href="style.css?v=1.0.4">
 </head>
 <body>
   <!-- PANTALLA DE INICIO DE SESIÓN / LOGIN CON GOOGLE -->
@@ -1109,6 +1109,35 @@
             <h4>Subir tu Lista de Alumnos</h4>
           </div>
 
+          <!-- Selector de Orden de Nombres y Apellidos -->
+          <div class="import-name-order-card">
+            <div class="import-order-header">
+              <span class="import-order-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m16 3 4 4-4 4"/>
+                  <path d="M20 7H4"/>
+                  <path d="m8 21-4-4 4-4"/>
+                  <path d="M4 17h16"/>
+                </svg>
+              </span>
+              <strong style="font-size: 0.85rem;">Orden de Nombres y Apellidos en tu lista:</strong>
+            </div>
+            <div class="import-order-options">
+              <label class="import-order-chip active" id="chip-order-auto">
+                <input type="radio" name="import-name-order" value="auto" checked>
+                <span>⚡ Auto-detectar</span>
+              </label>
+              <label class="import-order-chip" id="chip-order-first-last">
+                <input type="radio" name="import-name-order" value="first-last">
+                <span>👤 Nombres primero, luego Apellidos</span>
+              </label>
+              <label class="import-order-chip" id="chip-order-last-first">
+                <input type="radio" name="import-name-order" value="last-first">
+                <span>👥 Apellidos primero, luego Nombres</span>
+              </label>
+            </div>
+          </div>
+
           <!-- Pestañas para elegir método: Archivo vs Portapapeles -->
           <div class="import-method-tabs">
             <button type="button" class="import-tab-btn active" data-import-method="file" id="tab-btn-import-file">
@@ -1171,7 +1200,18 @@
               <span class="preview-count-chip" id="import-detected-count-badge">0 detectados</span>
               <h4 style="margin: 0; font-size: 0.95rem;">Previsualización de Estudiantes a Importar</h4>
             </div>
-            <span id="import-target-class-preview" class="preview-target-badge">Grupo destino</span>
+            <div class="preview-actions-group">
+              <button type="button" id="btn-swap-import-names" class="btn btn-secondary btn-sm btn-swap-names" title="Intercambiar Nombres y Apellidos en toda la lista con un solo clic">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m16 3 4 4-4 4"/>
+                  <path d="M20 7H4"/>
+                  <path d="m8 21-4-4 4-4"/>
+                  <path d="M4 17h16"/>
+                </svg>
+                <span>Invertir Nombres ⇄ Apellidos</span>
+              </button>
+              <span id="import-target-class-preview" class="preview-target-badge">Grupo destino</span>
+            </div>
           </div>
 
           <div id="import-warnings-box" class="import-warnings-box" style="display: none;"></div>
@@ -1181,11 +1221,21 @@
               <thead>
                 <tr>
                   <th style="width: 36px;">#</th>
-                  <th>Nombres</th>
-                  <th>Apellidos</th>
+                  <th>
+                    <div class="th-swap-wrap">
+                      <span>Nombres</span>
+                      <button type="button" class="btn-th-swap" id="btn-th-swap-names" title="Intercambiar Nombres ⇄ Apellidos">⇄</button>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="th-swap-wrap">
+                      <span>Apellidos</span>
+                      <button type="button" class="btn-th-swap" id="btn-th-swap-lastnames" title="Intercambiar Nombres ⇄ Apellidos">⇄</button>
+                    </div>
+                  </th>
                   <th>Correo Electrónico</th>
                   <th>Teléfono</th>
-                  <th style="width: 80px; text-align: center;">Estado</th>
+                  <th style="width: 90px; text-align: center;">Estado</th>
                 </tr>
               </thead>
               <tbody id="import-preview-tbody">
@@ -1215,9 +1265,9 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
   <!-- Motor de Persistencia IndexedDB con Soporte Offline Total -->
-  <script src="db.js?v=1.0.3"></script>
+  <script src="db.js?v=1.0.4"></script>
   <!-- Lógica de Google Drive -->
-  <script src="google-drive.js?v=1.0.3"></script>
+  <script src="google-drive.js?v=1.0.4"></script>
   <!-- Generación de Documentos y Hojas de Cálculo Excel (.xlsx) con SheetJS -->
   <script src="xlsx.full.min.js"></script>
   <script>
@@ -1226,8 +1276,8 @@
     }
   </script>
   <!-- Servicio de Exportación de Reportes Excel -->
-  <script src="export-service.js?v=1.0.3"></script>
+  <script src="export-service.js?v=1.0.4"></script>
   <!-- Lógica Principal -->
-  <script src="app.js?v=1.0.3"></script>
+  <script src="app.js?v=1.0.4"></script>
 </body>
 </html>

@@ -778,10 +778,12 @@ const ExportService = {
   },
 
   // Analizar matriz 2D de filas
-  parseStudentsData(rawRows) {
+  parseStudentsData(rawRows, options = {}) {
     if (!Array.isArray(rawRows) || rawRows.length === 0) {
       return { success: false, error: 'El archivo o texto no contiene filas legibles.' };
     }
+
+    const columnOrder = options.columnOrder || 'auto'; // 'auto' | 'first-last' | 'last-first'
 
     const cleanRows = rawRows.filter(r => Array.isArray(r) && r.some(cell => String(cell ?? '').trim().length > 0));
     if (cleanRows.length === 0) {
@@ -800,13 +802,15 @@ const ExportService = {
     let fullIdx = -1;
     let emailIdx = -1;
     let phoneIdx = -1;
+    let idIdx = -1;
 
     for (let r = 0; r < Math.min(4, cleanRows.length); r++) {
       const row = cleanRows[r];
       let foundHeadersInRow = 0;
       for (let c = 0; c < row.length; c++) {
         const text = normalize(row[c]);
-        if (/^(nombres?|first\s*name)$/.test(text)) { firstIdx = c; foundHeadersInRow++; }
+        if (/^(#|nº|no|num|id|orden|item|código|codigo)$/.test(text)) { idIdx = c; }
+        else if (/^(nombres?|first\s*name)$/.test(text)) { firstIdx = c; foundHeadersInRow++; }
         else if (/^(apellidos?|last\s*name)$/.test(text)) { lastIdx = c; foundHeadersInRow++; }
         else if (/^(nombre\s*completo|estudiante|alumno|estudiantes|alumnos|nombres?\s*y\s*apellidos?|apellidos?\s*y\s*nombres?)$/.test(text)) { fullIdx = c; foundHeadersInRow++; }
         else if (/^(correo|email|e-mail|correo\s*electronico|mail)$/.test(text)) { emailIdx = c; foundHeadersInRow++; }
@@ -823,14 +827,38 @@ const ExportService = {
       return { success: false, error: 'Solo se encontraron encabezados pero ninguna fila de estudiantes.' };
     }
 
-    if (firstIdx === -1 && fullIdx === -1 && lastIdx === -1) {
-      if (cleanRows[0].length >= 2) {
-        firstIdx = 0;
-        lastIdx = 1;
-        if (cleanRows[0].length >= 3) emailIdx = 2;
-        if (cleanRows[0].length >= 4) phoneIdx = 3;
+    // Detectar si la primera columna es un número correlativo / ID (1, 2, 3...) sin encabezado explícito
+    let colOffset = 0;
+    if (headerRowIndex === -1 && dataRows.length > 0 && cleanRows[0].length >= 3) {
+      const isFirstColNumeric = dataRows.every(r => {
+        const val = String(r[0] ?? '').trim();
+        return val === '' || /^\d+$/.test(val);
+      });
+      if (isFirstColNumeric) {
+        colOffset = 1;
+      }
+    } else if (idIdx === 0 && cleanRows[0].length >= 3) {
+      colOffset = 1;
+    }
+
+    if (columnOrder === 'last-first') {
+      lastIdx = colOffset;
+      firstIdx = colOffset + 1;
+      if (cleanRows[0].length >= colOffset + 3) emailIdx = colOffset + 2;
+      if (cleanRows[0].length >= colOffset + 4) phoneIdx = colOffset + 3;
+    } else if (columnOrder === 'first-last') {
+      firstIdx = colOffset;
+      lastIdx = colOffset + 1;
+      if (cleanRows[0].length >= colOffset + 3) emailIdx = colOffset + 2;
+      if (cleanRows[0].length >= colOffset + 4) phoneIdx = colOffset + 3;
+    } else if (firstIdx === -1 && fullIdx === -1 && lastIdx === -1) {
+      if (cleanRows[0].length >= colOffset + 2) {
+        firstIdx = colOffset;
+        lastIdx = colOffset + 1;
+        if (cleanRows[0].length >= colOffset + 3) emailIdx = colOffset + 2;
+        if (cleanRows[0].length >= colOffset + 4) phoneIdx = colOffset + 3;
       } else {
-        fullIdx = 0;
+        fullIdx = colOffset;
       }
     }
 
@@ -874,8 +902,13 @@ const ExportService = {
           }
         }
       } else {
-        firstName = String(row[0] ?? '').trim();
-        lastName = String(row[1] ?? '').trim();
+        if (columnOrder === 'last-first') {
+          lastName = String(row[colOffset + 0] ?? '').trim();
+          firstName = String(row[colOffset + 1] ?? '').trim();
+        } else {
+          firstName = String(row[colOffset + 0] ?? '').trim();
+          lastName = String(row[colOffset + 1] ?? '').trim();
+        }
       }
 
       if (firstName && (firstName === firstName.toUpperCase() || firstName === firstName.toLowerCase())) {
@@ -911,7 +944,7 @@ const ExportService = {
   },
 
   // Parsear archivo cargado (.xlsx, .xls, .csv)
-  parseStudentsFile(file) {
+  parseStudentsFile(file, options = {}) {
     return new Promise((resolve) => {
       if (!file) {
         return resolve({ success: false, error: 'No se ha seleccionado ningún archivo.' });
@@ -933,7 +966,7 @@ const ExportService = {
 
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const rawRows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
-          const result = this.parseStudentsData(rawRows);
+          const result = this.parseStudentsData(rawRows, options);
           resolve(result);
         } catch (err) {
           console.error('[ExportService] Error procesando archivo:', err);
@@ -950,7 +983,7 @@ const ExportService = {
   },
 
   // Parsear texto pegado desde portapapeles
-  parseStudentsText(text) {
+  parseStudentsText(text, options = {}) {
     if (!text || !text.trim()) {
       return { success: false, error: 'Por favor pega el contenido antes de analizar.' };
     }
@@ -968,7 +1001,7 @@ const ExportService = {
     }
 
     const rawRows = lines.map(line => line.split(sep).map(cell => cell.trim()));
-    return this.parseStudentsData(rawRows);
+    return this.parseStudentsData(rawRows, options);
   }
 };
 
