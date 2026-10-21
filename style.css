@@ -250,16 +250,20 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
 }
 
 .top-header {
-  padding: 24px 32px;
+  padding: 20px 28px;
   background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .header-left {
@@ -267,13 +271,22 @@ body {
   align-items: center;
   gap: 12px;
   min-width: 0;
+  flex: 1 1 auto;
+}
+
+.header-left > div {
+  min-width: 0;
   flex: 1;
 }
 
 .header-left h1 {
-  font-size: 1.6rem;
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
   font-weight: 800;
   letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
 }
 
 .header-actions {
@@ -287,6 +300,9 @@ body {
   color: var(--color-text-muted);
   font-size: 0.85rem;
   margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* BOTONES Y FORMULARIOS */
@@ -950,6 +966,7 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* FILTROS Y TABLA DE ESTUDIANTES */
@@ -1004,7 +1021,8 @@ body {
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .students-table {
@@ -1138,11 +1156,14 @@ body {
   align-items: center;
   justify-content: space-between;
   box-shadow: var(--shadow-sm);
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .roster-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .status-btn {
@@ -1862,25 +1883,230 @@ form {
 }
 
 /* ----------------------------------------------------
-   TABLETS Y PANTALLAS MEDIANAS (<= 992px)
+   LAPTOPS Y PANTALLAS COMPACTAS (<= 1200px)
    ---------------------------------------------------- */
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
   .sidebar {
     width: 220px;
   }
 
   .top-header {
-    padding: 20px 24px;
+    padding: 16px 24px;
+    gap: 12px;
   }
 
+  /* Compactar botones secundarios con iconos claros */
+  #btn-theme-toggle .theme-btn-text,
+  #btn-pwa-install .pwa-install-btn-text,
+  #btn-header-teacher-profile .teacher-btn-text {
+    display: none;
+  }
+
+  #btn-theme-toggle,
+  #btn-pwa-install,
+  #btn-header-teacher-profile {
+    padding: 0;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    justify-content: center;
+    border-radius: var(--radius-md);
+  }
+}
+
+/* ----------------------------------------------------
+   TABLETS (LANDSCAPE & PORTRAIT: 769px <= width <= 1024px)
+   ---------------------------------------------------- */
+@media (max-width: 1024px) {
+  /* Sidebar compacto optimizado para tablets */
+  .sidebar {
+    width: 200px;
+    padding: 16px 10px;
+  }
+
+  .brand {
+    padding: 0 4px;
+    margin-bottom: 20px;
+    gap: 8px;
+  }
+
+  .brand-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .brand-text h2 {
+    font-size: 1.1rem;
+  }
+
+  .brand-text span {
+    font-size: 0.68rem;
+  }
+
+  .nav-item {
+    padding: 9px 10px;
+    font-size: 0.82rem;
+    gap: 8px;
+    border-radius: var(--radius-md);
+  }
+
+  .nav-item svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    padding: 8px 4px 0 4px;
+  }
+
+  .teacher-profile {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .teacher-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+
+  .teacher-name {
+    font-size: 0.8rem;
+  }
+
+  .teacher-role {
+    font-size: 0.68rem;
+  }
+
+  /* Header tablet: sin colisiones, títulos fluidos y botones de acción tipo icono */
+  .top-header {
+    padding: 12px 18px;
+    gap: 10px;
+    min-height: 62px;
+    box-sizing: border-box;
+  }
+
+  .header-left {
+    min-width: 0;
+    flex: 1 1 auto;
+    gap: 8px;
+  }
+
+  .header-left > div {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .header-left h1 {
+    font-size: clamp(1.1rem, 2.2vw, 1.35rem);
+    font-weight: 700;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .header-left p {
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+    margin-top: 1px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* Todos los botones secundarios en tablet como iconos elegantes con tooltip */
+  #btn-google-drive,
+  #btn-pwa-install,
+  #btn-header-teacher-profile,
+  #btn-header-export-reports,
+  #btn-theme-toggle {
+    padding: 0;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    position: relative;
+  }
+
+  #btn-google-drive .google-btn-text,
+  #btn-pwa-install .pwa-install-btn-text,
+  #btn-header-teacher-profile .teacher-btn-text,
+  #btn-header-export-reports .report-btn-text,
+  #btn-theme-toggle .theme-btn-text {
+    display: none;
+  }
+
+  /* Indicador de sincronización como badge en la esquina del botón icono de Drive */
+  #btn-google-drive .google-sync-indicator {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+    border: 1.5px solid var(--color-surface);
+    margin: 0;
+  }
+
+  /* Botón de acción rápida superior en tablet */
+  #btn-quick-action {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    gap: 6px;
+    border-radius: var(--radius-md);
+    white-space: nowrap;
+  }
+
+  /* Pestañas y paneles */
   .tab-pane {
-    padding: 24px 20px;
+    padding: 18px 16px;
   }
 
+  /* Grid de aulas */
+  .classrooms-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .classroom-card-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 16px;
+  }
+
+  /* Filtros de estudiantes */
+  .filter-bar {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .filter-item {
+    flex: 1 1 180px;
+    min-width: 140px;
+  }
+
+  /* Asistencia */
   .attendance-header-card {
     flex-direction: column;
     align-items: stretch;
-    gap: 16px;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .attendance-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
   .attendance-meta {
@@ -1888,18 +2114,63 @@ form {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    gap: 14px;
+    gap: 12px;
     flex-wrap: wrap;
   }
 
   .attendance-summary {
     display: flex;
-    gap: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
     flex: 1;
   }
 
   .attendance-summary .stat-badge {
     flex: 1;
+    min-width: 90px;
+  }
+
+  .attendance-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* Calificaciones */
+  .grades-header-card {
+    padding: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .grades-controls {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .bulk-actions-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+}
+
+/* Tablets en modo vertical estrecho (<= 850px) */
+@media (max-width: 850px) and (min-width: 769px) {
+  #btn-quick-action {
+    padding: 0;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    justify-content: center;
+  }
+
+  #btn-quick-action #quick-action-text {
+    display: none;
+  }
+
+  .header-left p {
+    display: none;
   }
 }
 
@@ -1996,6 +2267,7 @@ form {
 
   /* Ocultar texto en todos los botones secundarios y de acción rápida en móvil */
   #btn-theme-toggle,
+  #btn-pwa-install,
   #btn-header-teacher-profile,
   #btn-header-export-reports,
   #btn-google-drive,
@@ -2006,14 +2278,26 @@ form {
     min-width: 36px;
     justify-content: center;
     border-radius: var(--radius-md);
+    position: relative;
   }
 
   #btn-theme-toggle .theme-btn-text,
+  #btn-pwa-install .pwa-install-btn-text,
   #btn-header-teacher-profile .teacher-btn-text,
   #btn-header-export-reports .report-btn-text,
   #btn-google-drive .google-btn-text,
   #btn-quick-action #quick-action-text {
     display: none;
+  }
+
+  #btn-google-drive .google-sync-indicator {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border: 1.5px solid var(--color-surface);
+    margin: 0;
   }
 
   /* Área de pestañas */
@@ -2567,7 +2851,9 @@ form {
   }
 
   #btn-theme-toggle,
+  #btn-pwa-install,
   #btn-header-teacher-profile,
+  #btn-header-export-reports,
   #btn-google-drive,
   #btn-quick-action {
     width: 34px;
@@ -2577,7 +2863,9 @@ form {
   }
 
   #btn-theme-toggle svg,
+  #btn-pwa-install svg,
   #btn-header-teacher-profile svg,
+  #btn-header-export-reports svg,
   #btn-quick-action svg {
     width: 16px;
     height: 16px;
@@ -2605,7 +2893,9 @@ form {
   }
 
   #btn-theme-toggle,
+  #btn-pwa-install,
   #btn-header-teacher-profile,
+  #btn-header-export-reports,
   #btn-google-drive,
   #btn-quick-action {
     width: 30px;
