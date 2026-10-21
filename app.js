@@ -510,6 +510,7 @@ const DataService = {
     }
   }
 };
+window.DataService = DataService;
 
 // --- CONTROLADOR DE LA INTERFAZ (UI STATE) ---
 const UIController = {
@@ -1745,13 +1746,19 @@ const UIController = {
 
   populateClassroomSelects() {
     const classrooms = DataService.getClassrooms();
-    const selects = ['filter-classroom-select', 'attendance-classroom-select', 'grades-classroom-select', 'student-class-select', 'grade-item-class-select', 'export-classroom-select'];
+    const selects = ['filter-classroom-select', 'attendance-classroom-select', 'grades-classroom-select', 'student-class-select', 'grade-item-class-select', 'export-classroom-select', 'import-classroom-select'];
     selects.forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
       if (id === 'filter-classroom-select') {
         el.innerHTML = '<option value="">Todos los grupos</option>' + 
           classrooms.map(c => `<option value="${c.id}" ${c.id === this.selectedClassroomId ? 'selected' : ''}>${c.name} (${c.gradeLevel})</option>`).join('');
+      } else if (id === 'import-classroom-select') {
+        if (classrooms.length === 0) {
+          el.innerHTML = '<option value="">No hay grupos creados todavía. Crea un grupo primero.</option>';
+        } else {
+          el.innerHTML = classrooms.map(c => `<option value="${c.id}" ${c.id === this.selectedClassroomId ? 'selected' : ''}>${c.name} (${c.gradeLevel || 'Sin nivel'})</option>`).join('');
+        }
       } else {
         el.innerHTML = classrooms.map(c => `<option value="${c.id}" ${c.id === this.selectedClassroomId ? 'selected' : ''}>${c.name} (${c.gradeLevel})</option>`).join('');
       }
@@ -2149,15 +2156,17 @@ const UIController = {
   openImportStudentsModal(defaultClassroomId) {
     try {
       const self = this || window.UIController;
-      const classrooms = (window.DataService && typeof window.DataService.getClassrooms === 'function')
-        ? window.DataService.getClassrooms()
+      const dataSvc = (typeof DataService !== 'undefined') ? DataService : window.DataService;
+      const classrooms = (dataSvc && typeof dataSvc.getClassrooms === 'function') 
+        ? dataSvc.getClassrooms() 
         : [];
+
       const classSelect = document.getElementById('import-classroom-select');
       if (classSelect) {
         if (!classrooms || classrooms.length === 0) {
           classSelect.innerHTML = '<option value="">No hay grupos creados todavía. Crea un grupo primero.</option>';
         } else {
-          const currentSelected = self ? self.selectedClassroomId : '';
+          const currentSelected = (self && self.selectedClassroomId) || '';
           const targetId = defaultClassroomId || currentSelected || (classrooms[0] && classrooms[0].id) || '';
           classSelect.innerHTML = classrooms.map(c => 
             `<option value="${c.id}" ${c.id === targetId ? 'selected' : ''}>${c.name} (${c.gradeLevel || 'Sin nivel'})</option>`
